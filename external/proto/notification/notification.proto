@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package notification;
+
+option go_package = "./notification";
+
+// The Notification service definition
+service NotificationService {
+    // Send a notification using a template
+    rpc SendNotification (SendNotificationRequest) returns (SendNotificationResponse);
+}
+
+// The request message containing notification details
+message SendNotificationRequest {
+    string template_name = 1;       // The ID of the template to be used
+    string recipient = 2;         // The recipient's contact (email, phone number, or device ID)
+    map<string, string> placeholders = 3;  // A map of placeholders to replace in the template body (e.g., {{username}} -> "John")
+}
+
+// The response message after attempting to send the notification
+message SendNotificationResponse {
+    string message = 1;           // A message indicating success or failure
+}

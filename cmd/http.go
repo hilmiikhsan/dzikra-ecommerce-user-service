@@ -11,6 +11,7 @@ import (
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/adapter"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/config"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/route"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -72,7 +73,7 @@ func RunServerHTTP(cmd *flag.FlagSet, args []string) {
 	// )
 
 	app.Get("/metrics", monitor.New(monitor.Config{Title: config.Envs.App.Name + config.Envs.App.Environtment + " Metrics"}))
-	// route.SetupRoutes(app)
+	route.SetupRoutes(app)
 
 	// print all routes that are registered
 	// for _, route := range app.Stack() {
