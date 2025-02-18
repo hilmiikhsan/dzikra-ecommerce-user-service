@@ -180,18 +180,13 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 		if err != nil {
 			if err == redis.Nil {
 				log.Info().Any("payload", req).Msg("service::Register - OTP number is not found")
-				err = s.redisRepository.Set(ctx, key, true, 5*time.Minute)
-				if err != nil {
-					log.Error().Err(err).Any("payload", req).Msg("service::Register - Failed to delete data redis")
-					return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
-				}
 			} else {
 				log.Error().Err(err).Any("payload", req).Msg("service::Register - Failed to get data redis")
 				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 			}
+		} else {
+			return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrUserRegistrationInProgress))
 		}
-
-		return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrUserRegistrationInProgress))
 	} else if userResult.EmailVerifiedAt != nil && userResult.OtpNumberVerifiedAt != nil {
 		log.Error().Any("payload", req).Msg("service::Register - Email already verified")
 		return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrEmailAlreadyRegistered))
@@ -226,5 +221,96 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 		Email:       res.Email,
 		FullName:    res.FullName,
 		PhoneNumber: req.PhoneNumber,
+	}, nil
+}
+
+func (s *userService) Verification(ctx context.Context, req *dto.VerificationRequest) (*dto.VerificationResponse, error) {
+	userData, err := s.userRepository.FindUserByEmail(ctx, req.Email)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Verification - Failed to find user by email")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage("Failed to find user by email"))
+	}
+
+	if userData == nil {
+		log.Error().Any("payload", req).Msg("service::Verification - User not found")
+		return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage(constants.ErrEmailOrOTPNumberIsIncorrect))
+	}
+
+	key := fmt.Sprintf("%s:%s", constants.OTPNumberKey, userData.Username)
+	blockedKey := fmt.Sprintf("%s:%s", constants.OTPBlockedKey, userData.Username)
+	attemptKey := fmt.Sprintf("%s:%s", constants.OTPAttemptKey, userData.Username)
+
+	blockTTL, err := s.redisRepository.TTL(ctx, blockedKey)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Verification - Failed to check blocked status in Redis")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	if blockTTL > 0 {
+		return nil, err_msg.NewCustomErrors(fiber.StatusTooManyRequests, err_msg.WithMessage(fmt.Sprintf("You are blocked. Please try again in %d seconds.", int(blockTTL.Seconds()))))
+	}
+
+	otpNumber, err := s.redisRepository.Get(ctx, key)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Verification - Failed to get data from Redis")
+		return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage(constants.ErrOTPNumberIsAlreadyExpired))
+	}
+
+	if otpNumber != req.Otp {
+		attemptCount, err := s.redisRepository.Incr(ctx, attemptKey)
+		if err != nil {
+			log.Error().Err(err).Any("payload", req).Msg("service::Verification - Failed to increment attempt count")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+
+		_ = s.redisRepository.Expire(ctx, attemptKey, 10*time.Minute)
+
+		if attemptCount >= 3 {
+			var blockDuration time.Duration
+			switch attemptCount {
+			case 3:
+				blockDuration = 1 * time.Minute
+			case 6:
+				blockDuration = 3 * time.Minute
+			default:
+				blockDuration = 5 * time.Minute
+			}
+
+			err = s.redisRepository.Set(ctx, blockedKey, "blocked", blockDuration)
+			if err != nil {
+				log.Error().Err(err).Any("payload", req).Msg("service::Verification - Failed to set blocked status in Redis")
+				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+			}
+
+			return nil, err_msg.NewCustomErrors(fiber.StatusTooManyRequests, err_msg.WithMessage(fmt.Sprintf("You are blocked. Please try again in %d seconds.", int(blockDuration.Seconds()))))
+		}
+
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrInvalidOtpNumber))
+	}
+
+	emailVerifiedAt, err := s.userRepository.UpdateVerificationUserByEmail(ctx, req.Email)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Verification - Failed to update verification user by email")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	keysToDelete := []string{key, blockedKey, attemptKey}
+	for _, k := range keysToDelete {
+		err := s.redisRepository.Del(ctx, k)
+		if err != nil {
+			log.Error().Err(err).Msgf("service::Verification - Failed to delete Redis key: %s", k)
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+	}
+
+	log.Info().Any("user", userData).Msg("Verification successful and all Redis keys deleted")
+
+	formattedVerifiedAt := utils.FormatToWIB(emailVerifiedAt)
+
+	return &dto.VerificationResponse{
+		Email: req.Email,
+		EmailConfirmed: dto.EmailConfirmed{
+			IsConfirm: true,
+			CreatedAt: formattedVerifiedAt,
+		},
 	}, nil
 }

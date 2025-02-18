@@ -8,7 +8,7 @@ var (
 	ErrEmailOrOTPNumberIsIncorrect     = "Email or otp number is incorrect"
 	ErrEmailNotRegistered              = "Email is not registered"
 	ErrUserAlreadyVerified             = "User already verified"
-	ErrOTPNumberIsAlreadyExpired       = "OTP number is already expired"
+	ErrOTPNumberIsAlreadyExpired       = "OTP not found, please request a new OTP"
 	ErrTooManyReuqestOTPNumber         = "Too many requests for the same email, please wait until the current OTP expires"
 	ErrPhoneNumberAlreadyRegistered    = "Phone number already registered"
 	ErrIdentifierOrPasswordIsIncorrect = "Identifier or password is incorrect"

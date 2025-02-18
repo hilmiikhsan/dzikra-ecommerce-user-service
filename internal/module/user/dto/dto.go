@@ -14,3 +14,18 @@ type RegisterResponse struct {
 	FullName    string `json:"full_name"`
 	PhoneNumber string `json:"phone_number"`
 }
+
+type VerificationRequest struct {
+	Email string `json:"email" validate:"required,email,email_blacklist"`
+	Otp   string `json:"otp" validate:"required,otp_number"`
+}
+
+type VerificationResponse struct {
+	Email          string         `json:"email"`
+	EmailConfirmed EmailConfirmed `json:"email_confirmed"`
+}
+
+type EmailConfirmed struct {
+	IsConfirm bool   `json:"is_confirm"`
+	CreatedAt string `json:"created_at"`
+}

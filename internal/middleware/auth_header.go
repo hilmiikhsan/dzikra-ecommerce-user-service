@@ -7,12 +7,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (m *AuthMiddleware) AuthBearer(c *fiber.Ctx) error {
+func (m *UserMiddleware) UserBearer(c *fiber.Ctx) error {
 	accessToken := c.Get(constants.HeaderAuthorization)
 
 	// If the cookie is not set, return an unauthorized status
 	if accessToken == "" {
-		log.Error().Msg("middleware::AuthBearer - Unauthorized [Header not set]")
+		log.Error().Msg("middleware::UserBearer - Unauthorized [Header not set]")
 		c.Status(fiber.StatusUnauthorized).JSON(response.Error(constants.ErrAccessTokenIsRequired))
 	}
 
@@ -24,7 +24,7 @@ func (m *AuthMiddleware) AuthBearer(c *fiber.Ctx) error {
 	// Parse the JWT string and store the result in `claims`
 	claims, err := m.jwt.ParseMiddlewareTokenString(c.Context(), accessToken)
 	if err != nil {
-		log.Error().Err(err).Any("payload", accessToken).Msg("middleware::AuthBearer - Error while parsing token")
+		log.Error().Err(err).Any("payload", accessToken).Msg("middleware::UserBearer - Error while parsing token")
 		return c.Status(fiber.StatusUnauthorized).JSON(response.Error(constants.ErrTokenAlreadyExpired))
 	}
 

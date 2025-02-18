@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/entity"
@@ -79,4 +80,16 @@ func (r *userRepository) FindUserByEmail(ctx context.Context, email string) (*en
 	}
 
 	return res, nil
+}
+
+func (r *userRepository) UpdateVerificationUserByEmail(ctx context.Context, email string) (time.Time, error) {
+	var emailVerifiedAt time.Time
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryUpdateVerificationUserByEmail), email).Scan(&emailVerifiedAt)
+	if err != nil {
+		log.Error().Err(err).Any("email", email).Msg("repository::UpdateVerificationUserByEmail - Failed to update verification user by email")
+		return time.Time{}, err
+	}
+
+	return emailVerifiedAt, nil
 }

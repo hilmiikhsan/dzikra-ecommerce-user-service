@@ -23,4 +23,13 @@ const (
 		FROM users
 		WHERE email = ?
 	`
+
+	queryUpdateVerificationUserByEmail = `
+		UPDATE users
+		SET
+			email_verified_at = NOW(),
+			otp_number_verified_at = NOW()
+		WHERE email = ?
+		RETURNING email_verified_at
+	`
 )

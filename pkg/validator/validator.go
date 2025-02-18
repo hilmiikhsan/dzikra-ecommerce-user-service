@@ -158,8 +158,7 @@ func phoneValidator(fl validator.FieldLevel) bool {
 
 func otpNumberValidation(fl validator.FieldLevel) bool {
 	otp := fl.Field().String()
-	// Check if the OTP matches exactly 6-digit numeric pattern
-	matched, _ := regexp.MatchString(`^\d{6}$`, otp)
+	matched, _ := regexp.MatchString(`^[0-9A-Z]{6}$`, otp)
 	return matched
 }
 
