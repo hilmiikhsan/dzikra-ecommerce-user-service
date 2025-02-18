@@ -59,3 +59,7 @@ generate-proto:
 docker-build:
 	@echo " >> Building Docker image"
 	docker buildx build --platform linux/amd64 -t ghcr.io/hilmiikhsan/dzikra-user-service:latest --push .
+
+wire:
+	@echo ">> Running Wire in internal/module/user/handler/rest"
+	cd internal/module/user/handler/rest && wire

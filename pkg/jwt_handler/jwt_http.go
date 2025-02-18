@@ -7,7 +7,7 @@ import (
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/config"
-	redisPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis"
+	redisPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis/ports"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/err_msg"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"

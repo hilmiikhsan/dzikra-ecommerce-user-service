@@ -29,3 +29,11 @@ type EmailConfirmed struct {
 	IsConfirm bool   `json:"is_confirm"`
 	CreatedAt string `json:"created_at"`
 }
+
+type SendOtpNumberVerificationRequest struct {
+	Email string `json:"email" validate:"required,email,email_blacklist"`
+}
+
+type SendOtpNumberVerificationResponse struct {
+	Otp string `json:"otp"`
+}

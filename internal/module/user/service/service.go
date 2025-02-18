@@ -8,7 +8,7 @@ import (
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
 	externalNotification "github.com/Digitalkeun-Creative/be-dzikra-user-service/external/notification"
-	redisPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis"
+	redisPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis/ports"
 	rolePorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/ports"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 	user "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/entity"
@@ -313,4 +313,55 @@ func (s *userService) Verification(ctx context.Context, req *dto.VerificationReq
 			CreatedAt: formattedVerifiedAt,
 		},
 	}, nil
+}
+
+func (s *userService) SendOtpNumberVerification(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.SendOtpNumberVerificationResponse, error) {
+	userData, err := s.userRepository.FindUserByEmail(ctx, req.Email)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::SendOtpNumberVerification - Failed to find user by email")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage("Failed to find user by email"))
+	}
+
+	if userData == nil {
+		log.Error().Any("payload", req).Msg("service::SendOtpNumberVerification - User not found")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrEmailNotRegistered))
+	} else if userData.EmailVerifiedAt != nil && userData.OtpNumberVerifiedAt != nil {
+		log.Error().Any("payload", req).Msg("service::SendOtpNumberVerification - User already verified")
+		return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrUserAlreadyVerified))
+	}
+
+	key := fmt.Sprintf("%s:%s", constants.OTPNumberKey, userData.Username)
+
+	_, err = s.redisRepository.Get(ctx, key)
+	if err != nil {
+		if err == redis.Nil {
+			generateNewOtpNumber := utils.GenerateRandomOTP()
+
+			err := s.redisRepository.Set(ctx, key, generateNewOtpNumber, 2*time.Minute)
+			if err != nil {
+				log.Error().Err(err).Any("payload", req).Msg("service::SendOtpNumberVerification - Failed to set data redis")
+				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+			}
+
+			go func() {
+				err := s.externalNotification.SendNotification(context.Background(), req.Email, constants.RegisterTemplateName, map[string]string{
+					"full_name":  userData.FullName,
+					"otp_number": generateNewOtpNumber,
+				})
+				if err != nil {
+					log.Error().Err(err).Msg("service::SendOtpNumberVerification - Failed to send notification in background")
+				}
+			}()
+
+			return &dto.SendOtpNumberVerificationResponse{
+				Otp: "OK",
+			}, nil
+		}
+
+		log.Error().Err(err).Any("payload", req).Msg("service::SendOtpNumberVerification - Failed to get data redis")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	log.Warn().Any("payload", req).Msg("service::SendOtpNumberVerification - Too many requests for the same email, please wait until the current OTP expires")
+	return nil, err_msg.NewCustomErrors(fiber.StatusTooManyRequests, err_msg.WithMessage(constants.ErrTooManyReuqestOTPNumber))
 }

@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis/ports"
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog/log"
 )
 
-var _ RedisRepository = &redisRepository{}
+var _ ports.RedisRepository = &redisRepository{}
 
 type redisRepository struct {
 	db *redis.Client

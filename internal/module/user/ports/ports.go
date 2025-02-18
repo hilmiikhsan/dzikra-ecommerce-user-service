@@ -18,4 +18,5 @@ type UserRepository interface {
 type UserService interface {
 	Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error)
 	Verification(ctx context.Context, req *dto.VerificationRequest) (*dto.VerificationResponse, error)
+	SendOtpNumberVerification(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.SendOtpNumberVerificationResponse, error)
 }

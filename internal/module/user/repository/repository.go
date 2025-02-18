@@ -15,19 +15,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var _ ports.UserRepository = &userRepository{}
+var _ ports.UserRepository = &UserRepository{}
 
-type userRepository struct {
+type UserRepository struct {
 	db *sqlx.DB
 }
 
-func NewUserRepository(db *sqlx.DB) *userRepository {
-	return &userRepository{
+func NewUserRepository(db *sqlx.DB) *UserRepository {
+	return &UserRepository{
 		db: db,
 	}
 }
 
-func (r *userRepository) InsertNewUser(ctx context.Context, tx *sql.Tx, data *entity.User) (*entity.User, error) {
+func (r *UserRepository) InsertNewUser(ctx context.Context, tx *sql.Tx, data *entity.User) (*entity.User, error) {
 	var res = new(entity.User)
 
 	err := tx.QueryRowContext(ctx, r.db.Rebind(queryInsertNewUser),
@@ -65,7 +65,7 @@ func (r *userRepository) InsertNewUser(ctx context.Context, tx *sql.Tx, data *en
 	return res, nil
 }
 
-func (r *userRepository) FindUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+func (r *UserRepository) FindUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	var res = new(entity.User)
 
 	err := r.db.GetContext(ctx, res, r.db.Rebind(queryFindUserByEmail), email)
@@ -82,7 +82,7 @@ func (r *userRepository) FindUserByEmail(ctx context.Context, email string) (*en
 	return res, nil
 }
 
-func (r *userRepository) UpdateVerificationUserByEmail(ctx context.Context, email string) (time.Time, error) {
+func (r *UserRepository) UpdateVerificationUserByEmail(ctx context.Context, email string) (time.Time, error) {
 	var emailVerifiedAt time.Time
 
 	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryUpdateVerificationUserByEmail), email).Scan(&emailVerifiedAt)
