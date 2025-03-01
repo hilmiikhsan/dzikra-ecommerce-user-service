@@ -166,8 +166,10 @@ func (j *jwtHandler) ParseTokenString(ctx context.Context, tokenString, username
 }
 
 func (j *jwtHandler) ParseMiddlewareTokenString(ctx context.Context, tokenString string) (*CustomClaims, error) {
+	// define custom claims
 	claims := &CustomClaims{}
 
+	// Parse the JWT string and store the result in `claims`
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(config.Envs.Guard.JwtPrivateKey), nil
 	})
@@ -176,10 +178,26 @@ func (j *jwtHandler) ParseMiddlewareTokenString(ctx context.Context, tokenString
 		return nil, err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrTokenAlreadyExpired))
 	}
 
+	// Check if the token is valid
 	if !token.Valid {
 		log.Error().Msg("jwthandler::ParseMiddlewareTokenString - Invalid token")
 		return nil, err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrTokenAlreadyExpired))
 	}
 
+	// Check if the token is stored in Redis
+	key := fmt.Sprintf("%s:%s:%s", claims.Username, claims.SessionID, constants.AccessTokenType)
+	storedToken, err := j.db.Get(ctx, key)
+	if err != nil {
+		log.Error().Err(err).Msg("jwthandler::ParseMiddlewareTokenString - Token not found in Redis")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrTokenAlreadyExpired))
+	}
+
+	// Check if the token is match
+	if storedToken != tokenString {
+		log.Error().Msg("jwthandler::ParseMiddlewareTokenString - Token mismatch in Redis")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrTokenAlreadyExpired))
+	}
+
+	// If the token is valid, return the claims
 	return claims, nil
 }

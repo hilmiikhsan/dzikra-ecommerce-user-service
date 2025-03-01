@@ -12,9 +12,10 @@ import (
 
 type UserRepository interface {
 	InsertNewUser(ctx context.Context, tx *sql.Tx, data *entity.User) (*entity.User, error)
-	FindUserByEmail(ctx context.Context, email string) (*entity.User, error)
+	FindByEmail(ctx context.Context, email string) (*entity.User, error)
 	UpdateVerificationUserByEmail(ctx context.Context, email string) (time.Time, error)
 	UpdateUserLastLoginAt(ctx context.Context, tx *sql.Tx, userID string) error
+	FindByID(ctx context.Context, id string) (*entity.User, error)
 }
 
 type UserService interface {
@@ -23,4 +24,5 @@ type UserService interface {
 	SendOtpNumberVerification(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.SendOtpNumberVerificationResponse, error)
 	Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error)
 	Logout(ctx context.Context, accessToken string, locals *middleware.Locals) error
+	GetCurrentUser(ctx context.Context, locals *middleware.Locals) (*dto.GetCurrentUserResponse, error)
 }

@@ -138,3 +138,19 @@ func (h *userHandler) logout(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
 }
+
+func (h *userHandler) getCurrentUser(c *fiber.Ctx) error {
+	var (
+		ctx    = c.Context()
+		locals = middleware.GetLocals(c)
+	)
+
+	res, err := h.service.GetCurrentUser(ctx, locals)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getCurrentUser - Failed to get current user")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}

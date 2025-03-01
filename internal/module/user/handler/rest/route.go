@@ -8,4 +8,5 @@ func (h *userHandler) UserRoute(router fiber.Router) {
 	router.Post("/new-otp", h.sendOtpNumberVerification)
 	router.Post("/login", h.login)
 	router.Delete("/logout", h.middleware.UserBearer, h.logout)
+	router.Get("/current", h.middleware.UserBearer, h.getCurrentUser)
 }

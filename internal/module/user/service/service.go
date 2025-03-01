@@ -36,7 +36,7 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
-	userResult, err := s.userRepository.FindUserByEmail(ctx, req.Email)
+	userResult, err := s.userRepository.FindByEmail(ctx, req.Email)
 	if err != nil {
 		log.Error().Err(err).Any("payload", req).Msg("service::Register - Failed to find user by email")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
@@ -197,7 +197,7 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 }
 
 func (s *userService) Verification(ctx context.Context, req *dto.VerificationRequest) (*dto.VerificationResponse, error) {
-	userData, err := s.userRepository.FindUserByEmail(ctx, req.Email)
+	userData, err := s.userRepository.FindByEmail(ctx, req.Email)
 	if err != nil {
 		log.Error().Err(err).Any("payload", req).Msg("service::Verification - Failed to find user by email")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage("Failed to find user by email"))
@@ -288,7 +288,7 @@ func (s *userService) Verification(ctx context.Context, req *dto.VerificationReq
 }
 
 func (s *userService) SendOtpNumberVerification(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.SendOtpNumberVerificationResponse, error) {
-	userData, err := s.userRepository.FindUserByEmail(ctx, req.Email)
+	userData, err := s.userRepository.FindByEmail(ctx, req.Email)
 	if err != nil {
 		log.Error().Err(err).Any("payload", req).Msg("service::SendOtpNumberVerification - Failed to find user by email")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage("Failed to find user by email"))
@@ -345,7 +345,7 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	)
 
 	// find user by email
-	userResult, err := s.userRepository.FindUserByEmail(ctx, req.Email)
+	userResult, err := s.userRepository.FindByEmail(ctx, req.Email)
 	if err != nil {
 		if strings.Contains(err.Error(), constants.ErrEmailOrPasswordIsIncorrect) {
 			log.Error().Any("payload", req).Msg("service::Login - Email is incorrect")
@@ -505,4 +505,55 @@ func (s *userService) Logout(ctx context.Context, accessToken string, locals *mi
 	}
 
 	return nil
+}
+
+func (s *userService) GetCurrentUser(ctx context.Context, locals *middleware.Locals) (*dto.GetCurrentUserResponse, error) {
+	// define variable
+	var (
+		res = new(dto.GetCurrentUserResponse)
+	)
+
+	// find user by id
+	userResult, err := s.userRepository.FindByID(ctx, locals.UserID)
+	if err != nil {
+		log.Error().Err(err).Any("user_id", locals.UserID).Msg("service::GetCurrentUser - Failed to find user by id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get user profile
+	userProfileResult, err := s.userProfileRepository.FindByUserID(ctx, userResult.ID.String())
+	if err != nil {
+		log.Error().Err(err).Any("payload", userResult.ID.String()).Msg("service::GetCurrentUser - Failed to find user profile by user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get user role ids
+	userRoleIDs, err := s.userRoleRepository.FindByUserID(ctx, userResult.ID.String())
+	if err != nil {
+		log.Error().Err(err).Any("payload", userResult.ID.String()).Msg("service::GetCurrentUser - Failed to find user role by user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get user role permission
+	userRolePermissionResults, err := s.rolePermissionRepository.GetUserRolePermission(ctx, userRoleIDs)
+	if err != nil {
+		log.Error().Err(err).Any("payload", userRoleIDs).Msg("service::GetCurrentUser - Failed to get user role permission")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	userRoleMap := utils.MapUserRoleResponse(userRolePermissionResults)
+
+	// mapping get current user response data
+	res = &dto.GetCurrentUserResponse{
+		Email: userResult.Email,
+		EmailConfirmed: dto.EmailConfirmed{
+			IsConfirm: true,
+			CreatedAt: utils.FormatToWIB(*userResult.EmailVerifiedAt),
+		},
+		FullName:    userResult.FullName,
+		PhoneNumber: *userProfileResult.PhoneNumber,
+		UserRole:    userRoleMap,
+	}
+
+	// return response
+	return res, nil
 }

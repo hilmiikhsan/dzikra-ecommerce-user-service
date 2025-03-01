@@ -40,4 +40,17 @@ const (
 			last_login_at = NOW()
 		WHERE id = ?
 	`
+
+	queryFindUserByID = `
+		SELECT
+			id,
+			username,
+			password,
+			email,
+			full_name,
+			email_verified_at,
+			otp_number_verified_at
+		FROM users
+		WHERE id = ?
+	`
 )

@@ -78,3 +78,11 @@ type ApplicationPermissionDetail struct {
 	Name          string   `json:"name"`
 	Permissions   []string `json:"permissions"`
 }
+
+type GetCurrentUserResponse struct {
+	Email          string           `json:"email"`
+	EmailConfirmed EmailConfirmed   `json:"email_confirmed"`
+	FullName       string           `json:"full_name"`
+	PhoneNumber    string           `json:"phone_number"`
+	UserRole       []UserRoleDetail `json:"user_role"`
+}

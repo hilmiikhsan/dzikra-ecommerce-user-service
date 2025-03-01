@@ -65,7 +65,7 @@ func (r *userRepository) InsertNewUser(ctx context.Context, tx *sql.Tx, data *en
 	return res, nil
 }
 
-func (r *userRepository) FindUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+func (r *userRepository) FindByEmail(ctx context.Context, email string) (*entity.User, error) {
 	var res = new(entity.User)
 
 	err := r.db.GetContext(ctx, res, r.db.Rebind(queryFindUserByEmail), email)
@@ -102,4 +102,21 @@ func (r *userRepository) UpdateUserLastLoginAt(ctx context.Context, tx *sql.Tx, 
 	}
 
 	return nil
+}
+
+func (r *userRepository) FindByID(ctx context.Context, id string) (*entity.User, error) {
+	var res = new(entity.User)
+
+	err := r.db.GetContext(ctx, res, r.db.Rebind(queryFindUserByID), id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Any("id", id).Msg("repository::FindUserByID - ID not found")
+			return nil, nil
+		}
+
+		log.Error().Err(err).Any("id", id).Msg("repository::FindUserByID - Failed to find user by ID")
+		return nil, err
+	}
+
+	return res, nil
 }
