@@ -32,6 +32,10 @@ func (m *UserMiddleware) UserBearer(c *fiber.Ctx) error {
 	c.Locals("username", claims.Username)
 	c.Locals("email", claims.Email)
 	c.Locals("full_name", claims.FullName)
+	c.Locals("session_id", claims.SessionID)
+	c.Locals("device_id", claims.DeviceID)
+	c.Locals("device_type", claims.DeviceType)
+	c.Locals("fcm_token", claims.FcmToken)
 
 	// If the token is valid, pass the request to the next handler
 	return c.Next()

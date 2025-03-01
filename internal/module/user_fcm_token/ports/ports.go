@@ -9,4 +9,5 @@ import (
 
 type UserFCMTokenRepository interface {
 	InsertNewUserFCMToken(ctx context.Context, tx *sql.Tx, userFCMToken entity.UserFCMToken) error
+	DeleteUserFCMToken(ctx context.Context, userID string) error
 }

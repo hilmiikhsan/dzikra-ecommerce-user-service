@@ -38,3 +38,13 @@ func (r *userFcmTokenRepository) InsertNewUserFCMToken(ctx context.Context, tx *
 
 	return nil
 }
+
+func (R *userFcmTokenRepository) DeleteUserFCMToken(ctx context.Context, userID string) error {
+	_, err := R.db.ExecContext(ctx, R.db.Rebind(queryDeleteUserFCMToken), userID)
+	if err != nil {
+		log.Error().Err(err).Str("userID", userID).Msg("repository::DeleteUserFCMToken - Failed to delete user fcm token")
+		return err
+	}
+
+	return nil
+}

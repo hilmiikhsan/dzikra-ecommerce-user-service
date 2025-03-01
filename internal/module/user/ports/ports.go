@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/middleware"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/entity"
 )
@@ -21,4 +22,5 @@ type UserService interface {
 	Verification(ctx context.Context, req *dto.VerificationRequest) (*dto.VerificationResponse, error)
 	SendOtpNumberVerification(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.SendOtpNumberVerificationResponse, error)
 	Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error)
+	Logout(ctx context.Context, accessToken string, locals *middleware.Locals) error
 }

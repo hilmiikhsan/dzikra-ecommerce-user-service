@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/middleware"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 	user "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/entity"
 	userFcmToken "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_fcm_token/entity"
@@ -363,10 +364,14 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 
 	// generate token
 	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
-		UserID:   userResult.ID.String(),
-		Username: userResult.Username,
-		Email:    userResult.Email,
-		FullName: userResult.FullName,
+		UserID:     userResult.ID.String(),
+		Username:   userResult.Username,
+		Email:      userResult.Email,
+		FullName:   userResult.FullName,
+		SessionID:  utils.GenerateSessionUUID(),
+		DeviceID:   req.DeviceID,
+		DeviceType: req.DeviceType,
+		FcmToken:   req.FcmToken,
 	})
 	if err != nil {
 		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to generate token string")
@@ -466,4 +471,38 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 
 	// return response
 	return res, nil
+}
+
+func (s *userService) Logout(ctx context.Context, accessToken string, locals *middleware.Locals) error {
+	// parse token
+	_, err := s.jwt.ParseTokenString(ctx, accessToken, locals.Username, locals.SessionID, constants.AccessTokenType)
+	if err != nil {
+		log.Error().Err(err).Any("access_token", accessToken).Msg("service::Logout - Failed to parse access token")
+		return err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrInvalidAccessToken))
+	}
+
+	// delete user fcm token
+	err = s.userFcmTokenRepository.DeleteUserFCMToken(ctx, locals.UserID)
+	if err != nil {
+		log.Error().Err(err).Any("access_token", accessToken).Msg("service::Logout - Failed to delete user fcm token")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// delete access token from redis
+	userKey := fmt.Sprintf("%s:%s:%s", locals.Username, locals.SessionID, constants.AccessTokenType)
+	err = s.redisRepository.Del(ctx, userKey)
+	if err != nil {
+		log.Error().Err(err).Any("access_token", accessToken).Msg("service::Logout - Failed to delete access token from Redis")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// delete refresh token from redis
+	refreshTokenKey := fmt.Sprintf("%s:%s:%s", locals.Username, locals.SessionID, constants.RefreshTokenType)
+	err = s.redisRepository.Del(ctx, refreshTokenKey)
+	if err != nil {
+		log.Error().Err(err).Any("access_token", accessToken).Msg("service::Logout - Failed to delete refresh token from Redis")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
 }

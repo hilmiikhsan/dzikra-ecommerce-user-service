@@ -25,3 +25,7 @@ func GenerateUUIDv7String() (uuid.UUID, error) {
 
 	return parsedUUID, nil
 }
+
+func GenerateSessionUUID() string {
+	return uuid.New().String()
+}

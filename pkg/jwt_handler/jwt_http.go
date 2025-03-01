@@ -27,6 +27,7 @@ func NewJWT(db redisPorts.RedisRepository) *jwtHandler {
 }
 
 func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClaimsPayload) (*GenerateTokenResponse, error) {
+	// Hapus token lama berdasarkan pola lama (jika masih diperlukan, namun pada multiple session sebaiknya dihapus berdasarkan sessionID tertentu)
 	for _, tokenType := range []string{constants.AccessTokenType, constants.RefreshTokenType} {
 		key := fmt.Sprintf("%s:%s", payload.Username, tokenType)
 		err := j.db.Del(ctx, key)
@@ -38,33 +39,39 @@ func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClai
 
 	now := time.Now().UTC()
 
+	// Parse access token duration from config
 	accessTokenDuration, err := time.ParseDuration(config.Envs.Guard.JwtTokenExpiration)
 	if err != nil {
 		log.Error().Err(err).Msg("jwthandler::GenerateTokenString - Error while parsing access token duration")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
+	// Parse refresh token duration from config
 	refreshTokenDuration, err := time.ParseDuration(config.Envs.Guard.JwtRefreshTokenExpiration)
 	if err != nil {
 		log.Error().Err(err).Msg("jwthandler::GenerateTokenString - Error while parsing refresh token duration")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
+	// Helper function untuk membuat token dengan claims, termasuk sessionID
 	createToken := func(tokenType string, duration time.Duration) (string, time.Time, error) {
-		expireTime := time.Now().Add(duration)
-
+		expireTime := now.Add(duration)
 		claims := CustomClaims{
-			UserID:    payload.UserID,
-			Username:  payload.Username,
-			Email:     payload.Email,
-			FullName:  payload.FullName,
-			CreatedAt: now,
+			UserID:     payload.UserID,
+			Username:   payload.Username,
+			Email:      payload.Email,
+			FullName:   payload.FullName,
+			SessionID:  payload.SessionID,
+			DeviceID:   payload.DeviceID,
+			DeviceType: payload.DeviceType,
+			FcmToken:   payload.FcmToken,
+			CreatedAt:  now,
 			RegisteredClaims: jwt.RegisteredClaims{
 				Subject:   "user",
 				Issuer:    config.Envs.App.Name,
 				ExpiresAt: jwt.NewNumericDate(expireTime),
-				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-				NotBefore: jwt.NewNumericDate(time.Now().UTC()),
+				IssuedAt:  jwt.NewNumericDate(now),
+				NotBefore: jwt.NewNumericDate(now),
 			},
 		}
 
@@ -78,49 +85,51 @@ func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClai
 		return tokenString, expireTime, nil
 	}
 
-	// Generate access token
+	// Generate access token use sessionID
 	accessToken, accessExpireTime, err := createToken(constants.AccessTokenType, accessTokenDuration)
 	if err != nil {
 		log.Error().Err(err).Msg("jwthandler::GenerateTokenString - Error while generating access token")
 		return nil, err
 	}
 
-	// Save access token to Redis
-	accessKey := fmt.Sprintf("%s:%s", payload.Username, constants.AccessTokenType)
-	err = j.db.Set(ctx, accessKey, accessToken, time.Until(accessExpireTime))
+	// Save access token to Redis with unique key based on username and sessionID
+	accessTokenKey := fmt.Sprintf("%s:%s:%s", payload.Username, payload.SessionID, constants.AccessTokenType)
+	err = j.db.Set(ctx, accessTokenKey, accessToken, time.Until(accessExpireTime))
 	if err != nil {
 		log.Error().Err(err).Msg("jwthandler::GenerateTokenString - Error while saving access token to Redis")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
-	// Generate refresh token
+	// Generate refresh token use sessionID
 	refreshToken, refreshExpireTime, err := createToken(constants.RefreshTokenType, refreshTokenDuration)
 	if err != nil {
 		log.Error().Err(err).Msg("jwthandler::GenerateTokenString - Error while generating refresh token")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
-	// Save refresh token to Redis
-	refreshKey := fmt.Sprintf("%s:%s", payload.Username, constants.RefreshTokenType)
-	err = j.db.Set(ctx, refreshKey, refreshToken, time.Until(refreshExpireTime))
+	// Save refresh token to Redis with unique key based on sessionID
+	refreshTokenKey := fmt.Sprintf("%s:%s:%s", payload.Username, payload.SessionID, constants.RefreshTokenType)
+	err = j.db.Set(ctx, refreshTokenKey, refreshToken, time.Until(refreshExpireTime))
 	if err != nil {
 		log.Error().Err(err).Msg("jwthandler::GenerateTokenString - Error while saving refresh token to Redis")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
+	// Return the response
 	return &GenerateTokenResponse{
 		AccessToken:           accessToken,
 		RefreshToken:          refreshToken,
 		TokenExpiredAt:        accessExpireTime,
 		RefreshTokenExpiredAt: refreshExpireTime,
 		CreatedAt:             now,
+		SessionID:             payload.SessionID,
 	}, nil
 }
 
-func (j *jwtHandler) ParseTokenString(ctx context.Context, tokenString, username, tokenType string) (*CustomClaims, error) {
+func (j *jwtHandler) ParseTokenString(ctx context.Context, tokenString, username, sessionID, tokenType string) (*CustomClaims, error) {
 	claims := &CustomClaims{}
 
-	key := fmt.Sprintf("%s:%s", username, tokenType)
+	key := fmt.Sprintf("%s:%s:%s", username, sessionID, tokenType)
 
 	storedToken, err := j.db.Get(ctx, key)
 	if err != nil {

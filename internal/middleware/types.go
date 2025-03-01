@@ -6,15 +6,19 @@ import (
 )
 
 type Locals struct {
-	UserID   int
-	Username string
-	Email    string
-	FullName string
+	UserID     string
+	Username   string
+	Email      string
+	FullName   string
+	SessionID  string
+	DeviceID   string
+	DeviceType string
+	FcmToken   string
 }
 
 func GetLocals(c *fiber.Ctx) *Locals {
 	var l = Locals{}
-	UserID, ok := c.Locals("user_id").(int)
+	UserID, ok := c.Locals("user_id").(string)
 	if ok {
 		l.UserID = UserID
 	} else {
@@ -42,10 +46,38 @@ func GetLocals(c *fiber.Ctx) *Locals {
 		log.Warn().Msg("middleware::Locals-GetLocals failed to get full_name from locals")
 	}
 
+	sessionID, ok := c.Locals("session_id").(string)
+	if ok {
+		l.SessionID = sessionID
+	} else {
+		log.Warn().Msg("middleware::Locals-GetLocals failed to get session_id from locals")
+	}
+
+	deviceID, ok := c.Locals("device_id").(string)
+	if ok {
+		l.DeviceID = deviceID
+	} else {
+		log.Warn().Msg("middleware::Locals-GetLocals failed to get device_id from locals")
+	}
+
+	deviceType, ok := c.Locals("device_type").(string)
+	if ok {
+		l.DeviceType = deviceType
+	} else {
+		log.Warn().Msg("middleware::Locals-GetLocals failed to get device_type from locals")
+	}
+
+	fcmToken, ok := c.Locals("fcm_token").(string)
+	if ok {
+		l.FcmToken = fcmToken
+	} else {
+		log.Warn().Msg("middleware::Locals-GetLocals failed to get fcm_token from locals")
+	}
+
 	return &l
 }
 
-func (l *Locals) GetUserID() int {
+func (l *Locals) GetUserID() string {
 	return l.UserID
 }
 
@@ -59,4 +91,20 @@ func (l *Locals) GetEmail() string {
 
 func (l *Locals) GetFullName() string {
 	return l.FullName
+}
+
+func (l *Locals) GetSessionID() string {
+	return l.SessionID
+}
+
+func (l *Locals) GetDeviceID() string {
+	return l.DeviceID
+}
+
+func (l *Locals) GetDeviceType() string {
+	return l.DeviceType
+}
+
+func (l *Locals) GetFcmToken() string {
+	return l.FcmToken
 }

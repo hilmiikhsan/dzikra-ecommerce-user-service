@@ -11,4 +11,9 @@ const (
 			fcm_token
 		) VALUES (?, ?, ?, ?, ?)
 	`
+
+	queryDeleteUserFCMToken = `
+		DELETE FROM user_fcm_tokens
+		WHERE user_id = ?
+	`
 )
