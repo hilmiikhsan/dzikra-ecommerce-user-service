@@ -15,7 +15,15 @@ func (s *Seed) deleteAll() {
 	}
 	defer rollbackOrCommit(tx, &err)
 
-	tables := []string{"permissions", "roles"}
+	tables := []string{
+		"role_permissions",
+		"applications",
+		"application_permissions",
+		"user_profiles",
+		"user_roles",
+		"permissions",
+		"roles",
+	}
 	for _, table := range tables {
 		query := `DELETE FROM ` + table
 		_, err = tx.Exec(query)

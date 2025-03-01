@@ -7,47 +7,18 @@ import (
 	"time"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
-	externalNotification "github.com/Digitalkeun-Creative/be-dzikra-user-service/external/notification"
-	redisPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis/ports"
-	rolePorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/ports"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 	user "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/entity"
-	userPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/ports"
+	userFcmToken "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_fcm_token/entity"
 	userProfile "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_profile/entity"
-	userProfilePorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_profile/ports"
 	userRole "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_role/entity"
-	userRolePorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_role/ports"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/err_msg"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/jwt_handler"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/utils"
 	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
-	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
-
-var _ userPorts.UserService = &userService{}
-
-type userService struct {
-	db                    *sqlx.DB
-	userRepository        userPorts.UserRepository
-	roleRepository        rolePorts.RoleRepository
-	userRoleRepository    userRolePorts.UserRoleRepository
-	userProfileRepository userProfilePorts.UserProfileRepository
-	redisRepository       redisPorts.RedisRepository
-	externalNotification  externalNotification.ExternalNotification
-}
-
-func NewUserService(db *sqlx.DB, userRepository userPorts.UserRepository, roleRepository rolePorts.RoleRepository, userRoleRepository userRolePorts.UserRoleRepository, userProfileRepository userProfilePorts.UserProfileRepository, redisRepository redisPorts.RedisRepository, externalNotification externalNotification.ExternalNotification) *userService {
-	return &userService{
-		db:                    db,
-		userRepository:        userRepository,
-		roleRepository:        roleRepository,
-		userRoleRepository:    userRoleRepository,
-		userProfileRepository: userProfileRepository,
-		redisRepository:       redisRepository,
-		externalNotification:  externalNotification,
-	}
-}
 
 func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error) {
 	hashedPassword, err := utils.HashPassword(req.Password)
@@ -364,4 +335,135 @@ func (s *userService) SendOtpNumberVerification(ctx context.Context, req *dto.Se
 
 	log.Warn().Any("payload", req).Msg("service::SendOtpNumberVerification - Too many requests for the same email, please wait until the current OTP expires")
 	return nil, err_msg.NewCustomErrors(fiber.StatusTooManyRequests, err_msg.WithMessage(constants.ErrTooManyReuqestOTPNumber))
+}
+
+func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
+	// define variable
+	var (
+		res = new(dto.LoginResponse)
+	)
+
+	// find user by email
+	userResult, err := s.userRepository.FindUserByEmail(ctx, req.Email)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrEmailOrPasswordIsIncorrect) {
+			log.Error().Any("payload", req).Msg("service::Login - Email is incorrect")
+			return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrEmailOrPasswordIsIncorrect))
+		}
+
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to find user by email")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check password
+	if !utils.ComparePassword(userResult.Password, req.Password) {
+		log.Error().Any("payload", req).Msg("service::Login - Password is incorrect")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrEmailOrPasswordIsIncorrect))
+	}
+
+	// generate token
+	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
+		UserID:   userResult.ID.String(),
+		Username: userResult.Username,
+		Email:    userResult.Email,
+		FullName: userResult.FullName,
+	})
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to generate token string")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get user profile
+	userProfileResult, err := s.userProfileRepository.FindByUserID(ctx, userResult.ID.String())
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to find user profile by user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get user role ids
+	userRoleIDs, err := s.userRoleRepository.FindByUserID(ctx, userResult.ID.String())
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to find user role by user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get user role permission
+	userRolePermissionResults, err := s.rolePermissionRepository.GetUserRolePermission(ctx, userRoleIDs)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to get user role permission")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	userRoleMap := utils.MapUserRoleResponse(userRolePermissionResults)
+
+	// Begin transaction
+	tx, err := s.db.Begin()
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to begin transaction")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				log.Error().Err(rollbackErr).Any("payload", req).Msg("service::Login - Failed to rollback transaction")
+			}
+		}
+	}()
+
+	// Update last login at
+	err = s.userRepository.UpdateUserLastLoginAt(ctx, tx, userResult.ID.String())
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to update last login at")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// generate UUID V7
+	userFcmTokenID, err := utils.GenerateUUIDv7String()
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to generate UUID V7")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// insert user fcm token
+	err = s.userFcmTokenRepository.InsertNewUserFCMToken(ctx, tx, userFcmToken.UserFCMToken{
+		ID:         userFcmTokenID,
+		UserID:     userResult.ID,
+		DeviceID:   req.DeviceID,
+		DeviceType: strings.ToUpper(req.DeviceType),
+		FcmToken:   req.FcmToken,
+	})
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to insert new user fcm token")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// mapping login response data
+	res = &dto.LoginResponse{
+		Email: req.Email,
+		EmailConfirmed: dto.EmailConfirmed{
+			IsConfirm: true,
+			CreatedAt: utils.FormatToWIB(*userResult.EmailVerifiedAt),
+		},
+		FullName:    userResult.FullName,
+		PhoneNumber: *userProfileResult.PhoneNumber,
+		Token: dto.TokenDetail{
+			Token:     result.AccessToken,
+			ExpiredAt: utils.FormatToWIB(result.TokenExpiredAt),
+			CreatedAt: utils.FormatToWIB(result.CreatedAt),
+			RefreshToken: dto.RefreshTokenDetail{
+				RefreshToken: result.RefreshToken,
+				ExpiredAt:    utils.FormatToWIB(result.RefreshTokenExpiredAt),
+				CreatedAt:    utils.FormatToWIB(result.CreatedAt),
+			},
+		},
+		UserRole: userRoleMap,
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to commit transaction")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// return response
+	return res, nil
 }

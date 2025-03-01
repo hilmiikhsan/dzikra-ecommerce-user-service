@@ -16,6 +16,7 @@ const (
 		SELECT
 			id,
 			username,
+			password,
 			email,
 			full_name,
 			email_verified_at,
@@ -31,5 +32,12 @@ const (
 			otp_number_verified_at = NOW()
 		WHERE email = ?
 		RETURNING email_verified_at
+	`
+
+	queryUpdateUserLastLoginAt = `
+		UPDATE users
+		SET
+			last_login_at = NOW()
+		WHERE id = ?
 	`
 )

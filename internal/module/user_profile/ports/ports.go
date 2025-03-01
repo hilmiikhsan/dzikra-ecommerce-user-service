@@ -9,4 +9,5 @@ import (
 
 type UserProfileRepository interface {
 	InsertNewUserProfile(ctx context.Context, tx *sql.Tx, data *entity.UserProfile) error
+	FindByUserID(ctx context.Context, userID string) (*entity.UserProfile, error)
 }

@@ -35,3 +35,20 @@ func (r *userRoleRepository) InsertNewUserRole(ctx context.Context, tx *sql.Tx, 
 
 	return nil
 }
+
+func (r *userRoleRepository) FindByUserID(ctx context.Context, userID string) ([]string, error) {
+	var res []entity.UserRole
+
+	err := r.db.SelectContext(ctx, &res, r.db.Rebind(queryFindByUserID), userID)
+	if err != nil {
+		log.Error().Err(err).Str("userID", userID).Msg("repository::FindByUserID - Failed to find user role by user ID")
+		return nil, err
+	}
+
+	var roleIDs []string
+	for _, role := range res {
+		roleIDs = append(roleIDs, role.RoleID.String())
+	}
+
+	return roleIDs, nil
+}

@@ -5,10 +5,13 @@ import (
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/adapter"
 	redisRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis"
 	roleRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/repository"
+	rolePermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/repository"
 	userRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/repository"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/service"
+	userFcmTokenRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_fcm_token/repository"
 	userProfileRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_profile/repository"
 	userRoleRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_role/repository"
+	jwtHandler "github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/jwt_handler"
 )
 
 func NewUserHandler() *userHandler {
@@ -24,7 +27,7 @@ func NewUserHandler() *userHandler {
 	redisRepository := redisRepository.NewRedisRepository(adapter.Adapters.DzikraRedis)
 
 	// jwt
-	// jwt := jwtHandler.NewJWT(redisRepository)
+	jwt := jwtHandler.NewJWT(redisRepository)
 
 	// middleware
 	// middlewareHandler := middleware.NewAuthMiddleware(jwt)
@@ -34,6 +37,8 @@ func NewUserHandler() *userHandler {
 	roleRepository := roleRepository.NewRoleRepository(adapter.Adapters.DzikraPostgres)
 	userRoleRepository := userRoleRepository.NewUserRoleRepository(adapter.Adapters.DzikraPostgres)
 	userProfileRepository := userProfileRepository.NewUserProfileRepository(adapter.Adapters.DzikraPostgres)
+	rolePermissionRepository := rolePermissionRepository.NewRolePermissionRepository(adapter.Adapters.DzikraPostgres)
+	userFcmTokenRepository := userFcmTokenRepository.NewUserFcmTokenRepository(adapter.Adapters.DzikraPostgres)
 
 	// service
 	userService := service.NewUserService(
@@ -44,6 +49,9 @@ func NewUserHandler() *userHandler {
 		userProfileRepository,
 		redisRepository,
 		externalNotification,
+		jwt,
+		rolePermissionRepository,
+		userFcmTokenRepository,
 	)
 
 	// handler

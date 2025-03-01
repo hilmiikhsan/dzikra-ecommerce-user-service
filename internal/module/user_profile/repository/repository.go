@@ -53,3 +53,20 @@ func (r *userProfileRepository) InsertNewUserProfile(ctx context.Context, tx *sq
 
 	return nil
 }
+
+func (r *userProfileRepository) FindByUserID(ctx context.Context, userID string) (*entity.UserProfile, error) {
+	var res = new(entity.UserProfile)
+
+	err := r.db.GetContext(ctx, res, r.db.Rebind(queryFindByUserID), userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Str("userID", userID).Msg("repository::FindByUserID - User profile not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrUserProfileNotFound))
+		}
+
+		log.Error().Err(err).Str("userID", userID).Msg("repository::FindByUserID - Failed to find user profile by user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return res, nil
+}

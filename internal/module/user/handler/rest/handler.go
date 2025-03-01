@@ -96,3 +96,30 @@ func (h *userHandler) sendOtpNumberVerification(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
+
+func (h *userHandler) login(c *fiber.Ctx) error {
+	var (
+		req = new(dto.LoginRequest)
+		ctx = c.Context()
+	)
+
+	if err := c.BodyParser(req); err != nil {
+		log.Warn().Err(err).Msg("handler::login - Failed to parse request body")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err))
+	}
+
+	if err := h.validator.Validate(req); err != nil {
+		log.Warn().Err(err).Msg("handler::login - Invalid request body")
+		code, errs := err_msg.Errors(err, req)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	res, err := h.service.Login(ctx, req)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("handler::login - Failed to login user")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}

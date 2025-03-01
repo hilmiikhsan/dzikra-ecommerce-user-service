@@ -15,19 +15,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var _ ports.UserRepository = &UserRepository{}
+var _ ports.UserRepository = &userRepository{}
 
-type UserRepository struct {
+type userRepository struct {
 	db *sqlx.DB
 }
 
-func NewUserRepository(db *sqlx.DB) *UserRepository {
-	return &UserRepository{
+func NewUserRepository(db *sqlx.DB) *userRepository {
+	return &userRepository{
 		db: db,
 	}
 }
 
-func (r *UserRepository) InsertNewUser(ctx context.Context, tx *sql.Tx, data *entity.User) (*entity.User, error) {
+func (r *userRepository) InsertNewUser(ctx context.Context, tx *sql.Tx, data *entity.User) (*entity.User, error) {
 	var res = new(entity.User)
 
 	err := tx.QueryRowContext(ctx, r.db.Rebind(queryInsertNewUser),
@@ -65,7 +65,7 @@ func (r *UserRepository) InsertNewUser(ctx context.Context, tx *sql.Tx, data *en
 	return res, nil
 }
 
-func (r *UserRepository) FindUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+func (r *userRepository) FindUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	var res = new(entity.User)
 
 	err := r.db.GetContext(ctx, res, r.db.Rebind(queryFindUserByEmail), email)
@@ -82,7 +82,7 @@ func (r *UserRepository) FindUserByEmail(ctx context.Context, email string) (*en
 	return res, nil
 }
 
-func (r *UserRepository) UpdateVerificationUserByEmail(ctx context.Context, email string) (time.Time, error) {
+func (r *userRepository) UpdateVerificationUserByEmail(ctx context.Context, email string) (time.Time, error) {
 	var emailVerifiedAt time.Time
 
 	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryUpdateVerificationUserByEmail), email).Scan(&emailVerifiedAt)
@@ -92,4 +92,14 @@ func (r *UserRepository) UpdateVerificationUserByEmail(ctx context.Context, emai
 	}
 
 	return emailVerifiedAt, nil
+}
+
+func (r *userRepository) UpdateUserLastLoginAt(ctx context.Context, tx *sql.Tx, userID string) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(queryUpdateUserLastLoginAt), userID)
+	if err != nil {
+		log.Error().Err(err).Any("user_id", userID).Msg("repository::UpdateUserLastLoginAt - Failed to update user last login at")
+		return err
+	}
+
+	return nil
 }

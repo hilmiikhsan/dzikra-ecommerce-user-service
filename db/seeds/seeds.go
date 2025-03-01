@@ -29,16 +29,31 @@ func (s *Seed) run(table string, total int) {
 		s.permissionEcommerceSeed()
 	case "permissions-web":
 		s.permissionWebSeed()
+	case "permissions-pos":
+		s.permissionPosSeed()
 	case "permissions-all":
 		s.permissionAllSeed()
 	case "role-permissions":
 		s.rolePermissionsSeed()
+	case "applications":
+		s.applicationSeed()
+	case "application-permissions-ecommerce":
+		s.applicationPermissionEcommerceSeed()
+	case "application-permissions-web":
+		s.applicationPermissionWebSeed()
+	case "application-permissions-pos":
+		s.applicationPermissionPOSSeed()
 	case "all":
 		s.rolesSeed()
 		s.permissionEcommerceSeed()
 		s.permissionWebSeed()
+		s.permissionPosSeed()
 		s.permissionAllSeed()
 		s.rolePermissionsSeed()
+		s.applicationSeed()
+		s.applicationPermissionEcommerceSeed()
+		s.applicationPermissionWebSeed()
+		s.applicationPermissionPOSSeed()
 	case "delete-all":
 		s.deleteAll()
 	default:
