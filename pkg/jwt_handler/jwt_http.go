@@ -201,3 +201,22 @@ func (j *jwtHandler) ParseMiddlewareTokenString(ctx context.Context, tokenString
 	// If the token is valid, return the claims
 	return claims, nil
 }
+
+func (j *jwtHandler) ParseMiddlewareRefreshTokenString(ctx context.Context, refreshTokenString string) (*CustomClaims, error) {
+	claims := &CustomClaims{}
+
+	token, err := jwt.ParseWithClaims(refreshTokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Envs.Guard.JwtPrivateKey), nil
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("jwthandler::ParseMiddlewareRefreshTokenString - Error while parsing token")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrTokenAlreadyExpired))
+	}
+
+	if !token.Valid {
+		log.Error().Msg("jwthandler::ParseMiddlewareRefreshTokenString - Invalid token")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrTokenAlreadyExpired))
+	}
+
+	return claims, nil
+}

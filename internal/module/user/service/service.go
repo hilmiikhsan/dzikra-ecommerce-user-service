@@ -338,10 +338,10 @@ func (s *userService) SendOtpNumberVerification(ctx context.Context, req *dto.Se
 	return nil, err_msg.NewCustomErrors(fiber.StatusTooManyRequests, err_msg.WithMessage(constants.ErrTooManyReuqestOTPNumber))
 }
 
-func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
+func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.AuthUserResponse, error) {
 	// define variable
 	var (
-		res = new(dto.LoginResponse)
+		res = new(dto.AuthUserResponse)
 	)
 
 	// find user by email
@@ -442,7 +442,7 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	}
 
 	// mapping login response data
-	res = &dto.LoginResponse{
+	res = &dto.AuthUserResponse{
 		Email: req.Email,
 		EmailConfirmed: dto.EmailConfirmed{
 			IsConfirm: true,
@@ -552,6 +552,90 @@ func (s *userService) GetCurrentUser(ctx context.Context, locals *middleware.Loc
 		FullName:    userResult.FullName,
 		PhoneNumber: *userProfileResult.PhoneNumber,
 		UserRole:    userRoleMap,
+	}
+
+	// return response
+	return res, nil
+}
+
+func (s *userService) RefreshToken(ctx context.Context, accessToken string, locals *middleware.Locals) (*dto.AuthUserResponse, error) {
+	// define variable
+	var (
+		res = new(dto.AuthUserResponse)
+	)
+
+	// parse token
+	claims, err := s.jwt.ParseTokenString(ctx, accessToken, locals.Username, locals.SessionID, constants.RefreshTokenType)
+	if err != nil {
+		log.Error().Err(err).Any("access_token", accessToken).Msg("service::RefreshToken - Failed to parse access token")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrInvalidAccessToken))
+	}
+
+	// generate new token
+	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
+		UserID:     claims.UserID,
+		Username:   claims.Username,
+		Email:      claims.Email,
+		FullName:   claims.FullName,
+		SessionID:  utils.GenerateSessionUUID(),
+		DeviceID:   claims.DeviceID,
+		DeviceType: claims.DeviceType,
+		FcmToken:   claims.FcmToken,
+	})
+	if err != nil {
+		log.Error().Err(err).Any("payload", claims).Msg("service::RefreshToken - Failed to generate token string")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// find user by id
+	userResult, err := s.userRepository.FindByID(ctx, claims.UserID)
+	if err != nil {
+		log.Error().Err(err).Any("user_id", claims.UserID).Msg("service::GetCurrentUser - Failed to find user by id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get user profile
+	userProfileResult, err := s.userProfileRepository.FindByUserID(ctx, userResult.ID.String())
+	if err != nil {
+		log.Error().Err(err).Any("payload", userResult.ID.String()).Msg("service::RefreshToken - Failed to find user profile by user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get user role ids
+	userRoleIDs, err := s.userRoleRepository.FindByUserID(ctx, userResult.ID.String())
+	if err != nil {
+		log.Error().Err(err).Any("payload", userResult.ID.String()).Msg("service::RefreshToken - Failed to find user role by user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get user role permission
+	userRolePermissionResults, err := s.rolePermissionRepository.GetUserRolePermission(ctx, userRoleIDs)
+	if err != nil {
+		log.Error().Err(err).Any("payload", userRoleIDs).Msg("service::RefreshToken - Failed to get user role permission")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	userRoleMap := utils.MapUserRoleResponse(userRolePermissionResults)
+
+	// mapping refresh token response data
+	res = &dto.AuthUserResponse{
+		Email: claims.Email,
+		EmailConfirmed: dto.EmailConfirmed{
+			IsConfirm: true,
+			CreatedAt: utils.FormatToWIB(*userResult.EmailVerifiedAt),
+		},
+		FullName:    userResult.FullName,
+		PhoneNumber: *userProfileResult.PhoneNumber,
+		Token: dto.TokenDetail{
+			Token:     result.AccessToken,
+			ExpiredAt: utils.FormatToWIB(result.TokenExpiredAt),
+			CreatedAt: utils.FormatToWIB(result.CreatedAt),
+			RefreshToken: dto.RefreshTokenDetail{
+				RefreshToken: result.RefreshToken,
+				ExpiredAt:    utils.FormatToWIB(result.RefreshTokenExpiredAt),
+				CreatedAt:    utils.FormatToWIB(result.CreatedAt),
+			},
+		},
+		UserRole: userRoleMap,
 	}
 
 	// return response

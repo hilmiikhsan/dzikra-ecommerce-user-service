@@ -46,7 +46,7 @@ type LoginRequest struct {
 	FcmToken   string `json:"fcm_token" validate:"required,max=255"`
 }
 
-type LoginResponse struct {
+type AuthUserResponse struct {
 	Email          string           `json:"email"`
 	EmailConfirmed EmailConfirmed   `json:"email_confirmed"`
 	FullName       string           `json:"full_name"`

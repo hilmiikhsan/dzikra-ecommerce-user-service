@@ -22,7 +22,8 @@ type UserService interface {
 	Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error)
 	Verification(ctx context.Context, req *dto.VerificationRequest) (*dto.VerificationResponse, error)
 	SendOtpNumberVerification(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.SendOtpNumberVerificationResponse, error)
-	Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error)
+	Login(ctx context.Context, req *dto.LoginRequest) (*dto.AuthUserResponse, error)
 	Logout(ctx context.Context, accessToken string, locals *middleware.Locals) error
 	GetCurrentUser(ctx context.Context, locals *middleware.Locals) (*dto.GetCurrentUserResponse, error)
+	RefreshToken(ctx context.Context, accessToken string, locals *middleware.Locals) (*dto.AuthUserResponse, error)
 }

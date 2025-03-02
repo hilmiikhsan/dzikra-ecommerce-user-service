@@ -154,3 +154,24 @@ func (h *userHandler) getCurrentUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
+
+func (h *userHandler) refreshToken(c *fiber.Ctx) error {
+	var (
+		ctx         = c.Context()
+		accessToken = c.Get(constants.HeaderAuthorization)
+		locals      = middleware.GetLocals(c)
+	)
+
+	if len(accessToken) > 7 {
+		accessToken = accessToken[7:]
+	}
+
+	res, err := h.service.RefreshToken(ctx, accessToken, locals)
+	if err != nil {
+		log.Error().Err(err).Any("access_token", accessToken).Msg("handler::refreshToken - Failed to refresh token")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}
