@@ -23,6 +23,7 @@ type Config struct {
 		LogLevel                string `env:"APP_LOG_LEVEL" env-default:"debug"`
 		LogFile                 string `env:"APP_LOG_FILE" env-default:"./logs/app.log"`
 		LogFileWs               string `env:"APP_LOG_FILE_WS" env-default:"./logs/ws.log"`
+		Domain                  string `env:"APP_DOMAIN" env-default:"localhost:9090"`
 		LocalStoragePublicPath  string `env:"LOCAL_STORAGE_PUBLIC_PATH" env-default:"./storage/public"`
 		LocalStoragePrivatePath string `env:"LOCAL_STORAGE_PRIVATE_PATH" env-default:"./storage/private"`
 	}
@@ -97,6 +98,7 @@ func (c *Configure) Initialize() {
 		Envs.App.LogLevel = utils.GetEnv("APP_LOG_LEVEL", Envs.App.LogLevel)
 		Envs.App.LogFile = utils.GetEnv("APP_LOG_FILE", Envs.App.LogFile)
 		Envs.App.LogFileWs = utils.GetEnv("APP_LOG_FILE_WS", Envs.App.LogFileWs)
+		Envs.App.Domain = utils.GetEnv("APP_DOMAIN", Envs.App.Domain)
 		Envs.App.LocalStoragePublicPath = utils.GetEnv("LOCAL_STORAGE_PUBLIC_PATH", Envs.App.LocalStoragePublicPath)
 		Envs.App.LocalStoragePrivatePath = utils.GetEnv("LOCAL_STORAGE_PRIVATE_PATH", Envs.App.LocalStoragePrivatePath)
 		Envs.DB.ConnectionTimeout = utils.GetIntEnv("DB_CONN_TIMEOUT", Envs.DB.ConnectionTimeout)

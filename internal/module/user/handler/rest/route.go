@@ -10,4 +10,5 @@ func (h *userHandler) UserRoute(router fiber.Router) {
 	router.Delete("/logout", h.middleware.UserBearer, h.logout)
 	router.Get("/current", h.middleware.UserBearer, h.getCurrentUser)
 	router.Patch("/refresh-token", h.middleware.UserRefreshBearer, h.refreshToken)
+	router.Post("/forgot-password", h.forgotPassword)
 }

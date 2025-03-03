@@ -26,4 +26,5 @@ type UserService interface {
 	Logout(ctx context.Context, accessToken string, locals *middleware.Locals) error
 	GetCurrentUser(ctx context.Context, locals *middleware.Locals) (*dto.GetCurrentUserResponse, error)
 	RefreshToken(ctx context.Context, accessToken string, locals *middleware.Locals) (*dto.AuthUserResponse, error)
+	ForgotPassword(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.ForgotPasswordResponse, error)
 }

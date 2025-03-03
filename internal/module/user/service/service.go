@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/config"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/middleware"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 	user "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/entity"
@@ -640,4 +642,65 @@ func (s *userService) RefreshToken(ctx context.Context, accessToken string, loca
 
 	// return response
 	return res, nil
+}
+
+func (s *userService) ForgotPassword(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.ForgotPasswordResponse, error) {
+	// declare variable
+	var (
+		res = new(dto.ForgotPasswordResponse)
+	)
+
+	// find user by email
+	userResult, err := s.userRepository.FindByEmail(ctx, req.Email)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::ForgotPassword - Failed to find user by email")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage("Failed to find user by email"))
+	}
+
+	// check user
+	if userResult == nil {
+		log.Error().Any("payload", req).Msg("service::ForgotPassword - User not found")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrEmailNotRegistered))
+	} else if userResult.EmailVerifiedAt == nil && userResult.OtpNumberVerifiedAt == nil {
+		log.Error().Any("payload", req).Msg("service::ForgotPassword - User already verified")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrEmailNotRegistered))
+	}
+
+	key := fmt.Sprintf("%s:%s", constants.ForgotPasswordKey, userResult.Email)
+
+	_, err = s.redisRepository.Get(ctx, key)
+	if err != nil {
+		if err == redis.Nil {
+			generateSessionID := utils.GenerateSessionUUID()
+			urlResetLink := fmt.Sprintf("%s/reset-password/%s", config.Envs.App.Domain, url.PathEscape(generateSessionID))
+
+			err := s.redisRepository.Set(ctx, key, generateSessionID, 2*time.Minute)
+			if err != nil {
+				log.Error().Err(err).Any("payload", req).Msg("service::ForgotPassword - Failed to set data redis")
+				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+			}
+
+			// Send notification in background
+			go func() {
+				err := s.externalNotification.SendNotification(context.Background(), req.Email, constants.ForgotPasswordTemplateName, map[string]string{
+					"full_name":      userResult.FullName,
+					"url_reset_link": urlResetLink,
+				})
+				if err != nil {
+					log.Error().Err(err).Msg("service::ForgotPassword - Failed to send notification in background")
+				}
+			}()
+
+			res.Email = req.Email
+			res.Sessions = generateSessionID
+
+			return res, nil
+		}
+
+		log.Error().Err(err).Any("payload", req).Msg("service::ForgotPassword - Failed to get data redis")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	log.Warn().Any("payload", req).Msg("service::ForgotPassword - Too many requests for the same email, please wait until the current OTP expires")
+	return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrTooManyReuqestOTPNumber))
 }

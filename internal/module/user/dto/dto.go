@@ -86,3 +86,8 @@ type GetCurrentUserResponse struct {
 	PhoneNumber    string           `json:"phone_number"`
 	UserRole       []UserRoleDetail `json:"user_role"`
 }
+
+type ForgotPasswordResponse struct {
+	Email    string `json:"email"`
+	Sessions string `json:"sessions"`
+}
