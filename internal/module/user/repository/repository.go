@@ -120,3 +120,13 @@ func (r *userRepository) FindByID(ctx context.Context, id string) (*entity.User,
 
 	return res, nil
 }
+
+func (r *userRepository) UpdatePasswordByEmail(ctx context.Context, email, password string) error {
+	_, err := r.db.ExecContext(ctx, r.db.Rebind(queryUpdatePasswordByEmail), password, email)
+	if err != nil {
+		log.Error().Err(err).Any("email", email).Msg("repository::UpdatePasswordByEmail - Failed to update password by email")
+		return err
+	}
+
+	return nil
+}

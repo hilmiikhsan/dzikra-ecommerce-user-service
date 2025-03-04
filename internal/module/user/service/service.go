@@ -666,15 +666,15 @@ func (s *userService) ForgotPassword(ctx context.Context, req *dto.SendOtpNumber
 		return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrEmailNotRegistered))
 	}
 
-	key := fmt.Sprintf("%s:%s", constants.ForgotPasswordKey, userResult.Email)
+	key := fmt.Sprintf("%s:%s", constants.ForgotPasswordKey, req.Email)
 
 	_, err = s.redisRepository.Get(ctx, key)
 	if err != nil {
 		if err == redis.Nil {
-			generateSessionID := utils.GenerateSessionUUID()
-			urlResetLink := fmt.Sprintf("%s/reset-password/%s", config.Envs.App.Domain, url.PathEscape(generateSessionID))
+			generateSessionToken := utils.GenerateSessionToken(userResult.Email)
+			urlResetLink := fmt.Sprintf("%s/reset-password/%s", config.Envs.App.Domain, url.PathEscape(generateSessionToken))
 
-			err := s.redisRepository.Set(ctx, key, generateSessionID, 2*time.Minute)
+			err := s.redisRepository.Set(ctx, key, generateSessionToken, 2*time.Minute)
 			if err != nil {
 				log.Error().Err(err).Any("payload", req).Msg("service::ForgotPassword - Failed to set data redis")
 				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
@@ -692,7 +692,7 @@ func (s *userService) ForgotPassword(ctx context.Context, req *dto.SendOtpNumber
 			}()
 
 			res.Email = req.Email
-			res.Sessions = generateSessionID
+			res.Sessions = generateSessionToken
 
 			return res, nil
 		}
@@ -701,6 +701,106 @@ func (s *userService) ForgotPassword(ctx context.Context, req *dto.SendOtpNumber
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
-	log.Warn().Any("payload", req).Msg("service::ForgotPassword - Too many requests for the same email, please wait until the current OTP expires")
+	log.Warn().Any("payload", req).Msg("service::ForgotPassword - Too many requests for the same email, please wait until the current Session Token expires")
 	return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrTooManyReuqestOTPNumber))
+}
+
+func (s *userService) ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error {
+	// find user by email
+	userResult, err := s.userRepository.FindByEmail(ctx, req.Email)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::ResetPassword - Failed to find user by email")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage("Failed to find user by email"))
+	}
+
+	// check user
+	if userResult == nil {
+		log.Error().Any("payload", req).Msg("service::ResetPassword - User not found")
+		return err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrEmailNotRegistered))
+	} else if userResult.EmailVerifiedAt == nil && userResult.OtpNumberVerifiedAt == nil {
+		log.Error().Any("payload", req).Msg("service::ResetPassword - User already verified")
+		return err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrEmailNotRegistered))
+	}
+
+	key := fmt.Sprintf("%s:%s", constants.ResetPasswordProgress, userResult.Email)
+	blockedKey := fmt.Sprintf("%s:%s", constants.OTPBlockedResetPasswordKey, userResult.Email)
+	attemptKey := fmt.Sprintf("%s:%s", constants.OTPAttemptResetPasswordKey, userResult.Email)
+
+	// Check if user is blocked
+	blockTTL, err := s.redisRepository.TTL(ctx, blockedKey)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::ResetPassword - Failed to check blocked status in Redis")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	if blockTTL > 0 {
+		return err_msg.NewCustomErrors(fiber.StatusTooManyRequests, err_msg.WithMessage(fmt.Sprintf("You are blocked. Please try again in %d seconds.", int(blockTTL.Seconds()))))
+	}
+
+	// get session token from redis
+	sessionToken, err := s.redisRepository.Get(ctx, key)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::ResetPassword - Failed to get data from Redis")
+		return err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrOTPNumberIsAlreadyExpired))
+	}
+
+	// validate session token
+	if sessionToken != req.SessionToken {
+		// Increment attempt count
+		attemptCount, err := s.redisRepository.Incr(ctx, attemptKey)
+		if err != nil {
+			log.Error().Err(err).Any("payload", req).Msg("service::ResetPassword - Failed to increment attempt count")
+			return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+
+		// Set TTL for attempts (e.g., 10 minutes)
+		_ = s.redisRepository.Expire(ctx, attemptKey, 10*time.Minute)
+
+		// Block user if attempts >= 3
+		if attemptCount >= 3 {
+			var blockDuration time.Duration
+			switch attemptCount {
+			case 3:
+				blockDuration = 1 * time.Minute
+			case 6:
+				blockDuration = 3 * time.Minute
+			default:
+				blockDuration = 5 * time.Minute
+			}
+
+			// Set blocked key with TTL
+			err = s.redisRepository.Set(ctx, blockedKey, "blocked", blockDuration)
+			if err != nil {
+				log.Error().Err(err).Any("payload", req).Msg("service::ResetPassword - Failed to set blocked status in Redis")
+				return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+			}
+
+			return err_msg.NewCustomErrors(fiber.StatusTooManyRequests, err_msg.WithMessage(fmt.Sprintf("You are blocked. Please try again in %d seconds.", int(blockDuration.Seconds()))))
+		}
+
+		// Return error for invalid OTP
+		return err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrInvalidOtpNumber))
+	}
+
+	// Hash password
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::ResetPassword - Failed to hash password")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// Update password by email
+	err = s.userRepository.UpdatePasswordByEmail(ctx, req.Email, hashedPassword)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::ResetPassword - Failed to update password by email")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// Delete keys from Redis
+	err = s.redisRepository.Del(ctx, key)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::ResetPassword - Failed to delete data redis")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
 }

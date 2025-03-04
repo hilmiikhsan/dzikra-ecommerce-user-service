@@ -16,6 +16,7 @@ type UserRepository interface {
 	UpdateVerificationUserByEmail(ctx context.Context, email string) (time.Time, error)
 	UpdateUserLastLoginAt(ctx context.Context, tx *sql.Tx, userID string) error
 	FindByID(ctx context.Context, id string) (*entity.User, error)
+	UpdatePasswordByEmail(ctx context.Context, email, password string) error
 }
 
 type UserService interface {
@@ -27,4 +28,5 @@ type UserService interface {
 	GetCurrentUser(ctx context.Context, locals *middleware.Locals) (*dto.GetCurrentUserResponse, error)
 	RefreshToken(ctx context.Context, accessToken string, locals *middleware.Locals) (*dto.AuthUserResponse, error)
 	ForgotPassword(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.ForgotPasswordResponse, error)
+	ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error
 }

@@ -53,4 +53,11 @@ const (
 		FROM users
 		WHERE id = ?
 	`
+
+	queryUpdatePasswordByEmail = `
+		UPDATE users
+		SET
+			password = ?
+		WHERE email = ?
+	`
 )
