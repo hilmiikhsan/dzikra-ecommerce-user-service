@@ -9,10 +9,12 @@ import (
 
 func SetupRoutes(app *fiber.App) {
 	var (
-		api = app.Group("/api/users")
+		userAPI       = app.Group("/api/users")
+		superadminAPI = app.Group("/api/superadmin")
 	)
 
-	rest.NewUserHandler().UserRoute(api)
+	rest.NewUserHandler().UserRoute(userAPI)
+	rest.NewSuperAdminHandler().SuperAdminRoute(superadminAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {

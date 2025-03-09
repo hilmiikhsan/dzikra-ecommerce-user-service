@@ -1,5 +1,6 @@
 package dto
 
+// User DTO
 type RegisterRequest struct {
 	FullName        string `json:"full_name" validate:"required,min=2,max=100"`
 	Username        string `json:"username" validate:"required,min=2,max=50"`
@@ -42,7 +43,7 @@ type LoginRequest struct {
 	Email      string `json:"email" validate:"required,email"`
 	Password   string `json:"password" validate:"required"`
 	DeviceID   string `json:"device_id" validate:"required,max=100"`
-	DeviceType string `json:"device_type" validate:"required,max=10"`
+	DeviceType string `json:"device_type" validate:"required,max=10,device_type"`
 	FcmToken   string `json:"fcm_token" validate:"required,max=255"`
 }
 

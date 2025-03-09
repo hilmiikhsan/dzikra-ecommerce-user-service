@@ -13,3 +13,7 @@ func (h *userHandler) UserRoute(router fiber.Router) {
 	router.Post("/forgot-password", h.forgotPassword)
 	router.Post("/reset-password", h.resetPassword)
 }
+
+func (h *superAdminHandler) SuperAdminRoute(router fiber.Router) {
+	router.Post("/roles/create", h.middleware.UserBearer, h.middleware.RBACMiddleware("create", "roles"), h.createRolePermission)
+}

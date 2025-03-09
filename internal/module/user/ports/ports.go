@@ -30,3 +30,7 @@ type UserService interface {
 	ForgotPassword(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.ForgotPasswordResponse, error)
 	ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error
 }
+
+type SuperAdminService interface {
+	CreateRolePermission(ctx context.Context, req *dto.CreateRolePermissionRequest) (*dto.CreateRolePermissionResponse, error)
+}

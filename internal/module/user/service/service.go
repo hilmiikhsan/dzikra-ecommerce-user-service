@@ -430,17 +430,39 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
-	// insert user fcm token
-	err = s.userFcmTokenRepository.InsertNewUserFCMToken(ctx, tx, userFcmToken.UserFCMToken{
-		ID:         userFcmTokenID,
-		UserID:     userResult.ID,
-		DeviceID:   req.DeviceID,
-		DeviceType: strings.ToUpper(req.DeviceType),
-		FcmToken:   req.FcmToken,
-	})
+	// check user fcm token detail
+	userFCMTokenResult, err := s.userFcmTokenRepository.FindUserFCMTokenDetail(ctx, req.DeviceID, strings.ToUpper(req.DeviceType), userResult.ID.String())
 	if err != nil {
-		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to insert new user fcm token")
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to find user fcm token detail")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if user fcm token detail is exist
+	if userFCMTokenResult != nil && userFCMTokenResult.FcmToken != req.FcmToken {
+		// update user fcm token
+		err = s.userFcmTokenRepository.UpdateUserFCMToken(ctx, tx, &userFcmToken.UserFCMToken{
+			FcmToken:   req.FcmToken,
+			DeviceID:   req.DeviceID,
+			DeviceType: strings.ToUpper(req.DeviceType),
+			UserID:     userResult.ID,
+		})
+		if err != nil {
+			log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to update user fcm token")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+	} else {
+		// insert user fcm token
+		err = s.userFcmTokenRepository.InsertNewUserFCMToken(ctx, tx, &userFcmToken.UserFCMToken{
+			ID:         userFcmTokenID,
+			UserID:     userResult.ID,
+			DeviceID:   req.DeviceID,
+			DeviceType: strings.ToUpper(req.DeviceType),
+			FcmToken:   req.FcmToken,
+		})
+		if err != nil {
+			log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to insert new user fcm token")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
 	}
 
 	// mapping login response data

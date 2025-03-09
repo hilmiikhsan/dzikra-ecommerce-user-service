@@ -52,3 +52,14 @@ func (r *userRoleRepository) FindByUserID(ctx context.Context, userID string) ([
 
 	return roleIDs, nil
 }
+
+func (r *userRoleRepository) FindPermissionsByUserID(ctx context.Context, userID string) ([]string, error) {
+	var permissions []string
+
+	if err := r.db.SelectContext(ctx, &permissions, r.db.Rebind(queryFindPermissionByUserID), userID); err != nil {
+		log.Error().Err(err).Msg("repository::FindPermissionsByUserID - error executing query")
+		return nil, err
+	}
+
+	return permissions, nil
+}

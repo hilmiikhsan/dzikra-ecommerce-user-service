@@ -72,6 +72,15 @@ func NewValidator() *Validator {
 	if err := v.RegisterValidation("google_token", isGoogleTokenValid); err != nil {
 		log.Fatal().Err(err).Msg("Error while registering google_token validator")
 	}
+	if err := v.RegisterValidation("role_permission_action", isValidRolePermissionAction); err != nil {
+		log.Fatal().Err(err).Msg("Error while registering role_permission_action validator")
+	}
+	if err := v.RegisterValidation("resource_permission_action", isValidResourcePermissionAction); err != nil {
+		log.Fatal().Err(err).Msg("Error while registering resource_permission_action validator")
+	}
+	if err := v.RegisterValidation("device_type", isValidDeviceType); err != nil {
+		log.Fatal().Err(err).Msg("Error while registering device_type validator")
+	}
 
 	validatorCustom.validator = v
 	// validatorCustom.trans = trans
@@ -176,4 +185,86 @@ func isGoogleTokenValid(fl validator.FieldLevel) bool {
 	}
 
 	return true
+}
+
+func isValidRolePermissionAction(fl validator.FieldLevel) bool {
+	allowedActions := []string{
+		"view_all",
+		"view_on",
+		"create",
+		"update",
+		"read",
+		"delete",
+		"use",
+	}
+
+	action := fl.Field().String()
+
+	for _, allowed := range allowedActions {
+		if action == allowed {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isValidResourcePermissionAction(fl validator.FieldLevel) bool {
+	allowedResources := []string{
+		"notification",
+		"read_notification",
+		"voucher",
+		"users",
+		"subcategory",
+		"category",
+		"product",
+		"roles",
+		"permissions",
+		"banner",
+		"expenses",
+		"order",
+		"dashboard_ecommerce",
+		"product_content",
+		"article",
+		"faq",
+		"category_article",
+		"dashboard",
+		"profile",
+		"address",
+		"recipe",
+		"product_pos",
+		"expenses_pos",
+		"ingredient",
+		"dashboard_pos",
+		"product_category_pos",
+		"member",
+		"transaction_history_pos",
+	}
+
+	resource := fl.Field().String()
+
+	for _, allowed := range allowedResources {
+		if resource == allowed {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isValidDeviceType(fl validator.FieldLevel) bool {
+	allowedDeviceType := []string{
+		"android",
+		"ios",
+	}
+
+	deviceType := fl.Field().String()
+
+	for _, allowed := range allowedDeviceType {
+		if strings.EqualFold(deviceType, allowed) {
+			return true
+		}
+	}
+
+	return false
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/ports"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 )
 
 var _ ports.RolePermissionRepository = &rolePermissionRepository{}
@@ -31,6 +32,7 @@ func (r *rolePermissionRepository) GetUserRolePermission(ctx context.Context, ro
 
 	err = r.db.SelectContext(ctx, &res, query, args...)
 	if err != nil {
+		log.Error().Err(err).Any("roleIDs", roleIDs).Msg("repository::GetUserRolePermission - Failed to get user role permission")
 		return nil, err
 	}
 

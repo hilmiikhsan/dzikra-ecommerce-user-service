@@ -184,6 +184,15 @@ func errorValidationHandler[T any](err error, payload *T) (int, map[string][]str
 		case "google_token":
 			message = fmt.Sprintf("%s is not a valid Google token.", fieldInMsg)
 			// message = fmt.Sprintf("%s bukan token Google yang valid.", fieldInMsg)
+		case "role_permission_action":
+			message = fmt.Sprintf("%s is not a valid role permission action.", fieldInMsg)
+			// message = fmt.Sprintf("%s bukan aksi peran yang valid.", fieldInMsg)
+		case "resource_permission_action":
+			message = fmt.Sprintf("%s is not a valid resource permission action.", fieldInMsg)
+			// message = fmt.Sprintf("%s bukan aksi izin sumber daya yang valid.", fieldInMsg)
+		case "device_type":
+			message = fmt.Sprintf("%s is not a valid device type.", fieldInMsg)
+			// message = fmt.Sprintf("%s bukan tipe perangkat yang valid.", fieldInMsg)
 		}
 
 		errorMessages[field] = append(errorMessages[field], message)

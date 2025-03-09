@@ -1,0 +1,127 @@
+package service
+
+import (
+	"context"
+	"strings"
+
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
+	role "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/entity"
+	roleApppermission "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_app_permission/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/err_msg"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/utils"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
+)
+
+func (s *superAdminService) CreateRolePermission(ctx context.Context, req *dto.CreateRolePermissionRequest) (*dto.CreateRolePermissionResponse, error) {
+	// mapping request apllication permission ID
+	applicationIDs := make([]string, 0, len(req.AppPermissions))
+	for _, item := range req.AppPermissions {
+		applicationIDs = append(applicationIDs, item.AppPermissionID)
+	}
+
+	// get application permissions by ID
+	isExist, err := s.applicationPermissionRepository.FindApplicationPermissionByID(ctx, applicationIDs)
+	if err != nil {
+		log.Error().Err(err).Msg("service::CreateRolePermission - Failed to get application permissions")
+		return nil, err
+	}
+
+	// check if application permissions not found
+	if !isExist {
+		log.Error().Msg("service::CreateRolePermission - Application permissions not found")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrApplicationPermissionNotFound))
+	}
+
+	// get role data by name
+	roleResult, err := s.roleRepository.FindRoleByName(ctx, strings.ToUpper(req.Roles))
+	if err != nil {
+		if err.Error() == constants.ErrRoleNotFound {
+			log.Error().Any("roleName", req.Roles).Msg("service::CreateRolePermission - Role not found")
+		} else {
+			log.Error().Err(err).Any("payload", req).Msg("service::CreateRolePermission - Failed to find role")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+	}
+
+	// check if role already exist
+	if roleResult != nil {
+		log.Error().Any("roleName", req.Roles).Msg("service::CreateRolePermission - Role already exist")
+		return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrRoleAlreadyExist))
+	}
+
+	// begin transaction
+	tx, err := s.db.Begin()
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateRolePermission - Failed to begin transaction")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				log.Error().Err(rollbackErr).Any("payload", req).Msg("service::CreateRolePermission - Failed to rollback transaction")
+			}
+		}
+	}()
+
+	// generate role UUID
+	generateRoleID, err := utils.GenerateUUIDv7String()
+	if err != nil {
+		log.Error().Err(err).Msg("service::CreateRolePermission - Failed to generate role UUID")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// insert new role
+	err = s.roleRepository.InsertNewRole(ctx, tx, &role.Role{
+		ID:          generateRoleID,
+		Name:        strings.ToUpper(req.Roles),
+		Description: req.Description,
+	})
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateRolePermission - Failed to insert new role")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// mapping request role app permissions
+	var roleAppPermissions []roleApppermission.RoleAppPermission
+	for _, item := range req.AppPermissions {
+		roleAppPermissionID, err := utils.GenerateUUIDv7String()
+		if err != nil {
+			log.Error().Err(err).Msg("service::CreateRolePermission - Failed to generate role app permission UUID")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+
+		appPermUUID, _ := uuid.Parse(item.AppPermissionID)
+
+		roleAppPermissions = append(roleAppPermissions, roleApppermission.RoleAppPermission{
+			ID:              roleAppPermissionID,
+			RoleID:          generateRoleID,
+			AppPermissionID: appPermUUID,
+		})
+	}
+
+	// Insert role app permissions (bulk insert)
+	err = s.roleAppPermissionRepository.InsertNewRoleAppPermissions(ctx, tx, roleAppPermissions)
+	if err != nil {
+		log.Error().Err(err).Any("payload", roleAppPermissions).Msg("service::CreateRolePermission - Failed to insert new role app permissions")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// commit transaction
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateRolePermission - Failed to commit transaction")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get role permissions
+	response, err := s.roleRepository.FindRolePermission(ctx, generateRoleID.String())
+	if err != nil {
+		log.Error().Err(err).Any("roleID", generateRoleID).Msg("service::CreateRolePermission - Failed to get role permissions")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// return response
+	return response, nil
+}

@@ -34,7 +34,7 @@ func Error(errorMsg any) Response {
 	if _, ok := errorMsg.(string); ok {
 		return Response{
 			"request_id": requestID,
-			"errors":     make(map[string][]string),
+			"errors":     errorMsg,
 			// "success": false,
 			// "message": errorMsg,
 		}
