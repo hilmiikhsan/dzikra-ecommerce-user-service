@@ -26,8 +26,8 @@ type RoleAppPermissions struct {
 }
 
 type ApplicationPermission struct {
-	ApplicationID string      `json:"application_id"`
-	Permissions   Permissions `json:"permissions"`
+	ApplicationID string        `json:"application_id"`
+	Permissions   []Permissions `json:"permissions"`
 }
 
 type Permissions struct {

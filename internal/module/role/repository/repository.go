@@ -74,22 +74,33 @@ func (r *roleRepository) FindRolePermission(ctx context.Context, roleID string) 
 		Description: rows[0].Description,
 	}
 
-	var roleAppPerms []dto.RoleAppPermissions
+	permMap := make(map[string]dto.RoleAppPermissions)
 	for _, row := range rows {
-		rp := dto.RoleAppPermissions{
-			ApplicationPermissionID: row.RoleAppPermissionID.String(),
-			ApplicationPermission: dto.ApplicationPermission{
-				ApplicationID: row.ApplicationID.String(),
-				Permissions: dto.Permissions{
-					ID:       row.PermissionID.String(),
-					Resource: row.Resource,
-					Action:   row.Action,
-				},
-			},
+		key := row.RoleAppPermissionID.String()
+		perm := dto.Permissions{
+			ID:       row.PermissionID.String(),
+			Resource: row.Resource,
+			Action:   row.Action,
 		}
-		roleAppPerms = append(roleAppPerms, rp)
+
+		if existing, ok := permMap[key]; ok {
+			existing.ApplicationPermission.Permissions = append(existing.ApplicationPermission.Permissions, perm)
+			permMap[key] = existing
+		} else {
+			permMap[key] = dto.RoleAppPermissions{
+				ApplicationPermissionID: key,
+				ApplicationPermission: dto.ApplicationPermission{
+					ApplicationID: row.ApplicationID.String(),
+					Permissions:   []dto.Permissions{perm},
+				},
+			}
+		}
 	}
 
+	var roleAppPerms []dto.RoleAppPermissions
+	for _, v := range permMap {
+		roleAppPerms = append(roleAppPerms, v)
+	}
 	response.RoleAppPermissions = roleAppPerms
 
 	return &response, nil
