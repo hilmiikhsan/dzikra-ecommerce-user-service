@@ -125,3 +125,35 @@ func (s *superAdminService) CreateRolePermission(ctx context.Context, req *dto.C
 	// return response
 	return response, nil
 }
+
+func (s *superAdminService) GetListRole(ctx context.Context, page, limit int, search string) (*dto.GetListRole, error) {
+	// calculate pagination
+	currentPage, perPage, offset := utils.Paginate(page, limit)
+
+	// get list role
+	roleResults, total, err := s.roleRepository.FindListRole(ctx, perPage, offset, search)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListRole - Failed to get list role")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if roleResults is nil
+	if roleResults == nil {
+		roleResults = []dto.GetListRolePermission{}
+	}
+
+	// calculate total pages
+	totalPages := utils.CalculateTotalPages(total, perPage)
+
+	// create mapping response
+	responses := &dto.GetListRole{
+		Roles:       roleResults,
+		TotalPages:  totalPages,
+		CurrentPage: currentPage,
+		PageSize:    perPage,
+		TotalData:   total,
+	}
+
+	// return response
+	return responses, nil
+}

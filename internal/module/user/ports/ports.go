@@ -33,4 +33,5 @@ type UserService interface {
 
 type SuperAdminService interface {
 	CreateRolePermission(ctx context.Context, req *dto.CreateRolePermissionRequest) (*dto.CreateRolePermissionResponse, error)
+	GetListRole(ctx context.Context, page, limit int, search string) (*dto.GetListRole, error)
 }

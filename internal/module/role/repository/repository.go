@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
@@ -104,4 +105,43 @@ func (r *roleRepository) FindRolePermission(ctx context.Context, roleID string) 
 	response.RoleAppPermissions = roleAppPerms
 
 	return &response, nil
+}
+
+func (r *roleRepository) FindListRole(ctx context.Context, limit, offset int, search string) ([]dto.GetListRolePermission, int, error) {
+	var responses []entity.ListRolePermission
+
+	if err := r.db.SelectContext(ctx, &responses, r.db.Rebind(queryFindListRole), search, limit, offset); err != nil {
+		log.Error().Err(err).Msg("repository::GetListRole - error executing query")
+		return nil, 0, err
+	}
+
+	var total int
+
+	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListRole), search); err != nil {
+		log.Error().Err(err).Msg("repository::GetListRole - error counting roles")
+		return nil, 0, err
+	}
+
+	var roles []dto.GetListRolePermission
+
+	for _, res := range responses {
+		var roleAppPermissions []dto.GetListRoleAppPermission
+
+		if err := json.Unmarshal([]byte(res.RoleAppPermission), &roleAppPermissions); err != nil {
+			log.Error().Err(err).Msg("repository::GetListRole - error unmarshalling role_app_permission JSON")
+			return nil, 0, err
+		}
+
+		roleDTO := dto.GetListRolePermission{
+			ID:                res.ID,
+			Roles:             res.Roles,
+			Description:       res.Description,
+			Static:            true,
+			RoleAppPermission: roleAppPermissions,
+		}
+
+		roles = append(roles, roleDTO)
+	}
+
+	return roles, total, nil
 }

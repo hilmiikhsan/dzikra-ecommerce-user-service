@@ -18,3 +18,10 @@ type RolePermission struct {
 	Resource            string    `db:"resource"`
 	Action              string    `db:"action"`
 }
+
+type ListRolePermission struct {
+	ID                string `db:"id"`
+	Roles             string `db:"roles"`
+	Description       string `db:"desc"`
+	RoleAppPermission string `db:"role_app_permission"`
+}

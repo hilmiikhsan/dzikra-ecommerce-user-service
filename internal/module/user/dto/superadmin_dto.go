@@ -35,3 +35,31 @@ type Permissions struct {
 	Resource string `json:"resource"`
 	Action   string `json:"action"`
 }
+
+type GetListRole struct {
+	Roles       []GetListRolePermission `json:"roles"`
+	TotalPages  int                     `json:"total_pages"`
+	CurrentPage int                     `json:"current_page"`
+	PageSize    int                     `json:"page_size"`
+	TotalData   int                     `json:"total_data"`
+}
+
+type GetListRolePermission struct {
+	ID                string                     `json:"id"`
+	Roles             string                     `json:"roles"`
+	Description       string                     `json:"desc"`
+	Static            bool                       `json:"static"`
+	RoleAppPermission []GetListRoleAppPermission `json:"role_app_permission"`
+}
+
+type GetListRoleAppPermission struct {
+	ApplicationID string              `json:"application_id"`
+	Name          string              `json:"name"`
+	Permissions   []GetListPermission `json:"permission"`
+}
+
+type GetListPermission struct {
+	Action                  string `json:"action"`
+	ApplicationPermissionID string `json:"aplicationperm_id"`
+	Resource                string `json:"resource"`
+}
