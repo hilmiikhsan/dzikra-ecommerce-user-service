@@ -13,4 +13,5 @@ type RoleRepository interface {
 	InsertNewRole(ctx context.Context, tx *sql.Tx, data *entity.Role) error
 	FindRolePermission(ctx context.Context, roleID string) (*dto.CreateRolePermissionResponse, error)
 	FindListRole(ctx context.Context, limit, offset int, search string) ([]dto.GetListRolePermission, int, error)
+	FindRoleByID(ctx context.Context, roleID string) (*dto.GetListRolePermission, error)
 }

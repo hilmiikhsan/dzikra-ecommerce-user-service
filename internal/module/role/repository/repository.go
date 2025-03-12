@@ -145,3 +145,34 @@ func (r *roleRepository) FindListRole(ctx context.Context, limit, offset int, se
 
 	return roles, total, nil
 }
+
+func (r roleRepository) FindRoleByID(ctx context.Context, roleID string) (*dto.GetListRolePermission, error) {
+	var res entity.ListRolePermission
+
+	if err := r.db.GetContext(ctx, &res, r.db.Rebind(queryFindRoleByID), roleID); err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Msg("repository::FindRoleByID - role not found")
+			return nil, errors.New(constants.ErrRoleNotFound)
+		}
+
+		log.Error().Err(err).Msg("repository::FindRoleByID - error executing query")
+		return nil, err
+	}
+
+	var roleAppPermissions []dto.GetListRoleAppPermission
+
+	if err := json.Unmarshal([]byte(res.RoleAppPermission), &roleAppPermissions); err != nil {
+		log.Error().Err(err).Msg("repository::FindRoleByID - error unmarshalling role_app_permission JSON")
+		return nil, err
+	}
+
+	roleDTO := dto.GetListRolePermission{
+		ID:                res.ID,
+		Roles:             res.Roles,
+		Description:       res.Description,
+		Static:            true,
+		RoleAppPermission: roleAppPermissions,
+	}
+
+	return &roleDTO, nil
+}

@@ -74,4 +74,37 @@ const (
 		SELECT COUNT(*) FROM roles r
 		WHERE r.name ILIKE '%' || ? || '%'
 	`
+
+	queryFindRoleByID = `
+		SELECT 
+			r.id,
+			r.name AS roles,
+			r.description AS "desc",
+			COALESCE(
+				json_agg(
+				json_build_object(
+					'application_id', a.id,
+					'name', a.name,
+					'permission', (
+					SELECT json_agg(
+						json_build_object(
+						'action', p.action,
+						'aplicationperm_id', ap.id,
+						'resource', p.resource
+						)
+					)
+					FROM application_permissions ap
+					JOIN permissions p ON ap.permission_id = p.id
+					WHERE ap.id = rap.app_permission_id
+					)
+				)
+				) FILTER (WHERE rap.id IS NOT NULL), '[]'
+			) AS role_app_permission
+		FROM roles r
+		LEFT JOIN role_app_permissions rap ON r.id = rap.role_id
+		LEFT JOIN application_permissions ap ON rap.app_permission_id = ap.id
+		LEFT JOIN applications a ON ap.application_id = a.id
+		WHERE r.id = ?
+		GROUP BY r.id, r.name, r.description
+	`
 )

@@ -29,6 +29,7 @@ type UserService interface {
 	RefreshToken(ctx context.Context, accessToken string, locals *middleware.Locals) (*dto.AuthUserResponse, error)
 	ForgotPassword(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.ForgotPasswordResponse, error)
 	ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error
+	GetDetailRole(ctx context.Context, roleID string) (*dto.GetDetailRoleResponse, error)
 }
 
 type SuperAdminService interface {

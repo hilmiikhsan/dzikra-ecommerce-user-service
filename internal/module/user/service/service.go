@@ -826,3 +826,36 @@ func (s *userService) ResetPassword(ctx context.Context, req *dto.ResetPasswordR
 
 	return nil
 }
+
+func (s *userService) GetDetailRole(ctx context.Context, roleID string) (*dto.GetDetailRoleResponse, error) {
+	roleResult, err := s.roleRepository.FindRoleByID(ctx, roleID)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrRoleNotFound) {
+			log.Error().Any("roleID", roleID).Msg("service::GetDetailRole - Role not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrRoleNotFound))
+		}
+
+		log.Error().Err(err).Any("roleID", roleID).Msg("service::GetDetailRole - Failed to get role by ID")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	if roleResult == nil {
+		log.Error().Any("roleID", roleID).Msg("service::GetDetailRole - Role not found")
+		return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrRoleNotFound))
+	}
+
+	converted := make([]dto.RoleAppPermissions, 0)
+	if roleResult.RoleAppPermission != nil {
+		for _, data := range roleResult.RoleAppPermission {
+			converted = append(converted, utils.MapRoleAppPermission((data)))
+		}
+	}
+
+	response := &dto.GetDetailRoleResponse{
+		ID:                roleResult.ID,
+		Description:       roleResult.Description,
+		RoleAppPermission: converted,
+	}
+
+	return response, nil
+}

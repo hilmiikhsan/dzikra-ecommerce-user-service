@@ -62,3 +62,27 @@ func MapUserRoleResponse(rows []entity.UserRolePermission) []dto.UserRoleDetail 
 
 	return results
 }
+
+func MapRoleAppPermission(data dto.GetListRoleAppPermission) dto.RoleAppPermissions {
+	var perms []dto.Permissions
+	for _, gp := range data.Permissions {
+		perms = append(perms, dto.Permissions{
+			ID:       gp.ApplicationPermissionID,
+			Resource: gp.Resource,
+			Action:   gp.Action,
+		})
+	}
+
+	var appPermID string
+	if len(data.Permissions) > 0 {
+		appPermID = data.Permissions[0].ApplicationPermissionID
+	}
+
+	return dto.RoleAppPermissions{
+		ApplicationPermissionID: appPermID,
+		ApplicationPermission: dto.ApplicationPermission{
+			ApplicationID: data.ApplicationID,
+			Permissions:   perms,
+		},
+	}
+}

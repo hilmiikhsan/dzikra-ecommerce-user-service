@@ -63,3 +63,16 @@ type GetListPermission struct {
 	ApplicationPermissionID string `json:"aplicationperm_id"`
 	Resource                string `json:"resource"`
 }
+
+type GetDetailRoleResponse struct {
+	ID                string               `json:"id"`
+	Description       string               `json:"desc"`
+	RoleAppPermission []RoleAppPermissions `json:"role_app_permission"`
+}
+
+type DetailAppPermission struct {
+	ApplicationID string              `json:"application_id"`
+	Application   string              `json:"application"`
+	Permissions   []GetListPermission `json:"permissions"`
+	Roles         string              `json:"roles"`
+}

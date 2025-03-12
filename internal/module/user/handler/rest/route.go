@@ -12,6 +12,9 @@ func (h *userHandler) UserRoute(router fiber.Router) {
 	router.Patch("/refresh-token", h.middleware.UserRefreshBearer, h.refreshToken)
 	router.Post("/forgot-password", h.forgotPassword)
 	router.Post("/reset-password", h.resetPassword)
+
+	// roles
+	router.Get("/roles/:role_id", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "roles"), h.getDetailRole)
 }
 
 func (h *superAdminHandler) SuperAdminRoute(router fiber.Router) {
