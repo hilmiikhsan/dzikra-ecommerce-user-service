@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/entity"
 	role "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/entity"
 	roleApppermission "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_app_permission/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
@@ -152,6 +153,32 @@ func (s *superAdminService) GetListRole(ctx context.Context, page, limit int, se
 		CurrentPage: currentPage,
 		PageSize:    perPage,
 		TotalData:   total,
+	}
+
+	// return response
+	return responses, nil
+}
+
+func (s *superAdminService) GetListApplication(ctx context.Context) ([]dto.GetListApplicationResponse, error) {
+	// get list application
+	appEntities, err := s.applicationRepository.FindAllApplication(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListApplication - Failed to get list application")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// validate if appEntities is nil
+	if appEntities == nil {
+		appEntities = []entity.Application{}
+	}
+
+	// create mapping response
+	var responses []dto.GetListApplicationResponse
+	for _, app := range appEntities {
+		responses = append(responses, dto.GetListApplicationResponse{
+			ID:   app.ID,
+			Name: app.Name,
+		})
 	}
 
 	// return response

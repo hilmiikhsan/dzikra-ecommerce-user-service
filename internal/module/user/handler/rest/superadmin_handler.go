@@ -53,3 +53,18 @@ func (h *superAdminHandler) getListRole(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
+
+func (h *superAdminHandler) getListApplication(c *fiber.Ctx) error {
+	var (
+		ctx = c.Context()
+	)
+
+	res, err := h.service.GetListApplication(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getListApplication - Failed to get list application")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}

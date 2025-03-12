@@ -4,6 +4,7 @@ import (
 	externalNotification "github.com/Digitalkeun-Creative/be-dzikra-user-service/external/notification"
 	redisPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis/ports"
 	applicationPermissionPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/application_permission/ports"
+	applicationPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/ports"
 	rolePorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/ports"
 	roleAppPermissionPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_app_permission/ports"
 	rolePermissionPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/ports"
@@ -36,6 +37,7 @@ type superAdminService struct {
 	applicationPermissionRepository applicationPermissionPorts.ApplicationPermissionRepository
 	roleRepository                  rolePorts.RoleRepository
 	roleAppPermissionRepository     roleAppPermissionPorts.RoleAppPermissionRepository
+	applicationRepository           applicationPorts.ApplicationRepository
 }
 
 func NewUserService(
@@ -69,11 +71,13 @@ func NewSuperAdminService(
 	applicationPermissionRepository applicationPermissionPorts.ApplicationPermissionRepository,
 	roleRepository rolePorts.RoleRepository,
 	roleAppPermissionRepository roleAppPermissionPorts.RoleAppPermissionRepository,
+	applicationRepository applicationPorts.ApplicationRepository,
 ) *superAdminService {
 	return &superAdminService{
 		db:                              db,
 		applicationPermissionRepository: applicationPermissionRepository,
 		roleRepository:                  roleRepository,
 		roleAppPermissionRepository:     roleAppPermissionRepository,
+		applicationRepository:           applicationRepository,
 	}
 }

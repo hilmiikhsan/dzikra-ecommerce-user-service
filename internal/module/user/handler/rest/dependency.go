@@ -6,6 +6,7 @@ import (
 	redisRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/middleware"
 	applicationPermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/application_permission/repository"
+	applicationRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/repository"
 	roleRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/repository"
 	roleAppPermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_app_permission/repository"
 	rolePermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/repository"
@@ -97,6 +98,7 @@ func NewSuperAdminHandler() *superAdminHandler {
 	applicationPermissionRepository := applicationPermissionRepository.NewApplicationPermissionRepository(adapter.Adapters.DzikraPostgres)
 	roleRepository := roleRepository.NewRoleRepository(adapter.Adapters.DzikraPostgres)
 	roleAppPermissionRepository := roleAppPermissionRepository.NewRoleAppPermissionRepository(adapter.Adapters.DzikraPostgres)
+	applicationRepository := applicationRepository.NewApplicationRepository(adapter.Adapters.DzikraPostgres)
 
 	// service
 	superAdminService := service.NewSuperAdminService(
@@ -104,6 +106,7 @@ func NewSuperAdminHandler() *superAdminHandler {
 		applicationPermissionRepository,
 		roleRepository,
 		roleAppPermissionRepository,
+		applicationRepository,
 	)
 
 	// handler
