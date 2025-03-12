@@ -184,3 +184,39 @@ func (s *superAdminService) GetListApplication(ctx context.Context) ([]dto.GetLi
 	// return response
 	return responses, nil
 }
+
+func (s *superAdminService) GetListPermissionByApp(ctx context.Context, appIDsParam string) (*dto.GetListPermissionByAppResponse, error) {
+	// declare variables
+	var apps []dto.PermissionApp
+	var err error
+
+	// check if appIDsParam is not empty
+	if strings.TrimSpace(appIDsParam) != "" {
+		ids := strings.Split(appIDsParam, ",")
+		for i, id := range ids {
+			ids[i] = strings.TrimSpace(id)
+		}
+
+		// get permission apps by IDs
+		apps, err = s.applicationRepository.FindPermissionAppsByIDs(ctx, ids)
+		if err != nil {
+			log.Error().Err(err).Msg("service::GetListPermissionByApp - Failed to get permission apps by IDs")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage("Internal server error"))
+		}
+	} else {
+		apps = []dto.PermissionApp{}
+	}
+
+	// validate if apps is nil
+	if apps == nil {
+		apps = []dto.PermissionApp{}
+	}
+
+	// create mapping response
+	response := &dto.GetListPermissionByAppResponse{
+		ApplicationPermissions: apps,
+	}
+
+	// return response
+	return response, nil
+}

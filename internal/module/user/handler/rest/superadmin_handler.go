@@ -68,3 +68,20 @@ func (h *superAdminHandler) getListApplication(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
+
+func (h *superAdminHandler) getListPermissionByApp(c *fiber.Ctx) error {
+	var (
+		ctx = c.Context()
+	)
+
+	appIDsParam := c.Query("appid", "")
+
+	res, err := h.service.GetListPermissionByApp(ctx, appIDsParam)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getListPermissionByApp - Failed to get list permission by app")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}

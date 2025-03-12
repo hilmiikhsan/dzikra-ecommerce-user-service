@@ -21,4 +21,5 @@ func (h *superAdminHandler) SuperAdminRoute(router fiber.Router) {
 	router.Post("/roles/create", h.middleware.UserBearer, h.middleware.RBACMiddleware("create", "roles"), h.createRolePermission)
 	router.Get("/roles", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "roles"), h.getListRole)
 	router.Get("/application", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "permissions"), h.getListApplication)
+	router.Get("/permissions", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "permissions"), h.getListPermissionByApp)
 }

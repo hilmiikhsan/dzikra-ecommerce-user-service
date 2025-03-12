@@ -2,9 +2,11 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/ports"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
@@ -31,4 +33,35 @@ func (r *applicationRepository) FindAllApplication(ctx context.Context) ([]entit
 	}
 
 	return res, nil
+}
+
+func (r *applicationRepository) FindPermissionAppsByIDs(ctx context.Context, appIDs []string) ([]dto.PermissionApp, error) {
+	query, args, err := sqlx.In(queryGetListPermissionByAppFiltered, appIDs)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::FindPermissionAppsByIDs - error building query")
+		return nil, err
+	}
+	query = r.db.Rebind(query)
+
+	var rows []entity.ApplicationPermission
+	if err := r.db.SelectContext(ctx, &rows, query, args...); err != nil {
+		log.Error().Err(err).Msg("repository::FindPermissionAppsByIDs - error executing query")
+		return nil, err
+	}
+
+	var result []dto.PermissionApp
+	for _, row := range rows {
+		var perms []dto.ListPermissionApp
+		if err := json.Unmarshal([]byte(row.Permissions), &perms); err != nil {
+			log.Error().Err(err).Msg("repository::FindPermissionAppsByIDs - error unmarshalling permissions JSON")
+			return nil, err
+		}
+		result = append(result, dto.PermissionApp{
+			ID:          row.ID,
+			Name:        row.Name,
+			Permissions: perms,
+		})
+	}
+
+	return result, nil
 }
