@@ -86,3 +86,12 @@ func MapRoleAppPermission(data dto.GetListRoleAppPermission) dto.RoleAppPermissi
 		},
 	}
 }
+
+func MapToDetailAppPermission(input dto.GetListRoleAppPermission, roleName string) dto.DetailAppPermission {
+	return dto.DetailAppPermission{
+		ApplicationID: input.ApplicationID,
+		Application:   input.Name,
+		Permissions:   input.Permissions,
+		Roles:         roleName,
+	}
+}
