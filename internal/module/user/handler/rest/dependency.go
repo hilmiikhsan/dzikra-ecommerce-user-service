@@ -99,6 +99,8 @@ func NewSuperAdminHandler() *superAdminHandler {
 	roleRepository := roleRepository.NewRoleRepository(adapter.Adapters.DzikraPostgres)
 	roleAppPermissionRepository := roleAppPermissionRepository.NewRoleAppPermissionRepository(adapter.Adapters.DzikraPostgres)
 	applicationRepository := applicationRepository.NewApplicationRepository(adapter.Adapters.DzikraPostgres)
+	rolePermissionRepository := rolePermissionRepository.NewRolePermissionRepository(adapter.Adapters.DzikraPostgres)
+	userRoleRepository := userRoleRepository.NewUserRoleRepository(adapter.Adapters.DzikraPostgres)
 
 	// service
 	superAdminService := service.NewSuperAdminService(
@@ -107,6 +109,8 @@ func NewSuperAdminHandler() *superAdminHandler {
 		roleRepository,
 		roleAppPermissionRepository,
 		applicationRepository,
+		rolePermissionRepository,
+		userRoleRepository,
 	)
 
 	// handler

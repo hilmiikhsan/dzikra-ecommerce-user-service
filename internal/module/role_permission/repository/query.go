@@ -14,4 +14,10 @@ const (
 		JOIN applications a ON ap.application_id = a.id
 		WHERE rp.role_id IN (?)
 	`
+
+	querySoftDeleteRolePermissions = `
+		UPDATE role_permissions
+		SET deleted_at = NOW()
+		WHERE role_id = ?
+	`
 )

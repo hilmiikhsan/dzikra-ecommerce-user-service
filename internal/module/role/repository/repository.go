@@ -146,7 +146,7 @@ func (r *roleRepository) FindListRole(ctx context.Context, limit, offset int, se
 	return roles, total, nil
 }
 
-func (r roleRepository) FindRoleByID(ctx context.Context, roleID string) (*dto.GetListRolePermission, error) {
+func (r *roleRepository) FindRoleByID(ctx context.Context, roleID string) (*dto.GetListRolePermission, error) {
 	var res entity.ListRolePermission
 
 	if err := r.db.GetContext(ctx, &res, r.db.Rebind(queryFindRoleByID), roleID); err != nil {
@@ -175,4 +175,14 @@ func (r roleRepository) FindRoleByID(ctx context.Context, roleID string) (*dto.G
 	}
 
 	return &roleDTO, nil
+}
+
+func (r *roleRepository) SoftDeleteRole(ctx context.Context, tx *sql.Tx, roleID string) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteRole), roleID)
+	if err != nil {
+		log.Error().Err(err).Str("roleID", roleID).Msg("repository::SoftDeleteRole - Failed to soft delete role")
+		return err
+	}
+
+	return nil
 }

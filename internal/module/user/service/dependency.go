@@ -38,6 +38,8 @@ type superAdminService struct {
 	roleRepository                  rolePorts.RoleRepository
 	roleAppPermissionRepository     roleAppPermissionPorts.RoleAppPermissionRepository
 	applicationRepository           applicationPorts.ApplicationRepository
+	rolePermissionRepository        rolePermissionPorts.RolePermissionRepository
+	userRoleRepository              userRolePorts.UserRoleRepository
 }
 
 func NewUserService(
@@ -72,6 +74,8 @@ func NewSuperAdminService(
 	roleRepository rolePorts.RoleRepository,
 	roleAppPermissionRepository roleAppPermissionPorts.RoleAppPermissionRepository,
 	applicationRepository applicationPorts.ApplicationRepository,
+	rolePermissionRepository rolePermissionPorts.RolePermissionRepository,
+	userRoleRepository userRolePorts.UserRoleRepository,
 ) *superAdminService {
 	return &superAdminService{
 		db:                              db,
@@ -79,5 +83,7 @@ func NewSuperAdminService(
 		roleRepository:                  roleRepository,
 		roleAppPermissionRepository:     roleAppPermissionRepository,
 		applicationRepository:           applicationRepository,
+		rolePermissionRepository:        rolePermissionRepository,
+		userRoleRepository:              userRoleRepository,
 	}
 }

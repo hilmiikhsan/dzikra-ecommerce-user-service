@@ -220,3 +220,68 @@ func (s *superAdminService) GetListPermissionByApp(ctx context.Context, appIDsPa
 	// return response
 	return response, nil
 }
+
+func (s *superAdminService) RemoveRolePermission(ctx context.Context, roleID string) error {
+	// begin transaction
+	tx, err := s.db.Begin()
+	if err != nil {
+		log.Error().Err(err).Str("roleID", roleID).Msg("service::RemoveRolePermission - Failed to begin transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				log.Error().Err(rollbackErr).Str("roleID", roleID).Msg("service::RemoveRolePermission - Failed to rollback transaction")
+			}
+		}
+	}()
+
+	// check if role exist
+	roleResult, err := s.roleRepository.FindRoleByID(ctx, roleID)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrRoleNotFound) {
+			log.Error().Str("roleID", roleID).Msg("service::RemoveRolePermission - Role not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrRoleNotFound))
+		}
+
+		log.Error().Err(err).Str("roleID", roleID).Msg("service::RemoveRolePermission - Failed to find role")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete role app permissions
+	err = s.roleAppPermissionRepository.SoftDeleteRoleAppPermissions(ctx, tx, roleResult.ID)
+	if err != nil {
+		log.Error().Err(err).Str("roleID", roleID).Msg("service::RemoveRolePermission - Failed to remove role app permissions")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete role permissions
+	err = s.rolePermissionRepository.SoftDeleteRolePermissions(ctx, tx, roleResult.ID)
+	if err != nil {
+		log.Error().Err(err).Str("roleID", roleID).Msg("service::RemoveRolePermission - Failed to remove role permissions")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete user roles
+	err = s.userRoleRepository.SoftDeleteUserRolePermissions(ctx, tx, roleResult.ID)
+	if err != nil {
+		log.Error().Err(err).Str("roleID", roleID).Msg("service::RemoveRolePermission - Failed to remove user roles")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// sopft delete roles
+	err = s.roleRepository.SoftDeleteRole(ctx, tx, roleResult.ID)
+	if err != nil {
+		log.Error().Err(err).Str("roleID", roleID).Msg("service::RemoveRolePermission - Failed to remove role")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// commit transaction
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Str("roleID", roleID).Msg("service::RemoveRolePermission - Failed to commit transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// return nil
+	return nil
+}

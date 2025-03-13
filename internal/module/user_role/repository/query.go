@@ -44,4 +44,10 @@ const (
 		JOIN permissions p ON rp.permission_id = p.id
 		WHERE ur.user_id = ?
 	`
+
+	querySoftDeleteUserRolePermissions = `
+		UPDATE user_roles
+		SET deleted_at = NOW()
+		WHERE role_id = ?
+	`
 )

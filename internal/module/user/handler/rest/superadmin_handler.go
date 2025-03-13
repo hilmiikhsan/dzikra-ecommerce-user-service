@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"strings"
+
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/err_msg"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/response"
@@ -84,4 +86,25 @@ func (h *superAdminHandler) getListPermissionByApp(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}
+
+func (h *superAdminHandler) removeRolePermission(c *fiber.Ctx) error {
+	var (
+		ctx    = c.Context()
+		roleID = c.Params("role_id")
+	)
+
+	if strings.Contains(roleID, ":role_id") {
+		log.Warn().Msg("handler::removeRolePermission - Invalid role ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid role ID"))
+	}
+
+	err := h.service.RemoveRolePermission(ctx, roleID)
+	if err != nil {
+		log.Error().Err(err).Any("roleID", roleID).Msg("handler::removeRolePermission - Failed to remove role permission")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
 }

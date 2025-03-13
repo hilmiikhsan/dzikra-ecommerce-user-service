@@ -37,4 +37,5 @@ type SuperAdminService interface {
 	GetListRole(ctx context.Context, page, limit int, search string) (*dto.GetListRole, error)
 	GetListApplication(ctx context.Context) ([]dto.GetListApplicationResponse, error)
 	GetListPermissionByApp(ctx context.Context, appIDsParam string) (*dto.GetListPermissionByAppResponse, error)
+	RemoveRolePermission(ctx context.Context, roleID string) error
 }

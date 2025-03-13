@@ -9,4 +9,5 @@ import (
 
 type RoleAppPermissionRepository interface {
 	InsertNewRoleAppPermissions(ctx context.Context, tx *sql.Tx, data []entity.RoleAppPermission) error
+	SoftDeleteRoleAppPermissions(ctx context.Context, tx *sql.Tx, roleID string) error
 }

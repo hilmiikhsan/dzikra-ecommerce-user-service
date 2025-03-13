@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/ports"
@@ -37,4 +38,14 @@ func (r *rolePermissionRepository) GetUserRolePermission(ctx context.Context, ro
 	}
 
 	return res, nil
+}
+
+func (r *rolePermissionRepository) SoftDeleteRolePermissions(ctx context.Context, tx *sql.Tx, roleID string) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteRolePermissions), roleID)
+	if err != nil {
+		log.Error().Err(err).Str("roleID", roleID).Msg("repository::SoftDeleteRolePermissions - Failed to soft delete role permissions")
+		return err
+	}
+
+	return nil
 }

@@ -28,7 +28,7 @@ const (
 		JOIN role_app_permissions rap ON r.id = rap.role_id
 		JOIN application_permissions ap ON rap.app_permission_id = ap.id
 		JOIN permissions p ON ap.permission_id = p.id
-		WHERE r.id = ?
+		WHERE r.id = ? AND r.deleted_at IS NULL
 	`
 
 	queryFindListRole = `
@@ -61,18 +61,18 @@ const (
 			LEFT JOIN role_app_permissions rap ON r.id = rap.role_id
 			LEFT JOIN application_permissions ap ON rap.app_permission_id = ap.id
 			LEFT JOIN applications a ON ap.application_id = a.id
-			WHERE r.name ILIKE '%' || ? || '%'
+			WHERE r.name ILIKE '%' || ? || '%' AND r.deleted_at IS NULL
 			GROUP BY r.id, r.name, r.description
 			ORDER BY r.name
 			LIMIT ? OFFSET ?
 		)
-
+		
 		SELECT * FROM role_list;
 	`
 
 	queryCountListRole = `
 		SELECT COUNT(*) FROM roles r
-		WHERE r.name ILIKE '%' || ? || '%'
+		WHERE r.name ILIKE '%' || ? || '%' AND r.deleted_at IS NULL
 	`
 
 	queryFindRoleByID = `
@@ -104,7 +104,11 @@ const (
 		LEFT JOIN role_app_permissions rap ON r.id = rap.role_id
 		LEFT JOIN application_permissions ap ON rap.app_permission_id = ap.id
 		LEFT JOIN applications a ON ap.application_id = a.id
-		WHERE r.id = ?
+		WHERE r.id = ? AND r.deleted_at IS NULL
 		GROUP BY r.id, r.name, r.description
+	`
+
+	querySoftDeleteRole = `
+		UPDATE roles SET deleted_at = NOW() WHERE id = ?
 	`
 )

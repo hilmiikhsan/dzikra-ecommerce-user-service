@@ -49,3 +49,13 @@ func (r *roleAppPermissionRepository) InsertNewRoleAppPermissions(ctx context.Co
 
 	return nil
 }
+
+func (r *roleAppPermissionRepository) SoftDeleteRoleAppPermissions(ctx context.Context, tx *sql.Tx, roleID string) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteRoleAppPermissions), roleID)
+	if err != nil {
+		log.Error().Err(err).Str("roleID", roleID).Msg("repository::SoftDeleteRoleAppPermissions - Failed to soft delete role app permissions")
+		return err
+	}
+
+	return nil
+}
