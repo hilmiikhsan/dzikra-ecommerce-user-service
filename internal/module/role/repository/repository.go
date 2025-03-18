@@ -56,7 +56,7 @@ func (r *roleRepository) InsertNewRole(ctx context.Context, tx *sql.Tx, data *en
 	return nil
 }
 
-func (r *roleRepository) FindRolePermission(ctx context.Context, roleID string) (*dto.CreateRolePermissionResponse, error) {
+func (r *roleRepository) FindRolePermission(ctx context.Context, roleID string) (*dto.RolePermissionResponse, error) {
 	var rows []entity.RolePermission
 
 	if err := r.db.SelectContext(ctx, &rows, r.db.Rebind(queryFindRolePermission), roleID); err != nil {
@@ -69,7 +69,7 @@ func (r *roleRepository) FindRolePermission(ctx context.Context, roleID string) 
 		return nil, sql.ErrNoRows
 	}
 
-	response := dto.CreateRolePermissionResponse{
+	response := dto.RolePermissionResponse{
 		ID:          rows[0].RoleID.String(),
 		Roles:       rows[0].RoleName,
 		Description: rows[0].Description,
@@ -181,6 +181,27 @@ func (r *roleRepository) SoftDeleteRole(ctx context.Context, tx *sql.Tx, roleID 
 	_, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteRole), roleID)
 	if err != nil {
 		log.Error().Err(err).Str("roleID", roleID).Msg("repository::SoftDeleteRole - Failed to soft delete role")
+		return err
+	}
+
+	return nil
+}
+
+func (r *roleRepository) UpdateRole(ctx context.Context, tx *sql.Tx, roleID, newName, description, currentName string) error {
+	var query string
+	var args []interface{}
+
+	if newName == currentName {
+		query = queryUpdateRoleDescription
+		args = []interface{}{description, roleID}
+	} else {
+		query = queryUpdateRole
+		args = []interface{}{newName, description, roleID}
+	}
+
+	_, err := tx.ExecContext(ctx, r.db.Rebind(query), args...)
+	if err != nil {
+		log.Error().Err(err).Str("roleID", roleID).Msg("repository::UpdateRole - Failed to update role")
 		return err
 	}
 

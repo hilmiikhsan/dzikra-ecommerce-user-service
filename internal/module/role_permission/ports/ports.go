@@ -10,4 +10,5 @@ import (
 type RolePermissionRepository interface {
 	GetUserRolePermission(ctx context.Context, roleID []string) ([]entity.UserRolePermission, error)
 	SoftDeleteRolePermissions(ctx context.Context, tx *sql.Tx, roleID string) error
+	InsertNewRolePermissions(ctx context.Context, tx *sql.Tx, data []entity.RolePermission) error
 }

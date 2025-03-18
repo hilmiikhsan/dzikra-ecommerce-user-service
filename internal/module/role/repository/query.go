@@ -28,7 +28,9 @@ const (
 		JOIN role_app_permissions rap ON r.id = rap.role_id
 		JOIN application_permissions ap ON rap.app_permission_id = ap.id
 		JOIN permissions p ON ap.permission_id = p.id
-		WHERE r.id = ? AND r.deleted_at IS NULL
+		WHERE r.id = ? 
+          AND r.deleted_at IS NULL
+          AND rap.deleted_at IS NULL
 	`
 
 	queryFindListRole = `
@@ -109,6 +111,26 @@ const (
 	`
 
 	querySoftDeleteRole = `
-		UPDATE roles SET deleted_at = NOW() WHERE id = ?
+		UPDATE roles
+		SET 
+			deleted_at = CURRENT_TIMESTAMP
+		WHERE role_id = ? AND deleted_at IS NULL
+	`
+
+	queryUpdateRole = `
+		UPDATE roles
+		SET 
+			name = ?, 
+			description = ?, 
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = ? AND deleted_at IS NULL
+	`
+
+	queryUpdateRoleDescription = `
+		UPDATE roles
+		SET 
+			description = ?, 
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = ? AND deleted_at IS NULL
 	`
 )

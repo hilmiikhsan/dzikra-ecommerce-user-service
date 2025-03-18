@@ -24,4 +24,5 @@ func (h *superAdminHandler) SuperAdminRoute(router fiber.Router) {
 	router.Get("/application", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "permissions"), h.getListApplication)
 	router.Get("/permissions", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "permissions"), h.getListPermissionByApp)
 	router.Delete("/roles/remove/:role_id", h.middleware.UserBearer, h.middleware.RBACMiddleware("delete", "roles"), h.removeRolePermission)
+	router.Patch("/roles/update/:role_id", h.middleware.UserBearer, h.middleware.RBACMiddleware("update", "roles"), h.updateRolePermission)
 }

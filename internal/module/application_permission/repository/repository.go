@@ -53,3 +53,15 @@ func (r *applicationPermissionRepository) FindByActionAndResource(ctx context.Co
 
 	return appPermissions, nil
 }
+
+func (r *applicationPermissionRepository) GetPermissionIDByID(ctx context.Context, appPermID string) (string, error) {
+	var permissionID string
+
+	err := r.db.GetContext(ctx, &permissionID, r.db.Rebind(queryGetPermissionIDByAppPermID), appPermID)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::GetPermissionIDByID - error fetching permission_id")
+		return "", err
+	}
+
+	return permissionID, nil
+}

@@ -1,7 +1,7 @@
 package dto
 
 // Super Admin DTO
-type CreateRolePermissionRequest struct {
+type RolePermissionRequest struct {
 	Roles          string           `json:"roles" validate:"required,max=50,min=3"`
 	Description    string           `json:"desc" validate:"required,max=255"`
 	AppPermissions []AppPermissions `json:"app_permissions" validate:"required,dive"`
@@ -13,7 +13,7 @@ type AppPermissions struct {
 	Resource        string `json:"resource" validate:"required,max=20,resource_permission_action"`
 }
 
-type CreateRolePermissionResponse struct {
+type RolePermissionResponse struct {
 	ID                 string               `json:"id"`
 	Roles              string               `json:"roles"`
 	Description        string               `json:"desc"`
@@ -96,4 +96,10 @@ type ListPermissionApp struct {
 	AppPermiID string `json:"appperm_id"`
 	Action     string `json:"action"`
 	Resource   string `json:"resource"`
+}
+
+type SoftDeleteRolePermissionRequest struct {
+	Roles          string           `json:"roles" validate:"required,max=50,min=3"`
+	Description    string           `json:"desc" validate:"required,max=255"`
+	AppPermissions []AppPermissions `json:"app_permissions" validate:"required,dive"`
 }
