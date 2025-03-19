@@ -5,11 +5,10 @@ import (
 	"strings"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/entity"
-	role "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/dto"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/entity"
 	roleApppermission "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_app_permission/entity"
 	rolePermission "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/entity"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/err_msg"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/utils"
 	"github.com/gofiber/fiber/v2"
@@ -17,7 +16,76 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (s *superAdminService) CreateRolePermission(ctx context.Context, req *dto.RolePermissionRequest) (*dto.RolePermissionResponse, error) {
+func (s *roleService) GetDetailRole(ctx context.Context, roleID string) (*dto.GetDetailRoleResponse, error) {
+	// find role by ID
+	roleResult, err := s.roleRepository.FindRoleByID(ctx, roleID)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrRoleNotFound) {
+			log.Error().Any("roleID", roleID).Msg("service::GetDetailRole - Role not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrRoleNotFound))
+		}
+		log.Error().Err(err).Any("roleID", roleID).Msg("service::GetDetailRole - Failed to get role by ID")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check role
+	if roleResult == nil {
+		log.Error().Any("roleID", roleID).Msg("service::GetDetailRole - Role not found")
+		return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrRoleNotFound))
+	}
+
+	// mapping data role app permission
+	converted := make([]dto.DetailAppPermission, 0)
+	if roleResult.RoleAppPermission != nil {
+		for _, data := range roleResult.RoleAppPermission {
+			converted = append(converted, utils.MapToDetailAppPermission(data, roleResult.Roles))
+		}
+	}
+
+	// mapping get detail role response data
+	response := &dto.GetDetailRoleResponse{
+		ID:                roleResult.ID,
+		Description:       roleResult.Description,
+		RoleAppPermission: converted,
+	}
+
+	// return response
+	return response, nil
+}
+
+func (s *roleService) GetListRole(ctx context.Context, page, limit int, search string) (*dto.GetListRole, error) {
+	// calculate pagination
+	currentPage, perPage, offset := utils.Paginate(page, limit)
+
+	// get list role
+	roleResults, total, err := s.roleRepository.FindListRole(ctx, perPage, offset, search)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListRole - Failed to get list role")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if roleResults is nil
+	if roleResults == nil {
+		roleResults = []dto.GetListRolePermission{}
+	}
+
+	// calculate total pages
+	totalPages := utils.CalculateTotalPages(total, perPage)
+
+	// create mapping response
+	responses := &dto.GetListRole{
+		Roles:       roleResults,
+		TotalPages:  totalPages,
+		CurrentPage: currentPage,
+		PageSize:    perPage,
+		TotalData:   total,
+	}
+
+	// return response
+	return responses, nil
+}
+
+func (s *roleService) CreateRolePermission(ctx context.Context, req *dto.RolePermissionRequest) (*dto.RolePermissionResponse, error) {
 	// mapping request apllication permission ID
 	applicationIDs := make([]string, 0, len(req.AppPermissions))
 	for _, item := range req.AppPermissions {
@@ -76,7 +144,7 @@ func (s *superAdminService) CreateRolePermission(ctx context.Context, req *dto.R
 	}
 
 	// insert new role
-	err = s.roleRepository.InsertNewRole(ctx, tx, &role.Role{
+	err = s.roleRepository.InsertNewRole(ctx, tx, &entity.Role{
 		ID:          generateRoleID,
 		Name:        strings.ToUpper(req.Roles),
 		Description: req.Description,
@@ -159,101 +227,7 @@ func (s *superAdminService) CreateRolePermission(ctx context.Context, req *dto.R
 	return response, nil
 }
 
-func (s *superAdminService) GetListRole(ctx context.Context, page, limit int, search string) (*dto.GetListRole, error) {
-	// calculate pagination
-	currentPage, perPage, offset := utils.Paginate(page, limit)
-
-	// get list role
-	roleResults, total, err := s.roleRepository.FindListRole(ctx, perPage, offset, search)
-	if err != nil {
-		log.Error().Err(err).Msg("service::GetListRole - Failed to get list role")
-		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
-	}
-
-	// check if roleResults is nil
-	if roleResults == nil {
-		roleResults = []dto.GetListRolePermission{}
-	}
-
-	// calculate total pages
-	totalPages := utils.CalculateTotalPages(total, perPage)
-
-	// create mapping response
-	responses := &dto.GetListRole{
-		Roles:       roleResults,
-		TotalPages:  totalPages,
-		CurrentPage: currentPage,
-		PageSize:    perPage,
-		TotalData:   total,
-	}
-
-	// return response
-	return responses, nil
-}
-
-func (s *superAdminService) GetListApplication(ctx context.Context) ([]dto.GetListApplicationResponse, error) {
-	// get list application
-	appEntities, err := s.applicationRepository.FindAllApplication(ctx)
-	if err != nil {
-		log.Error().Err(err).Msg("service::GetListApplication - Failed to get list application")
-		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
-	}
-
-	// validate if appEntities is nil
-	if appEntities == nil {
-		appEntities = []entity.Application{}
-	}
-
-	// create mapping response
-	var responses []dto.GetListApplicationResponse
-	for _, app := range appEntities {
-		responses = append(responses, dto.GetListApplicationResponse{
-			ID:   app.ID,
-			Name: app.Name,
-		})
-	}
-
-	// return response
-	return responses, nil
-}
-
-func (s *superAdminService) GetListPermissionByApp(ctx context.Context, appIDsParam string) (*dto.GetListPermissionByAppResponse, error) {
-	// declare variables
-	var apps []dto.PermissionApp
-	var err error
-
-	// check if appIDsParam is not empty
-	if strings.TrimSpace(appIDsParam) != "" {
-		ids := strings.Split(appIDsParam, ",")
-		for i, id := range ids {
-			ids[i] = strings.TrimSpace(id)
-		}
-
-		// get permission apps by IDs
-		apps, err = s.applicationRepository.FindPermissionAppsByIDs(ctx, ids)
-		if err != nil {
-			log.Error().Err(err).Msg("service::GetListPermissionByApp - Failed to get permission apps by IDs")
-			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage("Internal server error"))
-		}
-	} else {
-		apps = []dto.PermissionApp{}
-	}
-
-	// validate if apps is nil
-	if apps == nil {
-		apps = []dto.PermissionApp{}
-	}
-
-	// create mapping response
-	response := &dto.GetListPermissionByAppResponse{
-		ApplicationPermissions: apps,
-	}
-
-	// return response
-	return response, nil
-}
-
-func (s *superAdminService) RemoveRolePermission(ctx context.Context, roleID string) error {
+func (s *roleService) RemoveRolePermission(ctx context.Context, roleID string) error {
 	// begin transaction
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -318,7 +292,7 @@ func (s *superAdminService) RemoveRolePermission(ctx context.Context, roleID str
 	return nil
 }
 
-func (s *superAdminService) UpdateRolePermission(ctx context.Context, req *dto.SoftDeleteRolePermissionRequest, roleID string) (*dto.RolePermissionResponse, error) {
+func (s *roleService) UpdateRolePermission(ctx context.Context, req *dto.SoftDeleteRolePermissionRequest, roleID string) (*dto.RolePermissionResponse, error) {
 	// mapping request apllication permission ID
 	applicationIDs := make([]string, 0, len(req.AppPermissions))
 	for _, item := range req.AppPermissions {

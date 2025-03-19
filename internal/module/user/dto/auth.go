@@ -1,5 +1,9 @@
 package dto
 
+import (
+	role "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/dto"
+)
+
 // User DTO
 type RegisterRequest struct {
 	FullName        string `json:"full_name" validate:"required,min=2,max=100"`
@@ -48,12 +52,12 @@ type LoginRequest struct {
 }
 
 type AuthUserResponse struct {
-	Email          string           `json:"email"`
-	EmailConfirmed EmailConfirmed   `json:"email_confirmed"`
-	FullName       string           `json:"full_name"`
-	PhoneNumber    string           `json:"phone_number"`
-	Token          TokenDetail      `json:"token"`
-	UserRole       []UserRoleDetail `json:"user_role"`
+	Email          string                `json:"email"`
+	EmailConfirmed EmailConfirmed        `json:"email_confirmed"`
+	FullName       string                `json:"full_name"`
+	PhoneNumber    string                `json:"phone_number"`
+	Token          TokenDetail           `json:"token"`
+	UserRole       []role.UserRoleDetail `json:"user_role"`
 }
 
 type TokenDetail struct {
@@ -81,11 +85,11 @@ type ApplicationPermissionDetail struct {
 }
 
 type GetCurrentUserResponse struct {
-	Email          string           `json:"email"`
-	EmailConfirmed EmailConfirmed   `json:"email_confirmed"`
-	FullName       string           `json:"full_name"`
-	PhoneNumber    string           `json:"phone_number"`
-	UserRole       []UserRoleDetail `json:"user_role"`
+	Email          string                `json:"email"`
+	EmailConfirmed EmailConfirmed        `json:"email_confirmed"`
+	FullName       string                `json:"full_name"`
+	PhoneNumber    string                `json:"phone_number"`
+	UserRole       []role.UserRoleDetail `json:"user_role"`
 }
 
 type ForgotPasswordResponse struct {
@@ -98,4 +102,8 @@ type ResetPasswordRequest struct {
 	SessionToken    string `json:"session_token" validate:"required,max=255"`
 	Password        string `json:"password" validate:"required,strong_password"`
 	ConfirmPassword string `json:"confirm_password" validate:"required,eqfield=Password"`
+}
+
+type IsConfirmEmail struct {
+	IsConfirm bool `json:"is_confirm"`
 }

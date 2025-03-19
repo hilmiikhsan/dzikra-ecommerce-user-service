@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/entity"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 )
 
 type RoleRepository interface {
@@ -16,4 +16,12 @@ type RoleRepository interface {
 	FindRoleByID(ctx context.Context, roleID string) (*dto.GetListRolePermission, error)
 	SoftDeleteRole(ctx context.Context, tx *sql.Tx, roleID string) error
 	UpdateRole(ctx context.Context, tx *sql.Tx, roleID, newName, description, currentName string) error
+}
+
+type RoleService interface {
+	GetDetailRole(ctx context.Context, roleID string) (*dto.GetDetailRoleResponse, error)
+	GetListRole(ctx context.Context, page, limit int, search string) (*dto.GetListRole, error)
+	CreateRolePermission(ctx context.Context, req *dto.RolePermissionRequest) (*dto.RolePermissionResponse, error)
+	RemoveRolePermission(ctx context.Context, roleID string) error
+	UpdateRolePermission(ctx context.Context, req *dto.SoftDeleteRolePermissionRequest, roleID string) (*dto.RolePermissionResponse, error)
 }

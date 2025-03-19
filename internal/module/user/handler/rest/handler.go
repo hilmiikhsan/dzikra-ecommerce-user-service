@@ -1,8 +1,6 @@
 package rest
 
 import (
-	"strings"
-
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/middleware"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
@@ -232,23 +230,23 @@ func (h *userHandler) resetPassword(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
 }
 
-func (h *userHandler) getDetailRole(c *fiber.Ctx) error {
-	var (
-		ctx    = c.Context()
-		roleID = c.Params("role_id")
-	)
+// func (h *userHandler) getDetailRole(c *fiber.Ctx) error {
+// 	var (
+// 		ctx    = c.Context()
+// 		roleID = c.Params("role_id")
+// 	)
 
-	if strings.Contains(roleID, ":role_id") {
-		log.Warn().Msg("handler::getDetailRole - Invalid role ID")
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid role ID"))
-	}
+// 	if strings.Contains(roleID, ":role_id") {
+// 		log.Warn().Msg("handler::getDetailRole - Invalid role ID")
+// 		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid role ID"))
+// 	}
 
-	res, err := h.service.GetDetailRole(ctx, roleID)
-	if err != nil {
-		log.Error().Err(err).Any("roleID", roleID).Msg("handler::getDetailRole - Failed to get detail role")
-		code, errs := err_msg.Errors[error](err)
-		return c.Status(code).JSON(response.Error(errs))
-	}
+// 	res, err := h.service.GetDetailRole(ctx, roleID)
+// 	if err != nil {
+// 		log.Error().Err(err).Any("roleID", roleID).Msg("handler::getDetailRole - Failed to get detail role")
+// 		code, errs := err_msg.Errors[error](err)
+// 		return c.Status(code).JSON(response.Error(errs))
+// 	}
 
-	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
-}
+// 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+// }

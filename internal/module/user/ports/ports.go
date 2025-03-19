@@ -29,14 +29,4 @@ type UserService interface {
 	RefreshToken(ctx context.Context, accessToken string, locals *middleware.Locals) (*dto.AuthUserResponse, error)
 	ForgotPassword(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.ForgotPasswordResponse, error)
 	ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error
-	GetDetailRole(ctx context.Context, roleID string) (*dto.GetDetailRoleResponse, error)
-}
-
-type SuperAdminService interface {
-	CreateRolePermission(ctx context.Context, req *dto.RolePermissionRequest) (*dto.RolePermissionResponse, error)
-	GetListRole(ctx context.Context, page, limit int, search string) (*dto.GetListRole, error)
-	GetListApplication(ctx context.Context) ([]dto.GetListApplicationResponse, error)
-	GetListPermissionByApp(ctx context.Context, appIDsParam string) (*dto.GetListPermissionByAppResponse, error)
-	RemoveRolePermission(ctx context.Context, roleID string) error
-	UpdateRolePermission(ctx context.Context, req *dto.SoftDeleteRolePermissionRequest, roleID string) (*dto.RolePermissionResponse, error)
 }

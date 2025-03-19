@@ -7,9 +7,9 @@ import (
 	"errors"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/ports"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )

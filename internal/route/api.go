@@ -1,7 +1,8 @@
 package route
 
 import (
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/handler/rest"
+	role "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/handler/rest"
+	user "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/handler/rest"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/response"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
@@ -13,8 +14,8 @@ func SetupRoutes(app *fiber.App) {
 		superadminAPI = app.Group("/api/superadmin")
 	)
 
-	rest.NewUserHandler().UserRoute(userAPI)
-	rest.NewSuperAdminHandler().SuperAdminRoute(superadminAPI)
+	user.NewUserHandler().UserRoute(userAPI)
+	role.NewRoleHandler().RoleRoute(userAPI, superadminAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {
