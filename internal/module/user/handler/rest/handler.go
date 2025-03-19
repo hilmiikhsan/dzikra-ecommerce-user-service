@@ -230,23 +230,18 @@ func (h *userHandler) resetPassword(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
 }
 
-// func (h *userHandler) getDetailRole(c *fiber.Ctx) error {
-// 	var (
-// 		ctx    = c.Context()
-// 		roleID = c.Params("role_id")
-// 	)
+func (h *userHandler) getListUser(c *fiber.Ctx) error {
+	ctx := c.Context()
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 10)
+	search := c.Query("search", "")
 
-// 	if strings.Contains(roleID, ":role_id") {
-// 		log.Warn().Msg("handler::getDetailRole - Invalid role ID")
-// 		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid role ID"))
-// 	}
+	res, err := h.service.GetListUser(ctx, page, limit, search)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::GetListUser - Failed to get list user")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
 
-// 	res, err := h.service.GetDetailRole(ctx, roleID)
-// 	if err != nil {
-// 		log.Error().Err(err).Any("roleID", roleID).Msg("handler::getDetailRole - Failed to get detail role")
-// 		code, errs := err_msg.Errors[error](err)
-// 		return c.Status(code).JSON(response.Error(errs))
-// 	}
-
-// 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
-// }
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}

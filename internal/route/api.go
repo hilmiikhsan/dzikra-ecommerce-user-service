@@ -14,7 +14,7 @@ func SetupRoutes(app *fiber.App) {
 		superadminAPI = app.Group("/api/superadmin")
 	)
 
-	user.NewUserHandler().UserRoute(userAPI)
+	user.NewUserHandler().UserRoute(userAPI, superadminAPI)
 	role.NewRoleHandler().RoleRoute(userAPI, superadminAPI)
 
 	// fallback route

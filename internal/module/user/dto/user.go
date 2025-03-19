@@ -13,10 +13,10 @@ type GetListUserResponse struct {
 }
 
 type GetListUser struct {
-	ID             string         `json:"id"`
-	Email          string         `json:"email"`
-	FullName       string         `json:"full_name"`
-	PhoneNumber    string         `json:"phone_number"`
-	UserRole       role.UserRole  `json:"user_role"`
-	EmailConfirmed IsConfirmEmail `json:"email_confirmed"`
+	ID             string          `json:"id"`
+	Email          string          `json:"email"`
+	FullName       string          `json:"full_name"`
+	PhoneNumber    string          `json:"phone_number"`
+	UserRole       []role.UserRole `json:"user_role"`
+	EmailConfirmed IsConfirmEmail  `json:"email_confirmed"`
 }

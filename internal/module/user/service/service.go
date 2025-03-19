@@ -827,39 +827,29 @@ func (s *userService) ResetPassword(ctx context.Context, req *dto.ResetPasswordR
 	return nil
 }
 
-// func (s *userService) GetDetailRole(ctx context.Context, roleID string) (*dto.GetDetailRoleResponse, error) {
-// 	// find role by ID
-// 	roleResult, err := s.roleRepository.FindRoleByID(ctx, roleID)
-// 	if err != nil {
-// 		if strings.Contains(err.Error(), constants.ErrRoleNotFound) {
-// 			log.Error().Any("roleID", roleID).Msg("service::GetDetailRole - Role not found")
-// 			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrRoleNotFound))
-// 		}
-// 		log.Error().Err(err).Any("roleID", roleID).Msg("service::GetDetailRole - Failed to get role by ID")
-// 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
-// 	}
+func (s *userService) GetListUser(ctx context.Context, page, limit int, search string) (*dto.GetListUserResponse, error) {
+	// define variable for pagination
+	currentPage, perPage, offset := utils.Paginate(page, limit)
 
-// 	// check role
-// 	if roleResult == nil {
-// 		log.Error().Any("roleID", roleID).Msg("service::GetDetailRole - Role not found")
-// 		return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrRoleNotFound))
-// 	}
+	// find all user
+	users, total, err := s.userRepository.FindAllUser(ctx, perPage, offset, search)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListUser - Failed to find all user")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
 
-// 	// mapping data role app permission
-// 	converted := make([]dto.DetailAppPermission, 0)
-// 	if roleResult.RoleAppPermission != nil {
-// 		for _, data := range roleResult.RoleAppPermission {
-// 			converted = append(converted, utils.MapToDetailAppPermission(data, roleResult.Roles))
-// 		}
-// 	}
+	// calculate total pages
+	totalPages := utils.CalculateTotalPages(total, perPage)
 
-// 	// mapping get detail role response data
-// 	response := &dto.GetDetailRoleResponse{
-// 		ID:                roleResult.ID,
-// 		Description:       roleResult.Description,
-// 		RoleAppPermission: converted,
-// 	}
+	// mapping get list user response data
+	response := &dto.GetListUserResponse{
+		Users:       users,
+		TotalPages:  totalPages,
+		CurrentPage: currentPage,
+		PageSize:    perPage,
+		TotalData:   total,
+	}
 
-// 	// return response
-// 	return response, nil
-// }
+	// return response
+	return response, nil
+}

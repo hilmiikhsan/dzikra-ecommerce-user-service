@@ -3,11 +3,14 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/ports"
+	userRole "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_role/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/err_msg"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/utils"
 	"github.com/gofiber/fiber/v2"
@@ -129,4 +132,58 @@ func (r *userRepository) UpdatePasswordByEmail(ctx context.Context, email, passw
 	}
 
 	return nil
+}
+
+func (r *userRepository) FindAllUser(ctx context.Context, limit, offset int, search string) ([]dto.GetListUser, int, error) {
+	var rows []entity.ListUserRow
+
+	if err := r.db.SelectContext(ctx, &rows, r.db.Rebind(queryFindAllUser), search, search, limit, offset); err != nil {
+		log.Error().Err(err).Msg("repository::GetListUser - error executing query")
+		return nil, 0, err
+	}
+
+	var total int
+	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountUser), search, search); err != nil {
+		log.Error().Err(err).Msg("repository::GetListUser - error counting users")
+		return nil, 0, err
+	}
+
+	users := make([]dto.GetListUser, 0, len(rows))
+	for _, row := range rows {
+		var roles []userRole.UserRoleDetail
+
+		if err := json.Unmarshal([]byte(row.UserRole), &roles); err != nil {
+			log.Error().Err(err).Msg("repository::GetListUser - error unmarshalling user_role JSON")
+			return nil, 0, err
+		}
+
+		convertedRoles := ConvertUserRoleDetails(roles)
+
+		userDTO := dto.GetListUser{
+			ID:             row.ID,
+			Email:          row.Email,
+			FullName:       row.FullName,
+			PhoneNumber:    row.PhoneNumber,
+			UserRole:       convertedRoles,
+			EmailConfirmed: dto.IsConfirmEmail{IsConfirm: row.EmailConfirmed},
+		}
+
+		users = append(users, userDTO)
+	}
+
+	return users, total, nil
+}
+
+func ConvertUserRoleDetail(urd userRole.UserRoleDetail) userRole.UserRole {
+	return userRole.UserRole(urd)
+}
+
+func ConvertUserRoleDetails(details []userRole.UserRoleDetail) []userRole.UserRole {
+	var result []userRole.UserRole
+
+	for _, d := range details {
+		result = append(result, ConvertUserRoleDetail(d))
+	}
+
+	return result
 }

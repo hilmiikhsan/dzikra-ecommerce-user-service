@@ -19,3 +19,12 @@ type User struct {
 	UpdatedAt           time.Time  `db:"updated_at"`
 	DeletedAt           *time.Time `db:"deleted_at"`
 }
+
+type ListUserRow struct {
+	ID             string `db:"id"`
+	Email          string `db:"email"`
+	FullName       string `db:"full_name"`
+	PhoneNumber    string `db:"phone_number"`
+	UserRole       string `db:"user_role"`
+	EmailConfirmed bool   `db:"email_confirmed"`
+}
