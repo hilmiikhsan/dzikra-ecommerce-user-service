@@ -20,3 +20,20 @@ type GetDetailUserResponse struct {
 	UserRole       []role.UserRole `json:"user_role"`
 	EmailConfirmed IsConfirmEmail  `json:"email_confirmed"`
 }
+
+type CreateUserRequest struct {
+	FullName        string   `json:"full_name" validate:"required,min=2,max=100"`
+	Email           string   `json:"email" validate:"required,email,email_blacklist"`
+	Password        string   `json:"password" validate:"required,strong_password"`
+	ConfirmPassword string   `json:"confirm_password" validate:"required,eqfield=Password"`
+	Role            []string `json:"role" validate:"non_empty_array"`
+	PhoneNumber     string   `json:"phone_number" validate:"required,phone"`
+}
+
+type CreateUserResponse struct {
+	ID          string          `json:"id"`
+	Email       string          `json:"email"`
+	FullName    string          `json:"full_name"`
+	PhoneNumber string          `json:"phone_number"`
+	UserRole    []role.UserRole `json:"user_role"`
+}

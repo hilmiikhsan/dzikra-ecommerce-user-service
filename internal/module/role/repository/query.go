@@ -133,4 +133,17 @@ const (
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = ? AND deleted_at IS NULL
 	`
+
+	queryFindAllRole = `
+		SELECT name FROM roles WHERE deleted_at IS NULL
+	`
+
+	queryFindRoleIDsByNames = `
+		SELECT id FROM roles 
+		WHERE UPPER(name) IN (?) AND deleted_at IS NULL
+	`
+
+	queryFindRoleNameMap = `
+		SELECT id, name FROM roles WHERE deleted_at IS NULL
+	`
 )

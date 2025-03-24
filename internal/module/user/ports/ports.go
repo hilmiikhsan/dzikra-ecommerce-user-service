@@ -33,4 +33,5 @@ type UserService interface {
 	ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error
 	GetListUser(ctx context.Context, page, limit int, search string) (*dto.GetListUserResponse, error)
 	GetDetailUser(ctx context.Context, userID string) (*dto.GetDetailUserResponse, error)
+	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error)
 }

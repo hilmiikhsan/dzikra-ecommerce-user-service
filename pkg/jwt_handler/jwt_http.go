@@ -29,7 +29,7 @@ func NewJWT(db redisPorts.RedisRepository) *jwtHandler {
 func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClaimsPayload) (*GenerateTokenResponse, error) {
 	// Hapus token lama berdasarkan pola lama (jika masih diperlukan, namun pada multiple session sebaiknya dihapus berdasarkan sessionID tertentu)
 	for _, tokenType := range []string{constants.AccessTokenType, constants.RefreshTokenType} {
-		key := fmt.Sprintf("%s:%s", payload.Username, tokenType)
+		key := fmt.Sprintf("%s:%s", payload.Email, tokenType)
 		err := j.db.Del(ctx, key)
 		if err != nil {
 			log.Error().Err(err).Msgf("jwthandler::GenerateTokenString - Error while deleting %s from Redis", tokenType)
@@ -58,7 +58,6 @@ func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClai
 		expireTime := now.Add(duration)
 		claims := CustomClaims{
 			UserID:     payload.UserID,
-			Username:   payload.Username,
 			Email:      payload.Email,
 			FullName:   payload.FullName,
 			SessionID:  payload.SessionID,
@@ -92,8 +91,8 @@ func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClai
 		return nil, err
 	}
 
-	// Save access token to Redis with unique key based on username and sessionID
-	accessTokenKey := fmt.Sprintf("%s:%s:%s", payload.Username, payload.SessionID, constants.AccessTokenType)
+	// Save access token to Redis with unique key based on email and sessionID
+	accessTokenKey := fmt.Sprintf("%s:%s:%s", payload.Email, payload.SessionID, constants.AccessTokenType)
 	err = j.db.Set(ctx, accessTokenKey, accessToken, time.Until(accessExpireTime))
 	if err != nil {
 		log.Error().Err(err).Msg("jwthandler::GenerateTokenString - Error while saving access token to Redis")
@@ -108,7 +107,7 @@ func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClai
 	}
 
 	// Save refresh token to Redis with unique key based on sessionID
-	refreshTokenKey := fmt.Sprintf("%s:%s:%s", payload.Username, payload.SessionID, constants.RefreshTokenType)
+	refreshTokenKey := fmt.Sprintf("%s:%s:%s", payload.Email, payload.SessionID, constants.RefreshTokenType)
 	err = j.db.Set(ctx, refreshTokenKey, refreshToken, time.Until(refreshExpireTime))
 	if err != nil {
 		log.Error().Err(err).Msg("jwthandler::GenerateTokenString - Error while saving refresh token to Redis")
@@ -126,10 +125,10 @@ func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClai
 	}, nil
 }
 
-func (j *jwtHandler) ParseTokenString(ctx context.Context, tokenString, username, sessionID, tokenType string) (*CustomClaims, error) {
+func (j *jwtHandler) ParseTokenString(ctx context.Context, tokenString, email, sessionID, tokenType string) (*CustomClaims, error) {
 	claims := &CustomClaims{}
 
-	key := fmt.Sprintf("%s:%s:%s", username, sessionID, tokenType)
+	key := fmt.Sprintf("%s:%s:%s", email, sessionID, tokenType)
 
 	storedToken, err := j.db.Get(ctx, key)
 	if err != nil {
@@ -185,7 +184,7 @@ func (j *jwtHandler) ParseMiddlewareTokenString(ctx context.Context, tokenString
 	}
 
 	// Check if the token is stored in Redis
-	key := fmt.Sprintf("%s:%s:%s", claims.Username, claims.SessionID, constants.AccessTokenType)
+	key := fmt.Sprintf("%s:%s:%s", claims.Email, claims.SessionID, constants.AccessTokenType)
 	storedToken, err := j.db.Get(ctx, key)
 	if err != nil {
 		log.Error().Err(err).Msg("jwthandler::ParseMiddlewareTokenString - Token not found in Redis")

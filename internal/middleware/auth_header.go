@@ -31,7 +31,6 @@ func (m *UserMiddleware) UserBearer(c *fiber.Ctx) error {
 	}
 
 	c.Locals("user_id", claims.UserID)
-	c.Locals("username", claims.Username)
 	c.Locals("email", claims.Email)
 	c.Locals("full_name", claims.FullName)
 	c.Locals("session_id", claims.SessionID)
@@ -66,7 +65,6 @@ func (m *UserMiddleware) UserRefreshBearer(c *fiber.Ctx) error {
 	}
 
 	c.Locals("user_id", claims.UserID)
-	c.Locals("username", claims.Username)
 	c.Locals("email", claims.Email)
 	c.Locals("full_name", claims.FullName)
 	c.Locals("session_id", claims.SessionID)

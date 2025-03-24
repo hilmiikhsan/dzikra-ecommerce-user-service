@@ -8,7 +8,6 @@ import (
 
 type CustomClaims struct {
 	UserID     string    `json:"user_id"`
-	Username   string    `json:"username"`
 	Email      string    `json:"email"`
 	FullName   string    `json:"full_name"`
 	SessionID  string    `json:"session_id"`
@@ -21,7 +20,6 @@ type CustomClaims struct {
 
 type CostumClaimsPayload struct {
 	UserID     string `json:"user_id"`
-	Username   string `json:"username"`
 	Email      string `json:"email"`
 	FullName   string `json:"full_name"`
 	SessionID  string `json:"session_id"`

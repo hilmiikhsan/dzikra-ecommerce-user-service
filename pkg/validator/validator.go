@@ -81,6 +81,9 @@ func NewValidator() *Validator {
 	if err := v.RegisterValidation("device_type", isValidDeviceType); err != nil {
 		log.Fatal().Err(err).Msg("Error while registering device_type validator")
 	}
+	if err := v.RegisterValidation("non_empty_array", isNonEmptyArray); err != nil {
+		log.Fatal().Err(err).Msg("Error while registering non_empty_array validator")
+	}
 
 	validatorCustom.validator = v
 	// validatorCustom.trans = trans
@@ -267,4 +270,14 @@ func isValidDeviceType(fl validator.FieldLevel) bool {
 	}
 
 	return false
+}
+
+func isNonEmptyArray(fl validator.FieldLevel) bool {
+	val := fl.Field()
+
+	if val.Kind() != reflect.Slice {
+		return false
+	}
+
+	return val.Len() > 0
 }

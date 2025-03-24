@@ -5,17 +5,15 @@ const (
 		INSERT INTO users
 		(
 			id,
-			username,
 			email,
 			password,
 			full_name
-		) VALUES (?, ?, ?, ?, ?) RETURNING id, username, full_name, email
+		) VALUES (?, ?, ?, ?) RETURNING id, full_name, email
 	`
 
 	queryFindUserByEmail = `
 		SELECT
 			id,
-			username,
 			password,
 			email,
 			full_name,
@@ -44,7 +42,6 @@ const (
 	queryFindUserByID = `
 		SELECT
 			id,
-			username,
 			password,
 			email,
 			full_name,

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/dto"
@@ -206,4 +207,53 @@ func (r *roleRepository) UpdateRole(ctx context.Context, tx *sql.Tx, roleID, new
 	}
 
 	return nil
+}
+
+func (r *roleRepository) FindAllRole(ctx context.Context) ([]string, error) {
+	var roles []string
+
+	if err := r.db.SelectContext(ctx, &roles, queryFindAllRole); err != nil {
+		log.Error().Err(err).Msg("repository::FindAllRole - Failed to find all roles")
+		return nil, err
+	}
+
+	return roles, nil
+}
+
+func (r *roleRepository) FindRoleIDsByNames(ctx context.Context, names []string) ([]string, error) {
+	upperNames := make([]string, len(names))
+	for i, n := range names {
+		upperNames[i] = strings.ToUpper(n)
+	}
+
+	query, args, err := sqlx.In(queryFindRoleIDsByNames, upperNames)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::FindRoleIDsByNames - error building query")
+		return nil, err
+	}
+	query = r.db.Rebind(query)
+
+	var roleIDs []string
+	if err := r.db.SelectContext(ctx, &roleIDs, query, args...); err != nil {
+		log.Error().Err(err).Msg("repository::FindRoleIDsByNames - error executing query")
+		return nil, err
+	}
+
+	return roleIDs, nil
+}
+
+func (r *roleRepository) FindRoleNameMap(ctx context.Context) (map[string]string, error) {
+	var rows []entity.Role
+
+	if err := r.db.SelectContext(ctx, &rows, r.db.Rebind(queryFindRoleNameMap)); err != nil {
+		log.Error().Err(err).Msg("repository::GetRoleNameMap - error executing query")
+		return nil, err
+	}
+
+	roleMap := make(map[string]string)
+	for _, row := range rows {
+		roleMap[row.ID.String()] = row.Name
+	}
+
+	return roleMap, nil
 }

@@ -4,7 +4,6 @@ var (
 	ErrRoleNotFound                  = "Role not found"
 	ErrUserNotFound                  = "User not found"
 	ErrEmailAlreadyRegistered        = "Email already registered"
-	ErrUsernameAlreadyRegistered     = "Username already registered"
 	ErrInternalServerError           = "Internal server error"
 	ErrEmailOrOTPNumberIsIncorrect   = "Email or otp number is incorrect"
 	ErrEmailNotRegistered            = "Email is not registered"
@@ -23,4 +22,5 @@ var (
 	ErrRoleAlreadyExist              = "Role already exist"
 	ErrApplicationDoenstHaveAccess   = "Application does not have access to this action"
 	ErrApplicationForbidden          = "You do not have permission for this action"
+	ErrUserNotVerified               = "User not verified"
 )

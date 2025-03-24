@@ -266,3 +266,30 @@ func (h *userHandler) getDetailUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
+
+func (h *userHandler) createUser(c *fiber.Ctx) error {
+	var (
+		req = new(dto.CreateUserRequest)
+		ctx = c.Context()
+	)
+
+	if err := c.BodyParser(req); err != nil {
+		log.Warn().Err(err).Msg("handler::createUser - Failed to parse request body")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err))
+	}
+
+	if err := h.validator.Validate(req); err != nil {
+		log.Warn().Err(err).Msg("handler::createUser - Invalid request body")
+		code, errs := err_msg.Errors(err, req)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	res, err := h.service.CreateUser(ctx, req)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("handler::createUser - Failed to create user")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(response.Success(res, ""))
+}

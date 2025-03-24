@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -14,12 +15,14 @@ import (
 	user "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/entity"
 	userFcmToken "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_fcm_token/entity"
 	userProfile "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_profile/entity"
+	userRoleDto "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_role/dto"
 	userRole "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_role/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/err_msg"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/jwt_handler"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/utils"
 	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -62,7 +65,6 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 	if userResult != nil {
 		res.ID = userResult.ID
 		res.FullName = userResult.FullName
-		res.Username = userResult.Username
 		res.Email = userResult.Email
 	}
 
@@ -90,7 +92,6 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 		userData := &user.User{
 			ID:       userID,
 			FullName: req.FullName,
-			Username: req.Username,
 			Password: req.Password,
 			Email:    req.Email,
 		}
@@ -109,11 +110,6 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 
 		res, err = s.userRepository.InsertNewUser(ctx, tx, userData)
 		if err != nil {
-			if strings.Contains(err.Error(), constants.ErrUsernameAlreadyRegistered) {
-				log.Error().Any("payload", req).Msg("service::Register - Username already registered")
-				return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrUsernameAlreadyRegistered))
-			}
-
 			if strings.Contains(err.Error(), constants.ErrEmailAlreadyRegistered) {
 				log.Error().Any("payload", req).Msg("service::Register - Email already registered")
 				return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrEmailAlreadyRegistered))
@@ -140,7 +136,7 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 		}
 
-		err = s.redisRepository.Set(ctx, fmt.Sprintf("%s:%s", constants.RegisteredUserProgress, req.Username), true, 5*time.Minute)
+		err = s.redisRepository.Set(ctx, fmt.Sprintf("%s:%s", constants.RegisteredUserProgress, req.Email), true, 5*time.Minute)
 		if err != nil {
 			log.Error().Err(err).Any("payload", req).Msg("service::Register - Failed to set data redis")
 			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
@@ -148,7 +144,7 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 	} else if userResult.EmailVerifiedAt == nil && userResult.OtpNumberVerifiedAt == nil {
 		log.Info().Any("payload", req).Msg("service::Register - Email not verified")
 
-		key := fmt.Sprintf("%s:%s", constants.RegisteredUserProgress, req.Username)
+		key := fmt.Sprintf("%s:%s", constants.RegisteredUserProgress, req.Email)
 
 		_, err = s.redisRepository.Get(ctx, key)
 		if err != nil {
@@ -168,7 +164,7 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 
 	otpNumber := utils.GenerateRandomOTP()
 
-	otpRedisKey := fmt.Sprintf("%s:%s", constants.OTPNumberKey, req.Username)
+	otpRedisKey := fmt.Sprintf("%s:%s", constants.OTPNumberKey, req.Email)
 
 	err = s.redisRepository.Set(ctx, otpRedisKey, otpNumber, 2*time.Minute)
 	if err != nil {
@@ -210,9 +206,9 @@ func (s *userService) Verification(ctx context.Context, req *dto.VerificationReq
 		return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage(constants.ErrEmailOrOTPNumberIsIncorrect))
 	}
 
-	key := fmt.Sprintf("%s:%s", constants.OTPNumberKey, userData.Username)
-	blockedKey := fmt.Sprintf("%s:%s", constants.OTPBlockedKey, userData.Username)
-	attemptKey := fmt.Sprintf("%s:%s", constants.OTPAttemptKey, userData.Username)
+	key := fmt.Sprintf("%s:%s", constants.OTPNumberKey, userData.Email)
+	blockedKey := fmt.Sprintf("%s:%s", constants.OTPBlockedKey, userData.Email)
+	attemptKey := fmt.Sprintf("%s:%s", constants.OTPAttemptKey, userData.Email)
 
 	blockTTL, err := s.redisRepository.TTL(ctx, blockedKey)
 	if err != nil {
@@ -304,7 +300,7 @@ func (s *userService) SendOtpNumberVerification(ctx context.Context, req *dto.Se
 		return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrUserAlreadyVerified))
 	}
 
-	key := fmt.Sprintf("%s:%s", constants.OTPNumberKey, userData.Username)
+	key := fmt.Sprintf("%s:%s", constants.OTPNumberKey, userData.Email)
 
 	_, err = s.redisRepository.Get(ctx, key)
 	if err != nil {
@@ -351,23 +347,34 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 	if err != nil {
 		if strings.Contains(err.Error(), constants.ErrEmailOrPasswordIsIncorrect) {
 			log.Error().Any("payload", req).Msg("service::Login - Email is incorrect")
-			return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrEmailOrPasswordIsIncorrect))
+			return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage(constants.ErrEmailOrPasswordIsIncorrect))
 		}
 
 		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to find user by email")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
+	// check if user is not registered
+	if userResult == nil {
+		log.Error().Msg("service::Login - User not registered")
+		return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage(constants.ErrEmailOrPasswordIsIncorrect))
+	}
+
+	// check if user is not verified
+	if userResult.EmailVerifiedAt == nil && userResult.OtpNumberVerifiedAt == nil {
+		log.Error().Any("payload", req).Msg("service::Login - User not verified")
+		return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrUserNotVerified))
+	}
+
 	// check password
 	if !utils.ComparePassword(userResult.Password, req.Password) {
 		log.Error().Any("payload", req).Msg("service::Login - Password is incorrect")
-		return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(constants.ErrEmailOrPasswordIsIncorrect))
+		return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage(constants.ErrEmailOrPasswordIsIncorrect))
 	}
 
 	// generate token
 	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
 		UserID:     userResult.ID.String(),
-		Username:   userResult.Username,
 		Email:      userResult.Email,
 		FullName:   userResult.FullName,
 		SessionID:  utils.GenerateSessionUUID(),
@@ -499,7 +506,7 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 
 func (s *userService) Logout(ctx context.Context, accessToken string, locals *middleware.Locals) error {
 	// parse token
-	_, err := s.jwt.ParseTokenString(ctx, accessToken, locals.Username, locals.SessionID, constants.AccessTokenType)
+	_, err := s.jwt.ParseTokenString(ctx, accessToken, locals.Email, locals.SessionID, constants.AccessTokenType)
 	if err != nil {
 		log.Error().Err(err).Any("access_token", accessToken).Msg("service::Logout - Failed to parse access token")
 		return err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrInvalidAccessToken))
@@ -513,7 +520,7 @@ func (s *userService) Logout(ctx context.Context, accessToken string, locals *mi
 	}
 
 	// delete access token from redis
-	userKey := fmt.Sprintf("%s:%s:%s", locals.Username, locals.SessionID, constants.AccessTokenType)
+	userKey := fmt.Sprintf("%s:%s:%s", locals.Email, locals.SessionID, constants.AccessTokenType)
 	err = s.redisRepository.Del(ctx, userKey)
 	if err != nil {
 		log.Error().Err(err).Any("access_token", accessToken).Msg("service::Logout - Failed to delete access token from Redis")
@@ -521,7 +528,7 @@ func (s *userService) Logout(ctx context.Context, accessToken string, locals *mi
 	}
 
 	// delete refresh token from redis
-	refreshTokenKey := fmt.Sprintf("%s:%s:%s", locals.Username, locals.SessionID, constants.RefreshTokenType)
+	refreshTokenKey := fmt.Sprintf("%s:%s:%s", locals.Email, locals.SessionID, constants.RefreshTokenType)
 	err = s.redisRepository.Del(ctx, refreshTokenKey)
 	if err != nil {
 		log.Error().Err(err).Any("access_token", accessToken).Msg("service::Logout - Failed to delete refresh token from Redis")
@@ -589,7 +596,7 @@ func (s *userService) RefreshToken(ctx context.Context, accessToken string, loca
 	)
 
 	// parse token
-	claims, err := s.jwt.ParseTokenString(ctx, accessToken, locals.Username, locals.SessionID, constants.RefreshTokenType)
+	claims, err := s.jwt.ParseTokenString(ctx, accessToken, locals.Email, locals.SessionID, constants.RefreshTokenType)
 	if err != nil {
 		log.Error().Err(err).Any("access_token", accessToken).Msg("service::RefreshToken - Failed to parse access token")
 		return nil, err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrInvalidAccessToken))
@@ -598,7 +605,6 @@ func (s *userService) RefreshToken(ctx context.Context, accessToken string, loca
 	// generate new token
 	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
 		UserID:     claims.UserID,
-		Username:   claims.Username,
 		Email:      claims.Email,
 		FullName:   claims.FullName,
 		SessionID:  utils.GenerateSessionUUID(),
@@ -869,4 +875,189 @@ func (s *userService) GetDetailUser(ctx context.Context, userID string) (*dto.Ge
 
 	// return response
 	return userResult, nil
+}
+
+func (s *userService) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error) {
+	// check user by email
+	userResult, err := s.userRepository.FindByEmail(ctx, req.Email)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateUser - Failed to find user by email")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if user already registered
+	if userResult != nil {
+		log.Error().Any("payload", req).Msg("service::CreateUser - Email already registered")
+		return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrEmailAlreadyRegistered))
+	}
+
+	// hash password
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateUser - Failed to hash password")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	req.Password = hashedPassword
+
+	// find all role
+	roles, err := s.roleRepository.FindAllRole(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("service::CreateUser - Failed to find all role")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check role request if not exist
+	for _, role := range req.Role {
+		if !slices.Contains(roles, role) {
+			log.Error().Msgf("service::CreateUser - Role %s not found", role)
+			return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(fmt.Sprintf("Role %s not found", role)))
+		}
+	}
+
+	// find role ids by names
+	roleIDs, err := s.roleRepository.FindRoleIDsByNames(ctx, req.Role)
+	if err != nil {
+		log.Error().Err(err).Msg("service::CreateUser - Failed to find role IDs by names")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// Begin transaction
+	tx, err := s.db.Begin()
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateUser - Failed to begin transaction")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				log.Error().Err(rollbackErr).Any("payload", req).Msg("service::CreateUser - Failed to rollback transaction")
+			}
+		}
+	}()
+
+	// generate user UUID V7
+	userID, err := utils.GenerateUUIDv7String()
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateUser - Failed to generate UUID V7")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// generate user profile UUID V7
+	userProfileID, err := utils.GenerateUUIDv7String()
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateUser - Failed to generate UUID V7")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// mapping user data
+	userData := &user.User{
+		ID:       userID,
+		FullName: req.FullName,
+		Password: req.Password,
+		Email:    req.Email,
+	}
+
+	// mapping user profile data
+	userProfileData := &userProfile.UserProfile{
+		ID:          userProfileID,
+		UserID:      userID,
+		PhoneNumber: &req.PhoneNumber,
+	}
+
+	// insert new user
+	_, err = s.userRepository.InsertNewUser(ctx, tx, userData)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrEmailAlreadyRegistered) {
+			log.Error().Any("payload", req).Msg("service::CreateUser - Email already registered")
+			return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrEmailAlreadyRegistered))
+		}
+
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateUser - Failed to insert new user")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// insert new user role
+	var insertedUserRoles []userRole.UserRole
+	for _, roleID := range roleIDs {
+		userRoleID, err := utils.GenerateUUIDv7String()
+		if err != nil {
+			log.Error().Err(err).Any("payload", req).Msg("service::CreateUser - Failed to generate UUID V7")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+
+		roleIdParsed, _ := uuid.Parse(roleID)
+
+		userRoleData := &userRole.UserRole{
+			ID:     userRoleID,
+			UserID: userID,
+			RoleID: roleIdParsed,
+		}
+
+		err = s.userRoleRepository.InsertNewUserRole(ctx, tx, userRoleData)
+		if err != nil {
+			log.Error().Err(err).Any("payload", req).Msg("service::CreateUser - Failed to insert new user role")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+
+		insertedUserRoles = append(insertedUserRoles, *userRoleData)
+	}
+
+	// insert new user profile
+	err = s.userProfileRepository.InsertNewUserProfile(ctx, tx, userProfileData)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrPhoneNumberAlreadyRegistered) {
+			log.Error().Any("payload", req).Msg("service::CreateUser - Phone number already registered")
+			return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrPhoneNumberAlreadyRegistered))
+		}
+
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateUser - Failed to insert new user profile")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::CreateUser - Failed to commit transaction")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// find role nam map
+	roleMap, err := s.roleRepository.FindRoleNameMap(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("service::CreateUser - Failed to find role name map")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// converted user role model to DTO
+	convertedRoles := ConvertUserRoleEntitiesToDTO(insertedUserRoles, roleMap)
+
+	// return response
+	return &dto.CreateUserResponse{
+		ID:          userID.String(),
+		Email:       req.Email,
+		FullName:    req.FullName,
+		PhoneNumber: req.PhoneNumber,
+		UserRole:    convertedRoles,
+	}, nil
+}
+
+func ConvertUserRoleEntityToDTO(ur userRole.UserRole, roleMap map[string]string) userRoleDto.UserRole {
+	roleName, ok := roleMap[ur.RoleID.String()]
+	if !ok {
+		roleName = ur.RoleID.String()
+	}
+
+	return userRoleDto.UserRole{
+		ID:     ur.ID.String(),
+		UserID: ur.UserID.String(),
+		RoleID: roleName,
+	}
+}
+
+func ConvertUserRoleEntitiesToDTO(entities []userRole.UserRole, roleMap map[string]string) []userRoleDto.UserRole {
+	dtoRoles := make([]userRoleDto.UserRole, 0, len(entities))
+	for _, ur := range entities {
+		dtoRoles = append(dtoRoles, ConvertUserRoleEntityToDTO(ur, roleMap))
+	}
+
+	return dtoRoles
 }

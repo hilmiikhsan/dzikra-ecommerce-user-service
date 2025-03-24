@@ -193,6 +193,9 @@ func errorValidationHandler[T any](err error, payload *T) (int, map[string][]str
 		case "device_type":
 			message = fmt.Sprintf("%s is not a valid device type.", fieldInMsg)
 			// message = fmt.Sprintf("%s bukan tipe perangkat yang valid.", fieldInMsg)
+		case "non_empty_array":
+			message = fmt.Sprintf("%s must not be empty.", fieldInMsg)
+			// message = fmt.Sprintf("%s tidak boleh kosong.", fieldInMsg)
 		}
 
 		errorMessages[field] = append(errorMessages[field], message)

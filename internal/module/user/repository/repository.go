@@ -36,20 +36,17 @@ func (r *userRepository) InsertNewUser(ctx context.Context, tx *sql.Tx, data *en
 
 	err := tx.QueryRowContext(ctx, r.db.Rebind(queryInsertNewUser),
 		data.ID,
-		data.Username,
 		data.Email,
 		data.Password,
 		data.FullName,
 	).Scan(
 		&res.ID,
-		&res.Username,
 		&res.FullName,
 		&res.Email,
 	)
 	if err != nil {
 		uniqueConstraints := map[string]string{
-			"users_username_key": constants.ErrUsernameAlreadyRegistered,
-			"users_email_key":    constants.ErrEmailAlreadyRegistered,
+			"users_email_key": constants.ErrEmailAlreadyRegistered,
 		}
 
 		val, handleErr := utils.HandleInsertUniqueError(err, data, uniqueConstraints)

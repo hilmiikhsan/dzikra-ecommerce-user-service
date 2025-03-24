@@ -16,6 +16,9 @@ type RoleRepository interface {
 	FindRoleByID(ctx context.Context, roleID string) (*dto.GetListRolePermission, error)
 	SoftDeleteRole(ctx context.Context, tx *sql.Tx, roleID string) error
 	UpdateRole(ctx context.Context, tx *sql.Tx, roleID, newName, description, currentName string) error
+	FindAllRole(ctx context.Context) ([]string, error)
+	FindRoleIDsByNames(ctx context.Context, names []string) ([]string, error)
+	FindRoleNameMap(ctx context.Context) (map[string]string, error)
 }
 
 type RoleService interface {
