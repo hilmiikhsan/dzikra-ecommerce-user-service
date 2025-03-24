@@ -16,4 +16,5 @@ func (h *userHandler) UserRoute(userRouter, superadminRouter fiber.Router) {
 
 	// Users
 	superadminRouter.Get("/users", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "users"), h.getListUser)
+	superadminRouter.Get("/users/:user_id", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "users"), h.getDetailUser)
 }

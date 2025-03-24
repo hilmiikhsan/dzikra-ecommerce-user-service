@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"strings"
+
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/middleware"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
@@ -239,6 +241,25 @@ func (h *userHandler) getListUser(c *fiber.Ctx) error {
 	res, err := h.service.GetListUser(ctx, page, limit, search)
 	if err != nil {
 		log.Error().Err(err).Msg("handler::GetListUser - Failed to get list user")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}
+
+func (h *userHandler) getDetailUser(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := c.Params("user_id")
+
+	if strings.Contains(userID, ":user_id") {
+		log.Warn().Msg("handler::getDetailRole - Invalid user ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid user ID"))
+	}
+
+	res, err := h.service.GetDetailUser(ctx, userID)
+	if err != nil {
+		log.Error().Err(err).Any("user_id", userID).Msg("handler::getDetailUser - Failed to get detail user")
 		code, errs := err_msg.Errors[error](err)
 		return c.Status(code).JSON(response.Error(errs))
 	}

@@ -853,3 +853,20 @@ func (s *userService) GetListUser(ctx context.Context, page, limit int, search s
 	// return response
 	return response, nil
 }
+
+func (s *userService) GetDetailUser(ctx context.Context, userID string) (*dto.GetDetailUserResponse, error) {
+	// find user by id
+	userResult, err := s.userRepository.FindUserDetailByID(ctx, userID)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrUserNotFound) {
+			log.Error().Err(err).Any("user_id", userID).Msg("service::GetDetailUser - User not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrUserNotFound))
+		}
+
+		log.Error().Err(err).Any("user_id", userID).Msg("service::GetDetailUser - Failed to find user by id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// return response
+	return userResult, nil
+}

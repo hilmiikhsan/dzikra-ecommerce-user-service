@@ -2,6 +2,7 @@ package constants
 
 var (
 	ErrRoleNotFound                  = "Role not found"
+	ErrUserNotFound                  = "User not found"
 	ErrEmailAlreadyRegistered        = "Email already registered"
 	ErrUsernameAlreadyRegistered     = "Username already registered"
 	ErrInternalServerError           = "Internal server error"

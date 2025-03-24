@@ -17,7 +17,8 @@ type UserRepository interface {
 	UpdateUserLastLoginAt(ctx context.Context, tx *sql.Tx, userID string) error
 	FindByID(ctx context.Context, id string) (*entity.User, error)
 	UpdatePasswordByEmail(ctx context.Context, email, password string) error
-	FindAllUser(ctx context.Context, limit, offset int, search string) ([]dto.GetListUser, int, error)
+	FindAllUser(ctx context.Context, limit, offset int, search string) ([]dto.GetDetailUserResponse, int, error)
+	FindUserDetailByID(ctx context.Context, id string) (*dto.GetDetailUserResponse, error)
 }
 
 type UserService interface {
@@ -31,4 +32,5 @@ type UserService interface {
 	ForgotPassword(ctx context.Context, req *dto.SendOtpNumberVerificationRequest) (*dto.ForgotPasswordResponse, error)
 	ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error
 	GetListUser(ctx context.Context, page, limit int, search string) (*dto.GetListUserResponse, error)
+	GetDetailUser(ctx context.Context, userID string) (*dto.GetDetailUserResponse, error)
 }

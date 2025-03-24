@@ -5,14 +5,14 @@ import (
 )
 
 type GetListUserResponse struct {
-	Users       []GetListUser `json:"users"`
-	TotalPages  int           `json:"total_pages"`
-	CurrentPage int           `json:"current_page"`
-	PageSize    int           `json:"page_size"`
-	TotalData   int           `json:"total_data"`
+	Users       []GetDetailUserResponse `json:"users"`
+	TotalPages  int                     `json:"total_pages"`
+	CurrentPage int                     `json:"current_page"`
+	PageSize    int                     `json:"page_size"`
+	TotalData   int                     `json:"total_data"`
 }
 
-type GetListUser struct {
+type GetDetailUserResponse struct {
 	ID             string          `json:"id"`
 	Email          string          `json:"email"`
 	FullName       string          `json:"full_name"`
