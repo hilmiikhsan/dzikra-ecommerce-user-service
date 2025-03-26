@@ -112,14 +112,14 @@ func (r *roleRepository) FindListRole(ctx context.Context, limit, offset int, se
 	var responses []entity.ListRolePermission
 
 	if err := r.db.SelectContext(ctx, &responses, r.db.Rebind(queryFindListRole), search, limit, offset); err != nil {
-		log.Error().Err(err).Msg("repository::GetListRole - error executing query")
+		log.Error().Err(err).Msg("repository::FindListRole - error executing query")
 		return nil, 0, err
 	}
 
 	var total int
 
 	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListRole), search); err != nil {
-		log.Error().Err(err).Msg("repository::GetListRole - error counting roles")
+		log.Error().Err(err).Msg("repository::FindListRole - error counting roles")
 		return nil, 0, err
 	}
 
@@ -129,7 +129,7 @@ func (r *roleRepository) FindListRole(ctx context.Context, limit, offset int, se
 		var roleAppPermissions []dto.GetListRoleAppPermission
 
 		if err := json.Unmarshal([]byte(res.RoleAppPermission), &roleAppPermissions); err != nil {
-			log.Error().Err(err).Msg("repository::GetListRole - error unmarshalling role_app_permission JSON")
+			log.Error().Err(err).Msg("repository::FindListRole - error unmarshalling role_app_permission JSON")
 			return nil, 0, err
 		}
 
