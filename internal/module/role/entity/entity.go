@@ -23,5 +23,6 @@ type ListRolePermission struct {
 	ID                string `db:"id"`
 	Roles             string `db:"roles"`
 	Description       string `db:"desc"`
+	Static            bool   `db:"static"`
 	RoleAppPermission string `db:"role_app_permission"`
 }

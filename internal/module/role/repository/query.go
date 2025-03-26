@@ -39,6 +39,7 @@ const (
 				r.id,
 				r.name AS roles,
 				r.description AS "desc",
+				r.static,
 				COALESCE(
 					json_agg(
 						json_build_object(
@@ -82,6 +83,7 @@ const (
 			r.id,
 			r.name AS roles,
 			r.description AS "desc",
+			r.static,
 			COALESCE(
 				json_agg(
 				json_build_object(

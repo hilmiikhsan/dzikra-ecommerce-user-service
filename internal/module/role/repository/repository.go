@@ -137,7 +137,7 @@ func (r *roleRepository) FindListRole(ctx context.Context, limit, offset int, se
 			ID:                res.ID,
 			Roles:             res.Roles,
 			Description:       res.Description,
-			Static:            true,
+			Static:            res.Static,
 			RoleAppPermission: roleAppPermissions,
 		}
 
@@ -171,7 +171,7 @@ func (r *roleRepository) FindRoleByID(ctx context.Context, roleID string) (*dto.
 		ID:                res.ID,
 		Roles:             res.Roles,
 		Description:       res.Description,
-		Static:            true,
+		Static:            res.Static,
 		RoleAppPermission: roleAppPermissions,
 	}
 
