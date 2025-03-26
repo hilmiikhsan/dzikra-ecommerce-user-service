@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/external/proto/notification"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/config"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/utils"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/external/proto/notification"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/utils"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )

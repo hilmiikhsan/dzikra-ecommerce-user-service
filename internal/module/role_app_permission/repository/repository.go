@@ -7,8 +7,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_app_permission/entity"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_app_permission/ports"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role_app_permission/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role_app_permission/ports"
 	"github.com/jmoiron/sqlx"
 )
 

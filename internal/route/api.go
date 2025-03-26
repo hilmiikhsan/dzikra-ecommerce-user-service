@@ -1,10 +1,10 @@
 package route
 
 import (
-	application "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/handler/rest"
-	role "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/handler/rest"
-	user "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/handler/rest"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/response"
+	application "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/handler/rest"
+	role "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/handler/rest"
+	user "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/handler/rest"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/response"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )

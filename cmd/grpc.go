@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/adapter"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/config"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/adapter"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"

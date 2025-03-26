@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/natefinch/lumberjack.v2"

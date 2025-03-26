@@ -1,18 +1,18 @@
 package rest
 
 import (
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/adapter"
-	redisRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/middleware"
-	applicationPermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/application_permission/repository"
-	applicationRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/repository"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/ports"
-	roleRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/repository"
-	roleService "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/service"
-	roleAppPermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_app_permission/repository"
-	rolePermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/repository"
-	userRoleRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_role/repository"
-	jwtHandler "github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/jwt_handler"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/adapter"
+	redisRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/redis"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/middleware"
+	applicationPermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/application_permission/repository"
+	applicationRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/repository"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/ports"
+	roleRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/repository"
+	roleService "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/service"
+	roleAppPermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role_app_permission/repository"
+	rolePermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role_permission/repository"
+	userRoleRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user_role/repository"
+	jwtHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/jwt_handler"
 )
 
 type roleHandler struct {

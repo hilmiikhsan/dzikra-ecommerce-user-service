@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/dto"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/dto"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role_permission/entity"
 )
 
 func MapUserRoleResponse(rows []entity.UserRolePermission) []dto.UserRoleDetail {

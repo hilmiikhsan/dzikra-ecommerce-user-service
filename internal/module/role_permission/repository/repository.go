@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/entity"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/ports"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role_permission/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role_permission/ports"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )

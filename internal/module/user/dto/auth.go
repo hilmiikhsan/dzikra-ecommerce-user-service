@@ -1,7 +1,7 @@
 package dto
 
 import (
-	role "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/dto"
+	role "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/dto"
 )
 
 // User DTO

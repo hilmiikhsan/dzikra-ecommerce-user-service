@@ -1,7 +1,7 @@
 package service
 
 import (
-	applicationPorts "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/ports"
+	applicationPorts "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/ports"
 	"github.com/jmoiron/sqlx"
 )
 

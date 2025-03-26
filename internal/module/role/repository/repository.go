@@ -7,10 +7,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/dto"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/entity"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/ports"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/dto"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/ports"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )

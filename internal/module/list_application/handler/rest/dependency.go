@@ -1,13 +1,13 @@
 package rest
 
 import (
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/adapter"
-	redisRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/middleware"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/ports"
-	applicationRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/repository"
-	applicationService "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/service"
-	jwtHandler "github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/jwt_handler"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/adapter"
+	redisRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/redis"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/middleware"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/ports"
+	applicationRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/repository"
+	applicationService "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/service"
+	jwtHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/jwt_handler"
 )
 
 type applicationHandler struct {

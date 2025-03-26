@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/middleware"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/dto"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/middleware"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/dto"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/entity"
 )
 
 type UserRepository interface {

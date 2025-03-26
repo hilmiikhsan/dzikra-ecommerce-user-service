@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 )
 
 func GenerateSessionToken(email string) string {

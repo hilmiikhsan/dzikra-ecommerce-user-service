@@ -1,19 +1,19 @@
 package rest
 
 import (
-	externalNotification "github.com/Digitalkeun-Creative/be-dzikra-user-service/external/notification"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/adapter"
-	redisRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/middleware"
-	roleRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/repository"
-	rolePermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role_permission/repository"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/ports"
-	userRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/repository"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/service"
-	userFcmTokenRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_fcm_token/repository"
-	userProfileRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_profile/repository"
-	userRoleRepository "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_role/repository"
-	jwtHandler "github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/jwt_handler"
+	externalNotification "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/external/notification"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/adapter"
+	redisRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/redis"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/middleware"
+	roleRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/repository"
+	rolePermissionRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role_permission/repository"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/ports"
+	userRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/repository"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/service"
+	userFcmTokenRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user_fcm_token/repository"
+	userProfileRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user_profile/repository"
+	userRoleRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user_role/repository"
+	jwtHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/jwt_handler"
 )
 
 type userHandler struct {

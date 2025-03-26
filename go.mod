@@ -1,4 +1,4 @@
-module github.com/Digitalkeun-Creative/be-dzikra-user-service
+module github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service
 
 go 1.22.5
 

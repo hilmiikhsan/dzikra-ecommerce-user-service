@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/err_msg"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
 	"github.com/gofiber/fiber/v2"
 	"github.com/lib/pq"
 	"github.com/rs/zerolog/log"

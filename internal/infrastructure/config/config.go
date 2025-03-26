@@ -3,8 +3,8 @@ package config
 import (
 	"sync"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/config"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/utils"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/config"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/utils"
 	"github.com/rs/zerolog/log"
 )
 

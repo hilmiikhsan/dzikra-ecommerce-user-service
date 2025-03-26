@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_role/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user_role/entity"
 )
 
 type UserRoleRepository interface {

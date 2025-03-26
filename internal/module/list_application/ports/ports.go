@@ -3,8 +3,8 @@ package ports
 import (
 	"context"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/dto"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/dto"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/entity"
 )
 
 type ApplicationRepository interface {

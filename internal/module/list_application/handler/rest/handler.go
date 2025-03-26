@@ -1,8 +1,8 @@
 package rest
 
 import (
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/err_msg"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/response"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/response"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )

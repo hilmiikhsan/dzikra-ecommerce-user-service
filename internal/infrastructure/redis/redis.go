@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/infrastructure/redis/ports"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/redis/ports"
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog/log"
 )

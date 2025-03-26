@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/dto"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/entity"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/err_msg"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/dto"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )

@@ -3,10 +3,10 @@ package middleware
 import (
 	"fmt"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/constants"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/adapter"
-	userRole "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_role/repository"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/response"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/adapter"
+	userRole "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user_role/repository"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/response"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )

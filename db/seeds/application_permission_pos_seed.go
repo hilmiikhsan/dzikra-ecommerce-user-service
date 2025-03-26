@@ -3,7 +3,7 @@ package seeds
 import (
 	"context"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/utils"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/utils"
 	"github.com/rs/zerolog/log"
 )
 

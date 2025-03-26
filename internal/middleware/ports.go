@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/jwt_handler"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/jwt_handler"
 )
 
 type UserMiddleware struct {

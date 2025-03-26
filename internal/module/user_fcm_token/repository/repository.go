@@ -6,8 +6,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_fcm_token/entity"
-	"github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user_fcm_token/ports"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user_fcm_token/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user_fcm_token/ports"
 	"github.com/jmoiron/sqlx"
 )
 
