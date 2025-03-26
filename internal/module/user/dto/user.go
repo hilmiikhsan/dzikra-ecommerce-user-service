@@ -21,7 +21,7 @@ type GetDetailUserResponse struct {
 	EmailConfirmed IsConfirmEmail  `json:"email_confirmed"`
 }
 
-type CreateUserRequest struct {
+type CreateOrUpdateUserRequest struct {
 	FullName        string   `json:"full_name" validate:"required,min=2,max=100"`
 	Email           string   `json:"email" validate:"required,email,email_blacklist"`
 	Password        string   `json:"password" validate:"required,strong_password"`
@@ -36,4 +36,13 @@ type CreateUserResponse struct {
 	FullName    string          `json:"full_name"`
 	PhoneNumber string          `json:"phone_number"`
 	UserRole    []role.UserRole `json:"user_role"`
+}
+
+type UpdateUserResponse struct {
+	ID             string          `json:"id"`
+	Email          string          `json:"email"`
+	EmailConfirmed IsConfirmEmail  `json:"email_confirmed"`
+	FullName       string          `json:"full_name"`
+	PhoneNumber    string          `json:"phone_number"`
+	UserRole       []role.UserRole `json:"user_role"`
 }

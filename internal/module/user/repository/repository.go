@@ -206,6 +206,43 @@ func (r *userRepository) FindUserDetailByID(ctx context.Context, id string) (*dt
 	return response, nil
 }
 
+func (r *userRepository) UpdateNewUser(ctx context.Context, tx *sql.Tx, data *entity.User, existingEmail string) (*entity.User, error) {
+	var res = new(entity.User)
+
+	var query string
+	var row *sql.Row
+
+	if data.Email == existingEmail {
+		query = queryUpdateNewUserWithoutEmail
+		row = tx.QueryRowContext(ctx, r.db.Rebind(query),
+			data.FullName,
+			data.Password,
+			data.ID,
+		)
+	} else {
+		query = queryUpdateNewUser
+		row = tx.QueryRowContext(ctx, r.db.Rebind(query),
+			data.FullName,
+			data.Email,
+			data.Password,
+			data.ID,
+		)
+	}
+
+	err := row.Scan(
+		&res.ID,
+		&res.FullName,
+		&res.Email,
+		&res.EmailVerifiedAt,
+	)
+	if err != nil {
+		log.Error().Err(err).Any("payload", data).Msg("repository::UpdateNewUser - Failed to update new user")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return res, nil
+}
+
 func ConvertUserRoleDetail(urd userRole.UserRoleDetail) userRole.UserRole {
 	return userRole.UserRole(urd)
 }

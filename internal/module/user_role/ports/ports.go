@@ -12,4 +12,11 @@ type UserRoleRepository interface {
 	FindByUserID(ctx context.Context, userID string) ([]string, error)
 	FindPermissionsByUserID(ctx context.Context, userID string) ([]string, error)
 	SoftDeleteUserRolePermissions(ctx context.Context, tx *sql.Tx, roleID string) error
+	SoftDeleteUserRoles(ctx context.Context, tx *sql.Tx, userID string) error
+	FindUserRoleDetailsByUserID(ctx context.Context, userID string) ([]entity.UserRole, error)
+	SoftDeleteUserRolesByIDs(ctx context.Context, tx *sql.Tx, userID string, roleIDs []string) error
+	FindAllUserRolesByUserID(ctx context.Context, userID string) ([]entity.UserRole, error)
+	FindUserRoleByUserIDAndRoleName(ctx context.Context, userID, roleName string) (entity.UserRole, bool, error)
+	RestoreUserRole(ctx context.Context, tx *sql.Tx, roleUserID string) error
+	SoftDeleteUserRoleByID(ctx context.Context, tx *sql.Tx, roleUserID string) error
 }

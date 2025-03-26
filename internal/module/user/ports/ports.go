@@ -19,6 +19,7 @@ type UserRepository interface {
 	UpdatePasswordByEmail(ctx context.Context, email, password string) error
 	FindAllUser(ctx context.Context, limit, offset int, search string) ([]dto.GetDetailUserResponse, int, error)
 	FindUserDetailByID(ctx context.Context, id string) (*dto.GetDetailUserResponse, error)
+	UpdateNewUser(ctx context.Context, tx *sql.Tx, data *entity.User, existingEmail string) (*entity.User, error)
 }
 
 type UserService interface {
@@ -33,5 +34,6 @@ type UserService interface {
 	ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error
 	GetListUser(ctx context.Context, page, limit int, search string) (*dto.GetListUserResponse, error)
 	GetDetailUser(ctx context.Context, userID string) (*dto.GetDetailUserResponse, error)
-	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error)
+	CreateUser(ctx context.Context, req *dto.CreateOrUpdateUserRequest) (*dto.CreateUserResponse, error)
+	UpdateUser(ctx context.Context, userID string, req *dto.CreateOrUpdateUserRequest) (*dto.UpdateUserResponse, error)
 }

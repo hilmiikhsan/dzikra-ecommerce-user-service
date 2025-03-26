@@ -7,7 +7,7 @@ const (
 			id,
 			user_id,
 			role_id
-		) VALUES (?, ?, ?)
+		) VALUES (?, ?, ?) ON CONFLICT ON CONSTRAINT unique_user_roles DO NOTHING
 	`
 
 	queryFindByUserID = `
@@ -15,25 +15,6 @@ const (
 			role_id
 		FROM user_roles
 		WHERE user_id = ?
-	`
-
-	queryFindUserRolesWithPermissions = `
-		SELECT 
-			ur.user_id, 
-			r.id AS role_id, 
-			r.name AS role_name,
-		    rap.id AS role_app_permission_id, 
-			rap.app_permission_id,
-		    ap.application_id,
-		    p.id AS permission_id, 
-			p.resource, 
-			p.action
-		FROM user_roles ur
-		JOIN roles r ON ur.role_id = r.id
-		JOIN role_app_permissions rap ON r.id = rap.role_id
-		JOIN application_permissions ap ON rap.app_permission_id = ap.id
-		JOIN permissions p ON ap.permission_id = p.id
-		WHERE ur.user_id = ? AND rap.app_permission_id IN (?)
 	`
 
 	queryFindPermissionByUserID = `
@@ -50,5 +31,64 @@ const (
 		SET 
 			deleted_at = CURRENT_TIMESTAMP
 		WHERE role_id = ? AND deleted_at IS NULL
+	`
+
+	querySoftDeleteUserRoles = `
+		UPDATE user_roles
+		SET 
+			deleted_at = CURRENT_TIMESTAMP
+		WHERE user_id = ? AND deleted_at IS NULL
+	`
+
+	queryFindUserRoleDetailsByUserID = `
+		SELECT 
+			id, user_id, 
+			role_id, 
+			created_at, 
+			deleted_at
+        FROM user_roles
+        WHERE user_id = ? AND deleted_at IS NULL
+	`
+
+	querySoftDeleteUserRolesByIDs = `
+		UPDATE user_roles
+        SET deleted_at = CURRENT_TIMESTAMP
+        WHERE user_id = ? AND role_id IN (?) AND deleted_at IS NULL
+	`
+
+	queryFindAllUserRolesByUserID = `
+		SELECT 
+			id,
+			user_id,
+			role_id,
+			created_at,
+			deleted_at 
+		FROM user_roles WHERE user_id = ?
+	`
+
+	queryFindUserRoleByUserIDAndRoleName = `
+		SELECT 
+			ur.id,
+			ur.user_id,
+			ur.role_id,
+			ur.created_at,
+			ur.deleted_at
+		FROM user_roles ur
+		JOIN roles r ON ur.role_id = r.id
+		WHERE ur.user_id = ? AND UPPER(r.name) = ?
+`
+
+	queryRestoreUserRole = `
+		UPDATE user_roles 
+		SET 
+			deleted_at = NULL 
+		WHERE id = ?
+	`
+
+	querySoftDeleteUserRoleByID = `
+		UPDATE user_roles 
+		SET 
+			deleted_at = CURRENT_TIMESTAMP 
+		WHERE id = ? AND deleted_at IS NULL
 	`
 )

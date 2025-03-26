@@ -269,7 +269,7 @@ func (h *userHandler) getDetailUser(c *fiber.Ctx) error {
 
 func (h *userHandler) createUser(c *fiber.Ctx) error {
 	var (
-		req = new(dto.CreateUserRequest)
+		req = new(dto.CreateOrUpdateUserRequest)
 		ctx = c.Context()
 	)
 
@@ -292,4 +292,37 @@ func (h *userHandler) createUser(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(response.Success(res, ""))
+}
+
+func (h *userHandler) updateUser(c *fiber.Ctx) error {
+	var (
+		req    = new(dto.CreateOrUpdateUserRequest)
+		ctx    = c.Context()
+		userID = c.Params("user_id")
+	)
+
+	if strings.Contains(userID, ":user_id") {
+		log.Warn().Msg("handler::updateUser - Invalid user ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid user ID"))
+	}
+
+	if err := c.BodyParser(req); err != nil {
+		log.Warn().Err(err).Msg("handler::updateUser - Failed to parse request body")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err))
+	}
+
+	if err := h.validator.Validate(req); err != nil {
+		log.Warn().Err(err).Msg("handler::updateUser - Invalid request body")
+		code, errs := err_msg.Errors(err, req)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	res, err := h.service.UpdateUser(ctx, userID, req)
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("handler::updateUser - Failed to update user")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }

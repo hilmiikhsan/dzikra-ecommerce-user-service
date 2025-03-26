@@ -120,4 +120,24 @@ const (
 			
 		SELECT * FROM user_detail;
 	`
+
+	queryUpdateNewUser = `
+		UPDATE users
+		SET
+			full_name = ?,
+			email = ?,
+			password = ?,
+			email_verified_at = NULL
+		WHERE id = ?
+		RETURNING id, full_name, email, email_verified_at
+	`
+
+	queryUpdateNewUserWithoutEmail = `
+		UPDATE users
+		SET
+			full_name = ?,
+			password = ?
+		WHERE id = ?
+		RETURNING id, full_name, email, email_verified_at
+	`
 )

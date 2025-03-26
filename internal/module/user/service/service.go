@@ -877,7 +877,7 @@ func (s *userService) GetDetailUser(ctx context.Context, userID string) (*dto.Ge
 	return userResult, nil
 }
 
-func (s *userService) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error) {
+func (s *userService) CreateUser(ctx context.Context, req *dto.CreateOrUpdateUserRequest) (*dto.CreateUserResponse, error) {
 	// check user by email
 	userResult, err := s.userRepository.FindByEmail(ctx, req.Email)
 	if err != nil {
@@ -1040,6 +1040,212 @@ func (s *userService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 	}, nil
 }
 
+func (s *userService) UpdateUser(ctx context.Context, userID string, req *dto.CreateOrUpdateUserRequest) (*dto.UpdateUserResponse, error) {
+	// find existing user by email
+	var existingEmail string
+	userResult, err := s.userRepository.FindByEmail(ctx, req.Email)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateUser - Failed to find user by email")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	if userResult != nil {
+		existingEmail = userResult.Email
+	}
+
+	// Hash password
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateUser - Failed to hash password")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	req.Password = hashedPassword
+
+	// find all roles
+	roles, err := s.roleRepository.FindAllRole(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateUser - Failed to find all roles")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if user has roles to add is exist
+	for _, r := range req.Role {
+		if !contains(roles, r) {
+			log.Error().Msgf("service::UpdateUser - Role %s not found", r)
+			return nil, err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage(fmt.Sprintf("Role %s not found", r)))
+		}
+	}
+
+	// find all role names
+	roleMap, err := s.roleRepository.FindRoleNameMap(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateUser - Failed to get role name map")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// find existing user roles
+	existingUserRoles, err := s.userRoleRepository.FindAllUserRolesByUserID(ctx, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateUser - Failed to get existing user roles")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// Mapping existing user roles
+	activeRolesSet := make(map[string]userRole.UserRole)
+	softDeletedRolesSet := make(map[string]userRole.UserRole)
+	for _, ur := range existingUserRoles {
+		roleIDStr := ur.RoleID.String()
+		var rn string
+		if name, ok := roleMap[roleIDStr]; ok && name != "" {
+			rn = strings.ToUpper(name)
+		} else {
+			rn = strings.ToUpper(roleIDStr)
+		}
+		if ur.DeletedAt == nil {
+			activeRolesSet[rn] = ur
+		} else {
+			softDeletedRolesSet[rn] = ur
+		}
+	}
+
+	// mapping request roles to uppercase
+	requestRolesSet := make(map[string]bool)
+	for _, rName := range req.Role {
+		requestRolesSet[strings.ToUpper(rName)] = true
+	}
+
+	// check if user has roles to add
+	var rolesToAdd []string
+	for roleName := range requestRolesSet {
+		if _, exists := activeRolesSet[roleName]; !exists {
+			rolesToAdd = append(rolesToAdd, roleName)
+		}
+	}
+
+	// check if user has roles to delete
+	var rolesToDelete []userRole.UserRole
+	for roleName, ur := range activeRolesSet {
+		if !requestRolesSet[roleName] {
+			rolesToDelete = append(rolesToDelete, ur)
+		}
+	}
+
+	// Begin transaction
+	tx, err := s.db.Begin()
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateUser - Failed to begin transaction")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	// update new user
+	userParsedID, _ := uuid.Parse(userID)
+	newUserResult, err := s.userRepository.UpdateNewUser(ctx, tx, &user.User{
+		FullName: req.FullName,
+		Email:    req.Email,
+		Password: req.Password,
+		ID:       userParsedID,
+	}, existingEmail)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateUser - Failed to update user")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if user has roles to delete
+	for _, ur := range rolesToDelete {
+		err = s.userRoleRepository.SoftDeleteUserRoleByID(ctx, tx, ur.ID.String())
+		if err != nil {
+			log.Error().Err(err).Msg("service::UpdateUser - Failed to soft delete user role")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+	}
+
+	// check if user has roles to add
+	for _, roleName := range rolesToAdd {
+		// find existing user role by role name
+		ur, found, err := s.userRoleRepository.FindUserRoleByUserIDAndRoleName(ctx, userID, roleName)
+		if err != nil {
+			log.Error().Err(err).Msg("service::UpdateUser - Failed to check existing user role by role name")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+
+		// check if user role is soft deleted
+		if found {
+			if ur.DeletedAt != nil {
+				err = s.userRoleRepository.RestoreUserRole(ctx, tx, ur.ID.String())
+				if err != nil {
+					log.Error().Err(err).Msg("service::UpdateUser - Failed to restore user role")
+					return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+				}
+			}
+		} else {
+			// find role ID by role name
+			newRoleIDs, err := s.roleRepository.FindRoleIDsByNames(ctx, []string{roleName})
+			if err != nil || len(newRoleIDs) == 0 {
+				log.Error().Err(err).Msg("service::UpdateUser - Failed to get role ID for new role")
+				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+			}
+
+			// Generate new user role ID
+			newUserRoleID, err := utils.GenerateUUIDv7String()
+			if err != nil {
+				log.Error().Err(err).Msg("service::UpdateUser - Failed to generate UUID for new user role")
+				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+			}
+
+			// mapping user role data
+			newUserRole := &userRole.UserRole{
+				ID:     newUserRoleID,
+				UserID: userParsedID,
+				RoleID: uuid.MustParse(newRoleIDs[0]),
+			}
+
+			// Insert new user role
+			err = s.userRoleRepository.InsertNewUserRole(ctx, tx, newUserRole)
+			if err != nil {
+				log.Error().Err(err).Msg("service::UpdateUser - Failed to insert new user role")
+				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+			}
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("service::UpdateUser - Failed to commit transaction")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// find final user roles map data
+	finalUserRoles, err := s.userRoleRepository.FindUserRoleDetailsByUserID(ctx, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateUser - Failed to fetch updated user role details")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// convert user role model to DTO
+	convertedRoles := ConvertUserRoleEntitiesToDTO(finalUserRoles, roleMap)
+
+	// check if email is confirmed
+	var emailConfirmed bool
+	if newUserResult.EmailVerifiedAt != nil {
+		emailConfirmed = true
+	}
+
+	// Return response
+	return &dto.UpdateUserResponse{
+		ID:             userID,
+		Email:          req.Email,
+		FullName:       req.FullName,
+		PhoneNumber:    req.PhoneNumber,
+		EmailConfirmed: dto.IsConfirmEmail{IsConfirm: emailConfirmed},
+		UserRole:       convertedRoles,
+	}, nil
+}
+
+// ConvertUserRoleEntityToDTO converts a userRole entity to a DTO.
 func ConvertUserRoleEntityToDTO(ur userRole.UserRole, roleMap map[string]string) userRoleDto.UserRole {
 	roleName, ok := roleMap[ur.RoleID.String()]
 	if !ok {
@@ -1053,6 +1259,7 @@ func ConvertUserRoleEntityToDTO(ur userRole.UserRole, roleMap map[string]string)
 	}
 }
 
+// ConvertUserRoleEntitiesToDTO converts a slice of userRole entities to a slice of DTOs.
 func ConvertUserRoleEntitiesToDTO(entities []userRole.UserRole, roleMap map[string]string) []userRoleDto.UserRole {
 	dtoRoles := make([]userRoleDto.UserRole, 0, len(entities))
 	for _, ur := range entities {
@@ -1060,4 +1267,15 @@ func ConvertUserRoleEntitiesToDTO(entities []userRole.UserRole, roleMap map[stri
 	}
 
 	return dtoRoles
+}
+
+// contains checks if an item exists in a slice of strings.
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+
+	return false
 }
