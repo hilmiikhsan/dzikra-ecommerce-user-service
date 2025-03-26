@@ -1,6 +1,7 @@
 package route
 
 import (
+	application "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/list_application/handler/rest"
 	role "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/role/handler/rest"
 	user "github.com/Digitalkeun-Creative/be-dzikra-user-service/internal/module/user/handler/rest"
 	"github.com/Digitalkeun-Creative/be-dzikra-user-service/pkg/response"
@@ -16,6 +17,7 @@ func SetupRoutes(app *fiber.App) {
 
 	user.NewUserHandler().UserRoute(userAPI, superadminAPI)
 	role.NewRoleHandler().RoleRoute(userAPI, superadminAPI)
+	application.NewApplicationHandler().ApplicationRoute(userAPI, superadminAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {
