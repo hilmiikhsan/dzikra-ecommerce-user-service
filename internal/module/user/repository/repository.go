@@ -243,6 +243,16 @@ func (r *userRepository) UpdateNewUser(ctx context.Context, tx *sql.Tx, data *en
 	return res, nil
 }
 
+func (r *userRepository) SoftDeleteUserByID(ctx context.Context, tx *sql.Tx, id string) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteUserByID), id)
+	if err != nil {
+		log.Error().Err(err).Any("id", id).Msg("repository::SoftDeleteUserByID - Failed to soft delete user by ID")
+		return err
+	}
+
+	return nil
+}
+
 func ConvertUserRoleDetail(urd userRole.UserRoleDetail) userRole.UserRole {
 	return userRole.UserRole(urd)
 }

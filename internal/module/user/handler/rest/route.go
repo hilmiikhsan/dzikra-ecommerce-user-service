@@ -19,4 +19,5 @@ func (h *userHandler) UserRoute(userRouter, superadminRouter fiber.Router) {
 	superadminRouter.Get("/users/:user_id", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "users"), h.getDetailUser)
 	superadminRouter.Post("/users/create", h.middleware.UserBearer, h.middleware.RBACMiddleware("create", "users"), h.createUser)
 	superadminRouter.Patch("/users/update/:user_id", h.middleware.UserBearer, h.middleware.RBACMiddleware("update", "users"), h.updateUser)
+	superadminRouter.Delete("/users/remove/:user_id", h.middleware.UserBearer, h.middleware.RBACMiddleware("delete", "users"), h.removeUser)
 }

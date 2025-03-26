@@ -70,3 +70,13 @@ func (r *userProfileRepository) FindByUserID(ctx context.Context, userID string)
 
 	return res, nil
 }
+
+func (r *userProfileRepository) SoftDeleteByUserID(ctx context.Context, tx *sql.Tx, userID string) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteByUserID), userID)
+	if err != nil {
+		log.Error().Err(err).Str("userID", userID).Msg("repository::SoftDeleteByUserID - Failed to soft delete user profile")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
+}

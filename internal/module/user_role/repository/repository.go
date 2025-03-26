@@ -75,7 +75,7 @@ func (r *userRoleRepository) SoftDeleteUserRolePermissions(ctx context.Context, 
 	return nil
 }
 
-func (r *userRoleRepository) SoftDeleteUserRoles(ctx context.Context, tx *sql.Tx, userID string) error {
+func (r *userRoleRepository) SoftDeleteUserRoleByUserID(ctx context.Context, tx *sql.Tx, userID string) error {
 	_, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteUserRoles), userID)
 	if err != nil {
 		log.Error().Err(err).Str("userID", userID).Msg("repository::SoftDeleteUserRoles - Failed to soft delete user roles")

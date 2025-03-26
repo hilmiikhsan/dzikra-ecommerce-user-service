@@ -15,6 +15,13 @@ const (
 			user_id,
 			phone_number
 		FROM user_profiles
-		WHERE user_id = ?
+		WHERE user_id = ? AND deleted_at IS NULL
+	`
+
+	querySoftDeleteByUserID = `
+		UPDATE user_profiles
+		SET 
+			deleted_at = NOW()
+		WHERE user_id = ? AND deleted_at IS NULL
 	`
 )

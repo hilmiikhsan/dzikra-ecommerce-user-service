@@ -512,8 +512,22 @@ func (s *userService) Logout(ctx context.Context, accessToken string, locals *mi
 		return err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrInvalidAccessToken))
 	}
 
+	// Begin transaction
+	tx, err := s.db.Begin()
+	if err != nil {
+		log.Error().Err(err).Any("payload", locals.UserID).Msg("service::Logout - Failed to begin transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				log.Error().Err(rollbackErr).Any("payload", locals.UserID).Msg("service::Logout - Failed to rollback transaction")
+			}
+		}
+	}()
+
 	// delete user fcm token
-	err = s.userFcmTokenRepository.DeleteUserFCMToken(ctx, locals.UserID)
+	err = s.userFcmTokenRepository.DeleteUserFCMToken(ctx, tx, locals.UserID)
 	if err != nil {
 		log.Error().Err(err).Any("access_token", accessToken).Msg("service::Logout - Failed to delete user fcm token")
 		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
@@ -523,7 +537,7 @@ func (s *userService) Logout(ctx context.Context, accessToken string, locals *mi
 	userKey := fmt.Sprintf("%s:%s:%s", locals.Email, locals.SessionID, constants.AccessTokenType)
 	err = s.redisRepository.Del(ctx, userKey)
 	if err != nil {
-		log.Error().Err(err).Any("access_token", accessToken).Msg("service::Logout - Failed to delete access token from Redis")
+		log.Error().Err(err).Any("access_token", locals.UserID).Msg("service::Logout - Failed to delete access token from Redis")
 		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
@@ -531,7 +545,12 @@ func (s *userService) Logout(ctx context.Context, accessToken string, locals *mi
 	refreshTokenKey := fmt.Sprintf("%s:%s:%s", locals.Email, locals.SessionID, constants.RefreshTokenType)
 	err = s.redisRepository.Del(ctx, refreshTokenKey)
 	if err != nil {
-		log.Error().Err(err).Any("access_token", accessToken).Msg("service::Logout - Failed to delete refresh token from Redis")
+		log.Error().Err(err).Any("access_token", locals.UserID).Msg("service::Logout - Failed to delete refresh token from Redis")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Any("payload", locals.UserID).Msg("service::Logout - Failed to commit transaction")
 		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
@@ -1243,6 +1262,69 @@ func (s *userService) UpdateUser(ctx context.Context, userID string, req *dto.Cr
 		EmailConfirmed: dto.IsConfirmEmail{IsConfirm: emailConfirmed},
 		UserRole:       convertedRoles,
 	}, nil
+}
+
+func (s *userService) RemoveUser(ctx context.Context, id string) error {
+	// find user by id
+	userResult, err := s.userRepository.FindByID(ctx, id)
+	if err != nil {
+		log.Error().Err(err).Any("user_id", id).Msg("service::RemoveUser - Failed to find user by id")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if user is not found
+	if userResult == nil {
+		log.Error().Any("user_id", id).Msg("service::RemoveUser - User not found")
+		return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrUserNotFound))
+	}
+
+	// Begin transaction
+	tx, err := s.db.Begin()
+	if err != nil {
+		log.Error().Err(err).Msg("service::RemoveUser - Failed to begin transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	// soft delete user role
+	err = s.userRoleRepository.SoftDeleteUserRoleByUserID(ctx, tx, id)
+	if err != nil {
+		log.Error().Err(err).Any("user_id", id).Msg("service::RemoveUser - Failed to soft delete user role")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete user profile
+	err = s.userProfileRepository.SoftDeleteByUserID(ctx, tx, id)
+	if err != nil {
+		log.Error().Err(err).Any("user_id", id).Msg("service::RemoveUser - Failed to soft delete user profile")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// delete user fcm token
+	err = s.userFcmTokenRepository.DeleteUserFCMToken(ctx, tx, id)
+	if err != nil {
+		log.Error().Err(err).Any("user_id", id).Msg("service::RemoveUser - Failed to delete user FCM token")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete user
+	err = s.userRepository.SoftDeleteUserByID(ctx, tx, id)
+	if err != nil {
+		log.Error().Err(err).Any("user_id", id).Msg("service::RemoveUser - Failed to soft delete user")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Any("user_id", id).Msg("service::RemoveUser - Failed to commit transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
 }
 
 // ConvertUserRoleEntityToDTO converts a userRole entity to a DTO.

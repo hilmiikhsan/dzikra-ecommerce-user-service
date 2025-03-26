@@ -326,3 +326,30 @@ func (h *userHandler) updateUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
+
+func (h *userHandler) removeUser(c *fiber.Ctx) error {
+	var (
+		ctx    = c.Context()
+		userID = c.Params("user_id")
+		locals = middleware.GetLocals(c)
+	)
+
+	if strings.Contains(userID, ":user_id") {
+		log.Warn().Msg("handler::removeUser - Invalid user ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid user ID"))
+	}
+
+	if locals.UserID == userID {
+		log.Warn().Any("user_id", userID).Msg("handler::removeUser - Cannot remove own user")
+		return c.Status(fiber.StatusForbidden).JSON(response.Error("Cannot remove own user"))
+	}
+
+	err := h.service.RemoveUser(ctx, userID)
+	if err != nil {
+		log.Error().Err(err).Any("user_id", userID).Msg("handler::removeUser - Failed to remove user")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
+}

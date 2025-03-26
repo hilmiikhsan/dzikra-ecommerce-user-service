@@ -55,8 +55,8 @@ func (r *userFcmTokenRepository) InsertNewUserFCMToken(ctx context.Context, tx *
 	return nil
 }
 
-func (r *userFcmTokenRepository) DeleteUserFCMToken(ctx context.Context, userID string) error {
-	_, err := r.db.ExecContext(ctx, r.db.Rebind(queryDeleteUserFCMToken), userID)
+func (r *userFcmTokenRepository) DeleteUserFCMToken(ctx context.Context, tx *sql.Tx, userID string) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(queryDeleteUserFCMToken), userID)
 	if err != nil {
 		log.Error().Err(err).Str("userID", userID).Msg("repository::DeleteUserFCMToken - Failed to delete user fcm token")
 		return err

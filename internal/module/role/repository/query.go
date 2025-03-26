@@ -115,7 +115,7 @@ const (
 	querySoftDeleteRole = `
 		UPDATE roles
 		SET 
-			deleted_at = CURRENT_TIMESTAMP
+			deleted_at = NOW()
 		WHERE role_id = ? AND deleted_at IS NULL
 	`
 
@@ -124,7 +124,7 @@ const (
 		SET 
 			name = ?, 
 			description = ?, 
-			updated_at = CURRENT_TIMESTAMP
+			updated_at = NOW()
 		WHERE id = ? AND deleted_at IS NULL
 	`
 
@@ -132,7 +132,7 @@ const (
 		UPDATE roles
 		SET 
 			description = ?, 
-			updated_at = CURRENT_TIMESTAMP
+			updated_at = NOW()
 		WHERE id = ? AND deleted_at IS NULL
 	`
 

@@ -20,7 +20,7 @@ const (
 			email_verified_at,
 			otp_number_verified_at
 		FROM users
-		WHERE email = ?
+		WHERE email = ? AND deleted_at IS NULL
 	`
 
 	queryUpdateVerificationUserByEmail = `
@@ -28,7 +28,7 @@ const (
 		SET
 			email_verified_at = NOW(),
 			otp_number_verified_at = NOW()
-		WHERE email = ?
+		WHERE email = ? AND deleted_at IS NULL
 		RETURNING email_verified_at
 	`
 
@@ -36,7 +36,7 @@ const (
 		UPDATE users
 		SET
 			last_login_at = NOW()
-		WHERE id = ?
+		WHERE id = ? AND deleted_at IS NULL
 	`
 
 	queryFindUserByID = `
@@ -48,14 +48,14 @@ const (
 			email_verified_at,
 			otp_number_verified_at
 		FROM users
-		WHERE id = ?
+		WHERE id = ? AND deleted_at IS NULL
 	`
 
 	queryUpdatePasswordByEmail = `
 		UPDATE users
 		SET
 			password = ?
-		WHERE email = ?
+		WHERE email = ? AND deleted_at IS NULL
 	`
 
 	queryFindAllUser = `
@@ -128,7 +128,7 @@ const (
 			email = ?,
 			password = ?,
 			email_verified_at = NULL
-		WHERE id = ?
+		WHERE id = ? AND deleted_at IS NULL
 		RETURNING id, full_name, email, email_verified_at
 	`
 
@@ -137,7 +137,14 @@ const (
 		SET
 			full_name = ?,
 			password = ?
-		WHERE id = ?
+		WHERE id = ? AND deleted_at IS NULL
 		RETURNING id, full_name, email, email_verified_at
+	`
+
+	querySoftDeleteUserByID = `
+		UPDATE users
+		SET
+			deleted_at = NOW()
+		WHERE id = ? AND deleted_at IS NULL
 	`
 )

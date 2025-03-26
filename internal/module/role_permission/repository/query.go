@@ -18,7 +18,7 @@ const (
 	querySoftDeleteRolePermissions = `
 		UPDATE role_permissions
 		SET 
-			deleted_at = CURRENT_TIMESTAMP
+			deleted_at = NOW()
 		WHERE role_id = ? AND deleted_at IS NULL
 	`
 )

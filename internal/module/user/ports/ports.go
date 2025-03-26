@@ -20,6 +20,7 @@ type UserRepository interface {
 	FindAllUser(ctx context.Context, limit, offset int, search string) ([]dto.GetDetailUserResponse, int, error)
 	FindUserDetailByID(ctx context.Context, id string) (*dto.GetDetailUserResponse, error)
 	UpdateNewUser(ctx context.Context, tx *sql.Tx, data *entity.User, existingEmail string) (*entity.User, error)
+	SoftDeleteUserByID(ctx context.Context, tx *sql.Tx, id string) error
 }
 
 type UserService interface {
@@ -36,4 +37,5 @@ type UserService interface {
 	GetDetailUser(ctx context.Context, userID string) (*dto.GetDetailUserResponse, error)
 	CreateUser(ctx context.Context, req *dto.CreateOrUpdateUserRequest) (*dto.CreateUserResponse, error)
 	UpdateUser(ctx context.Context, userID string, req *dto.CreateOrUpdateUserRequest) (*dto.UpdateUserResponse, error)
+	RemoveUser(ctx context.Context, id string) error
 }

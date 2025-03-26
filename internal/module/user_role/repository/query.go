@@ -29,14 +29,14 @@ const (
 	querySoftDeleteUserRolePermissions = `
 		UPDATE user_roles
 		SET 
-			deleted_at = CURRENT_TIMESTAMP
+			deleted_at = NOW()
 		WHERE role_id = ? AND deleted_at IS NULL
 	`
 
 	querySoftDeleteUserRoles = `
 		UPDATE user_roles
 		SET 
-			deleted_at = CURRENT_TIMESTAMP
+			deleted_at = NOW()
 		WHERE user_id = ? AND deleted_at IS NULL
 	`
 
@@ -52,7 +52,7 @@ const (
 
 	querySoftDeleteUserRolesByIDs = `
 		UPDATE user_roles
-        SET deleted_at = CURRENT_TIMESTAMP
+        SET deleted_at = NOW()
         WHERE user_id = ? AND role_id IN (?) AND deleted_at IS NULL
 	`
 
@@ -88,7 +88,7 @@ const (
 	querySoftDeleteUserRoleByID = `
 		UPDATE user_roles 
 		SET 
-			deleted_at = CURRENT_TIMESTAMP 
+			deleted_at = NOW() 
 		WHERE id = ? AND deleted_at IS NULL
 	`
 )

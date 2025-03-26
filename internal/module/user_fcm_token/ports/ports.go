@@ -10,6 +10,6 @@ import (
 type UserFCMTokenRepository interface {
 	FindUserFCMTokenDetail(ctx context.Context, deviceID, deviceType, userID string) (*entity.UserFCMToken, error)
 	InsertNewUserFCMToken(ctx context.Context, tx *sql.Tx, userFCMToken *entity.UserFCMToken) error
-	DeleteUserFCMToken(ctx context.Context, userID string) error
+	DeleteUserFCMToken(ctx context.Context, tx *sql.Tx, userID string) error
 	UpdateUserFCMToken(ctx context.Context, tx *sql.Tx, userFCMToken *entity.UserFCMToken) error
 }
