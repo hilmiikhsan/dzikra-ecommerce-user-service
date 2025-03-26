@@ -23,4 +23,5 @@ var (
 	ErrApplicationDoenstHaveAccess   = "Application does not have access to this action"
 	ErrApplicationForbidden          = "You do not have permission for this action"
 	ErrUserNotVerified               = "User not verified"
+	ErrStaticRoleCannotBeDeleted     = "Static role cannot be deleted"
 )

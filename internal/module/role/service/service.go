@@ -254,6 +254,12 @@ func (s *roleService) RemoveRolePermission(ctx context.Context, roleID string) e
 		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
+	// check value static role
+	if roleResult.Static {
+		log.Error().Str("roleID", roleID).Msg("service::RemoveRolePermission - Static role cannot be deleted")
+		return err_msg.NewCustomErrors(fiber.StatusForbidden, err_msg.WithMessage(constants.ErrStaticRoleCannotBeDeleted))
+	}
+
 	// soft delete role app permissions
 	err = s.roleAppPermissionRepository.SoftDeleteRoleAppPermissions(ctx, tx, roleResult.ID)
 	if err != nil {
