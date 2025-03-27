@@ -1,6 +1,9 @@
 package rest
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/response"
@@ -29,7 +32,7 @@ func (h *productCategoryHandler) getListProductCategory(c *fiber.Ctx) error {
 
 func (h *productCategoryHandler) createProductCategory(c *fiber.Ctx) error {
 	var (
-		req = new(dto.CreateProductCategoryRequest)
+		req = new(dto.CreateOrUpdateProductCategoryRequest)
 		ctx = c.Context()
 	)
 
@@ -52,4 +55,43 @@ func (h *productCategoryHandler) createProductCategory(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(response.Success(res, ""))
+}
+
+func (h *productCategoryHandler) updateProductCategory(c *fiber.Ctx) error {
+	var (
+		req   = new(dto.CreateOrUpdateProductCategoryRequest)
+		ctx   = c.Context()
+		idStr = c.Params("product_category_id")
+	)
+
+	if strings.Contains(idStr, ":product_category_id") {
+		log.Warn().Msg("handler::updateProductCategory - Invalid product category ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product category ID"))
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Warn().Err(err).Msg("handler::updateProductCategory - Invalid id parameter")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid id parameter"))
+	}
+
+	if err := c.BodyParser(req); err != nil {
+		log.Warn().Err(err).Msg("handler::updateProductCategory - Failed to parse request body")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Failed to parse request body"))
+	}
+
+	if err := h.validator.Validate(req); err != nil {
+		log.Warn().Err(err).Msg("handler::updateProductCategory - Invalid request body")
+		code, errs := err_msg.Errors(err, req)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	res, err := h.service.UpdateProductCategory(ctx, id, req.Category)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::updateProductCategory - Failed to update product category")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }

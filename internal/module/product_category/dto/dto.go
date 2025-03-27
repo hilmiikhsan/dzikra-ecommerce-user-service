@@ -13,11 +13,11 @@ type GetListCategory struct {
 	Category string `json:"category"`
 }
 
-type CreateProductCategoryRequest struct {
+type CreateOrUpdateProductCategoryRequest struct {
 	Category string `json:"category" validate:"required,min=3,max=50,xss_safe"`
 }
 
-type CreateProductCategoryResponse struct {
+type CreateOrProductCategoryResponse struct {
 	ID       int    `json:"id"`
 	Category string `json:"category"`
 }

@@ -25,4 +25,5 @@ var (
 	ErrUserNotVerified                  = "User not verified"
 	ErrStaticRoleCannotBeDeleted        = "Static role cannot be deleted"
 	ErrProductCategoryAlreadyRegistered = "Product category already registered"
+	ErrProductCategoryNotFound          = "Product category not found"
 )

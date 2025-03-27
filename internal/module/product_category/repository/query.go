@@ -20,4 +20,20 @@ const (
 	queryInsertNewProductCategory = `
 		INSERT INTO product_categories (name) VALUES (?) RETURNING id, name
 	`
+
+	queryUpdateProductCategory = `
+		UPDATE product_categories
+		SET 
+			name = ?
+		WHERE id = ? AND name <> ?
+		RETURNING id, name
+	`
+
+	queryFindProductCategoryByID = `
+		SELECT
+			id,
+			name
+		FROM product_categories
+		WHERE id = ? AND deleted_at IS NULL
+	`
 )

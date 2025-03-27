@@ -2,6 +2,8 @@ package repostiory
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/dto"
@@ -74,6 +76,40 @@ func (r *productCategoryRepository) InsertNewProductCategory(ctx context.Context
 		}
 
 		log.Error().Err(err).Str("name", name).Msg("repository::InsertNewProductCategory - error inserting new product category")
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *productCategoryRepository) UpdateProductCategory(ctx context.Context, id int, name string) (*entity.ProductCategory, error) {
+	var res = new(entity.ProductCategory)
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryUpdateProductCategory), name, id, name).Scan(&res.ID, &res.Name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Int("id", id).Str("name", name).Msg("repository::UpdateProductCategory - product category is already registered")
+			return nil, errors.New(constants.ErrProductCategoryAlreadyRegistered)
+		}
+
+		log.Error().Err(err).Str("name", name).Msg("repository::UpdateProductCategory - error updating product category")
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *productCategoryRepository) FindProductCategoryByID(ctx context.Context, id int) (*entity.ProductCategory, error) {
+	var res = new(entity.ProductCategory)
+
+	err := r.db.GetContext(ctx, res, r.db.Rebind(queryFindProductCategoryByID), id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Int("id", id).Msg("repository::FindProductCategoryByID - Failed to find product category by id")
+			return nil, errors.New(constants.ErrProductCategoryNotFound)
+		}
+
+		log.Error().Err(err).Int("id", id).Msg("repository::FindProductCategoryByID - error finding product category by id")
 		return nil, err
 	}
 
