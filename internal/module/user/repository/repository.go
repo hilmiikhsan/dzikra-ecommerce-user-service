@@ -60,6 +60,7 @@ func (r *userRepository) InsertNewUser(ctx context.Context, tx *sql.Tx, data *en
 			return user, nil
 		}
 
+		log.Error().Err(err).Any("payload", data).Msg("repository::InsertNewUser - Failed to insert new user")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 

@@ -16,4 +16,8 @@ const (
 		FROM product_categories
 		WHERE name ILIKE '%' || ? || '%' AND deleted_at IS NULL
 	`
+
+	queryInsertNewProductCategory = `
+		INSERT INTO product_categories (name) VALUES (?) RETURNING id, name
+	`
 )

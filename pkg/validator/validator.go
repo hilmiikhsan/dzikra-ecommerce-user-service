@@ -84,6 +84,9 @@ func NewValidator() *Validator {
 	if err := v.RegisterValidation("non_empty_array", isNonEmptyArray); err != nil {
 		log.Fatal().Err(err).Msg("Error while registering non_empty_array validator")
 	}
+	if err := v.RegisterValidation("xss_safe", isXSSSafe); err != nil {
+		log.Fatal().Err(err).Msg("Error while registering xss_safe validator")
+	}
 
 	validatorCustom.validator = v
 	// validatorCustom.trans = trans
@@ -280,4 +283,16 @@ func isNonEmptyArray(fl validator.FieldLevel) bool {
 	}
 
 	return val.Len() > 0
+}
+
+func isXSSSafe(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+
+	// if strings.ContainsAny(value, "<>") {
+	// 	return false
+	// }
+
+	re := regexp.MustCompile(`<[^>]*>`)
+	return !re.MatchString(value)
+	// return true
 }

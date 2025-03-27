@@ -40,3 +40,21 @@ func (s *productCategoryService) GetListProductCategory(ctx context.Context, pag
 	// return response
 	return &response, nil
 }
+
+func (s *productCategoryService) CreateProductCategory(ctx context.Context, name string) (*dto.CreateProductCategoryResponse, error) {
+	// insert new product category
+	res, err := s.productCategoryRepository.InsertNewProductCategory(ctx, name)
+	if err != nil {
+		log.Error().Err(err).Msg("service::CreateProductCategory - error inserting new product category")
+		return nil, err
+	}
+
+	// create response
+	response := dto.CreateProductCategoryResponse{
+		ID:       res.ID,
+		Category: res.Name,
+	}
+
+	// return response
+	return &response, nil
+}

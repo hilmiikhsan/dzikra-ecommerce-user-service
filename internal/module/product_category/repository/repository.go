@@ -3,9 +3,11 @@ package repostiory
 import (
 	"context"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/ports"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/utils"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
@@ -49,4 +51,31 @@ func (r *productCategoryRepository) FindListProductCategory(ctx context.Context,
 	}
 
 	return productCategories, total, nil
+}
+
+func (r *productCategoryRepository) InsertNewProductCategory(ctx context.Context, name string) (*entity.ProductCategory, error) {
+	var res = new(entity.ProductCategory)
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryInsertNewProductCategory), name).Scan(&res.ID, &res.Name)
+	if err != nil {
+		uniqueConstraints := map[string]string{
+			"product_categories_name_key": constants.ErrProductCategoryAlreadyRegistered,
+		}
+
+		val, handleErr := utils.HandleInsertUniqueError(err, name, uniqueConstraints)
+		if handleErr != nil {
+			log.Error().Err(handleErr).Any("payload", name).Msg("repository::InsertNewProductCategory - Failed to insert new product category")
+			return nil, handleErr
+		}
+
+		if productCategory, ok := val.(*entity.ProductCategory); ok {
+			log.Error().Err(err).Any("payload", name).Msg("repository::InsertNewProductCategory - Failed to insert new product category")
+			return productCategory, nil
+		}
+
+		log.Error().Err(err).Str("name", name).Msg("repository::InsertNewProductCategory - error inserting new product category")
+		return nil, err
+	}
+
+	return res, nil
 }

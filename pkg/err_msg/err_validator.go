@@ -196,6 +196,9 @@ func errorValidationHandler[T any](err error, payload *T) (int, map[string][]str
 		case "non_empty_array":
 			message = fmt.Sprintf("%s must not be empty.", fieldInMsg)
 			// message = fmt.Sprintf("%s tidak boleh kosong.", fieldInMsg)
+		case "xss_safe":
+			message = fmt.Sprintf("%s must not contain any harmful characters.", fieldInMsg)
+			// message = fmt.Sprintf("%s tidak boleh mengandung karakter berbahaya.", fieldInMsg)
 		}
 
 		errorMessages[field] = append(errorMessages[field], message)
