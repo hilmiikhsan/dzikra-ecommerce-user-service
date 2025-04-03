@@ -107,3 +107,25 @@ func (s *productCategoryService) UpdateProductCategory(ctx context.Context, id i
 	// Return the response.
 	return &response, nil
 }
+
+func (s *productCategoryService) RemoveProductCategory(ctx context.Context, id int) error {
+	// Check if the product category exists.
+	productCategory, err := s.productCategoryRepository.FindProductCategoryByID(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows || strings.Contains(err.Error(), constants.ErrProductCategoryNotFound) {
+			log.Error().Err(err).Msg("service::RemoveProductCategory - Product category not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductCategoryNotFound))
+		}
+		log.Error().Err(err).Msg("service::RemoveProductCategory - Error finding product category by id")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// Attempt to delete the product category.
+	err = s.productCategoryRepository.DeleteProductCategoryByID(ctx, productCategory.ID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::RemoveProductCategory - error deleting product category")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
+}

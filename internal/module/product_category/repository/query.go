@@ -36,4 +36,9 @@ const (
 		FROM product_categories
 		WHERE id = ? AND deleted_at IS NULL
 	`
+
+	queryDeleteProductCategoryByID = `
+		DELETE FROM product_categories
+		WHERE id = ? AND deleted_at IS NULL
+	`
 )

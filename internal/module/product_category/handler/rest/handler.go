@@ -95,3 +95,30 @@ func (h *productCategoryHandler) updateProductCategory(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
+
+func (h *productCategoryHandler) removeProductCategory(c *fiber.Ctx) error {
+	var (
+		ctx   = c.Context()
+		idStr = c.Params("product_category_id")
+	)
+
+	if strings.Contains(idStr, ":product_category_id") {
+		log.Warn().Msg("handler::removeProductCategory - Invalid product category ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product category ID"))
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Warn().Err(err).Msg("handler::removeProductCategory - Invalid id parameter")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid id parameter"))
+	}
+
+	err = h.service.RemoveProductCategory(ctx, id)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::removeProductCategory - Failed to remove product category")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
+}

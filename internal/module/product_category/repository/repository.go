@@ -115,3 +115,18 @@ func (r *productCategoryRepository) FindProductCategoryByID(ctx context.Context,
 
 	return res, nil
 }
+
+func (r *productCategoryRepository) DeleteProductCategoryByID(ctx context.Context, id int) error {
+	_, err := r.db.ExecContext(ctx, r.db.Rebind(queryDeleteProductCategoryByID), id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Int("id", id).Msg("repository::DeleteProductCategoryByID - Failed to delete product category by id")
+			return errors.New(constants.ErrProductCategoryNotFound)
+		}
+
+		log.Error().Err(err).Int("id", id).Msg("repository::DeleteProductCategoryByID - error deleting product category by id")
+		return err
+	}
+
+	return nil
+}

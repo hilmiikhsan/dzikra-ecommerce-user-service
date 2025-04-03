@@ -12,10 +12,12 @@ type ProductCategoryRepository interface {
 	InsertNewProductCategory(ctx context.Context, name string) (*entity.ProductCategory, error)
 	UpdateProductCategory(ctx context.Context, id int, name string) (*entity.ProductCategory, error)
 	FindProductCategoryByID(ctx context.Context, id int) (*entity.ProductCategory, error)
+	DeleteProductCategoryByID(ctx context.Context, id int) error
 }
 
 type ProductCategoryService interface {
 	GetListProductCategory(ctx context.Context, page, limit int, search string) (*dto.GetListProductCategory, error)
 	CreateProductCategory(ctx context.Context, name string) (*dto.CreateOrProductCategoryResponse, error)
 	UpdateProductCategory(ctx context.Context, id int, name string) (*dto.CreateOrProductCategoryResponse, error)
+	RemoveProductCategory(ctx context.Context, id int) error
 }
