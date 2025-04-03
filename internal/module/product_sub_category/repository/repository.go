@@ -121,3 +121,13 @@ func (r *productSubCategoryRepository) FindListProductSubCategory(ctx context.Co
 
 	return productSubCategories, total, nil
 }
+
+func (r *productSubCategoryRepository) SoftDeleteProductSubCategory(ctx context.Context, subCategoryID int) error {
+	_, err := r.db.ExecContext(ctx, r.db.Rebind(querySoftDeleteProductSubCategory), subCategoryID)
+	if err != nil {
+		log.Error().Err(err).Int("product_sub_category_id", subCategoryID).Msg("repository::DeleteProductSubCategory - error deleting product sub category")
+		return err
+	}
+
+	return nil
+}

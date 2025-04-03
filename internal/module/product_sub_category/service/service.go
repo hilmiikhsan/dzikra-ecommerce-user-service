@@ -145,3 +145,26 @@ func (s *productSubCategoryService) GetListProductSubCategory(ctx context.Contex
 	// return response
 	return &response, nil
 }
+
+func (s *productSubCategoryService) RemoveProductSubCategory(ctx context.Context, subCategoryID int) error {
+	// check find sub product category by id
+	productCategoryResult, err := s.productSubCategoryRepository.FindProductSubCategoryByID(ctx, subCategoryID)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrProductSubCategoryNotFound) {
+			log.Error().Err(err).Msg("service::RemoveProductSubCategory - product sub category not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductSubCategoryNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::RemoveProductSubCategory - error finding product sub category by id")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// remove product sub category
+	err = s.productSubCategoryRepository.SoftDeleteProductSubCategory(ctx, productCategoryResult.ID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::RemoveProductSubCategory - error removing product sub category")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
+}

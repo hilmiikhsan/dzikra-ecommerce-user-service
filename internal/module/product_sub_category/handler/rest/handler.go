@@ -130,3 +130,30 @@ func (h *productSubCategoryHandler) getListProductSubCategory(c *fiber.Ctx) erro
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
+
+func (h *productSubCategoryHandler) removeProductSubCategory(c *fiber.Ctx) error {
+	var (
+		ctx              = c.Context()
+		subCategoryIDStr = c.Params("subcategory_id")
+	)
+
+	if strings.Contains(subCategoryIDStr, ":subcategory_id") {
+		log.Warn().Msg("handler::removeProductSubCategory - Invalid product sub category ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product sub category ID"))
+	}
+
+	subCategoryID, err := strconv.Atoi(subCategoryIDStr)
+	if err != nil {
+		log.Warn().Msg("handler::removeProductSubCategory - Invalid product sub category ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product sub category ID"))
+	}
+
+	err = h.service.RemoveProductSubCategory(ctx, subCategoryID)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::removeProductSubCategory - Failed to remove product sub category")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
+}

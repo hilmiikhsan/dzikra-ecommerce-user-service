@@ -49,4 +49,10 @@ const (
 		JOIN product_categories pc ON psc.product_category_id = pc.id
 		WHERE psc.name ILIKE '%' || ? || '%' AND psc.deleted_at IS NULL
 	`
+
+	querySoftDeleteProductSubCategory = `
+		UPDATE product_sub_categories
+		SET deleted_at = NOW()
+		WHERE id = ? AND deleted_at IS NULL
+	`
 )
