@@ -233,10 +233,12 @@ func (h *userHandler) resetPassword(c *fiber.Ctx) error {
 }
 
 func (h *userHandler) getListUser(c *fiber.Ctx) error {
-	ctx := c.Context()
-	page := c.QueryInt("page", 1)
-	limit := c.QueryInt("limit", 10)
-	search := c.Query("search", "")
+	var (
+		ctx    = c.Context()
+		page   = c.QueryInt("page", 1)
+		limit  = c.QueryInt("limit", 10)
+		search = c.Query("search", "")
+	)
 
 	res, err := h.service.GetListUser(ctx, page, limit, search)
 	if err != nil {
@@ -249,8 +251,10 @@ func (h *userHandler) getListUser(c *fiber.Ctx) error {
 }
 
 func (h *userHandler) getDetailUser(c *fiber.Ctx) error {
-	ctx := c.Context()
-	userID := c.Params("user_id")
+	var (
+		ctx    = c.Context()
+		userID = c.Params("user_id")
+	)
 
 	if strings.Contains(userID, ":user_id") {
 		log.Warn().Msg("handler::getDetailRole - Invalid user ID")

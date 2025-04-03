@@ -33,12 +33,11 @@ func (h *roleHandler) getDetailRole(c *fiber.Ctx) error {
 
 func (h *roleHandler) getListRole(c *fiber.Ctx) error {
 	var (
-		ctx = c.Context()
+		ctx    = c.Context()
+		page   = c.QueryInt("page", 1)
+		limit  = c.QueryInt("limit", 10)
+		search = c.Query("search", "")
 	)
-
-	page := c.QueryInt("page", 1)
-	limit := c.QueryInt("limit", 10)
-	search := c.Query("search", "")
 
 	res, err := h.service.GetListRole(ctx, page, limit, search)
 	if err != nil {

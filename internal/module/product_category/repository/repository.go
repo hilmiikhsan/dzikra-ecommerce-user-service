@@ -29,14 +29,14 @@ func NewProductCategoryRepository(db *sqlx.DB) *productCategoryRepository {
 func (r *productCategoryRepository) FindListProductCategory(ctx context.Context, limit, offset int, search string) ([]dto.GetListCategory, int, error) {
 	var responses []entity.ProductCategory
 
-	if err := r.db.SelectContext(ctx, &responses, r.db.Rebind(queryFindListRole), search, limit, offset); err != nil {
+	if err := r.db.SelectContext(ctx, &responses, r.db.Rebind(queryFindListProductCategory), search, limit, offset); err != nil {
 		log.Error().Err(err).Msg("repository::FindListProductCategory - error executing query")
 		return nil, 0, err
 	}
 
 	var total int
 
-	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListRole), search); err != nil {
+	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListProductCategory), search); err != nil {
 		log.Error().Err(err).Msg("repository::FindListProductCategory - error counting product categories")
 		return nil, 0, err
 	}

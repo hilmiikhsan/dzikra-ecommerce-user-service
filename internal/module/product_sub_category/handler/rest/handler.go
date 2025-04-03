@@ -34,7 +34,11 @@ func (h *productSubCategoryHandler) createProductSubCategory(c *fiber.Ctx) error
 		return c.Status(code).JSON(response.Error(errs))
 	}
 
-	categoryID, _ := strconv.Atoi(c.Params("category_id"))
+	categoryID, err := strconv.Atoi(c.Params("category_id"))
+	if err != nil {
+		log.Warn().Msg("handler::createProductSubCategory - Invalid product category ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product category ID"))
+	}
 
 	res, err := h.service.CreateProductSubCategory(ctx, req, categoryID)
 	if err != nil {
@@ -75,8 +79,17 @@ func (h *productSubCategoryHandler) updateProductSubCategory(c *fiber.Ctx) error
 		return c.Status(code).JSON(response.Error(errs))
 	}
 
-	categoryID, _ := strconv.Atoi(categoryIDStr)
-	subCategoryID, _ := strconv.Atoi(subCategoryIDStr)
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		log.Warn().Msg("handler::updateProductSubCategory - Invalid product category ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product category ID"))
+	}
+
+	subCategoryID, err := strconv.Atoi(subCategoryIDStr)
+	if err != nil {
+		log.Warn().Msg("handler::updateProductSubCategory - Invalid product sub category ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product sub category ID"))
+	}
 
 	res, err := h.service.UpdateProductSubCategory(ctx, req, categoryID, subCategoryID)
 	if err != nil {
@@ -86,4 +99,34 @@ func (h *productSubCategoryHandler) updateProductSubCategory(c *fiber.Ctx) error
 	}
 
 	return c.JSON(response.Success(res, ""))
+}
+
+func (h *productSubCategoryHandler) getListProductSubCategory(c *fiber.Ctx) error {
+	var (
+		ctx           = c.Context()
+		page          = c.QueryInt("page", 1)
+		limit         = c.QueryInt("limit", 10)
+		search        = c.Query("search", "")
+		categoryIDStr = c.Params("category_id")
+	)
+
+	if strings.Contains(categoryIDStr, ":category_id") {
+		log.Warn().Msg("handler::getListProductSubCategory - Invalid product category ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product category ID"))
+	}
+
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		log.Warn().Msg("handler::getListProductSubCategory - Invalid product category ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product category ID"))
+	}
+
+	res, err := h.service.GetListProductSubCategory(ctx, page, limit, categoryID, search)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getListProductSubCategory - Failed to get list product sub category")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }

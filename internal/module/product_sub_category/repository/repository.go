@@ -6,6 +6,8 @@ import (
 	"errors"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	productCategory "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/dto"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/ports"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/utils"
@@ -84,4 +86,38 @@ func (r *productSubCategoryRepository) UpdateProducSubCategory(ctx context.Conte
 	}
 
 	return res, nil
+}
+
+func (r *productSubCategoryRepository) FindListProductSubCategory(ctx context.Context, limit, offset, categoryID int, search string) ([]dto.GetListSubCategory, int, error) {
+	var responses []entity.ProductSubCategory
+
+	if err := r.db.SelectContext(ctx, &responses, r.db.Rebind(queryFindListProductSubCategory), categoryID, search, limit, offset); err != nil {
+		utils.QueryLog(r.db.Rebind(queryFindListProductSubCategory), limit, offset, categoryID, search)
+		log.Error().Err(err).Msg("repository::FindListProductSubCategory - error finding list product sub category")
+		return nil, 0, err
+	}
+
+	var total int
+
+	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListProductSubCategory), search); err != nil {
+		log.Error().Err(err).Msg("repository::FindListProductSubCategory - error counting list product sub category")
+		return nil, 0, err
+	}
+
+	var productSubCategories []dto.GetListSubCategory
+
+	for _, response := range responses {
+		productSubCategoryDTO := dto.GetListSubCategory{
+			ID:          response.ID,
+			SubCategory: response.Name,
+			Category: productCategory.GetListCategory{
+				ID:       response.CategoryID,
+				Category: response.CategoryName,
+			},
+		}
+
+		productSubCategories = append(productSubCategories, productSubCategoryDTO)
+	}
+
+	return productSubCategories, total, nil
 }

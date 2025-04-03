@@ -7,6 +7,7 @@ import (
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )
@@ -95,6 +96,50 @@ func (s *productSubCategoryService) UpdateProductSubCategory(ctx context.Context
 		ID:                res.ID,
 		SubCategory:       res.Name,
 		ProductCategoryID: res.ProductCategoryID,
+	}
+
+	// return response
+	return &response, nil
+}
+
+func (s *productSubCategoryService) GetListProductSubCategory(ctx context.Context, page, limit, categoryID int, search string) (*dto.GetListProductSubCategory, error) {
+	// check find category by id
+	productCategoryResult, err := s.productCategoryRepository.FindProductCategoryByID(ctx, categoryID)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrProductCategoryNotFound) {
+			log.Error().Err(err).Msg("service::GetListProductSubCategory - product category not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductCategoryNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::GetListProductSubCategory - error finding product category by id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// calculate pagination
+	currentPage, perPage, offset := utils.Paginate(page, limit)
+
+	// get list product sub category
+	productSubCategories, total, err := s.productSubCategoryRepository.FindListProductSubCategory(ctx, perPage, offset, productCategoryResult.ID, search)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListProductSubCategory - error getting list product category")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if productSubCategories is nil
+	if productSubCategories == nil {
+		productSubCategories = []dto.GetListSubCategory{}
+	}
+
+	// calculate total pages
+	totalPages := utils.CalculateTotalPages(total, perPage)
+
+	// create map response
+	response := dto.GetListProductSubCategory{
+		SubCategory: productSubCategories,
+		TotalPages:  totalPages,
+		CurrentPage: currentPage,
+		PageSize:    perPage,
+		TotalData:   total,
 	}
 
 	// return response

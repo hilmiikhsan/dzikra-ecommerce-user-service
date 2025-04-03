@@ -1,7 +1,7 @@
 package repostiory
 
 const (
-	queryFindListRole = `
+	queryFindListProductCategory = `
 		SELECT
 			id,
 			name
@@ -11,7 +11,7 @@ const (
 		LIMIT ? OFFSET ?
 	`
 
-	queryCountListRole = `
+	queryCountListProductCategory = `
 		SELECT COUNT(*)
 		FROM product_categories
 		WHERE name ILIKE '%' || ? || '%' AND deleted_at IS NULL
