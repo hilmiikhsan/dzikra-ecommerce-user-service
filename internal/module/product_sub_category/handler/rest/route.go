@@ -4,4 +4,5 @@ import "github.com/gofiber/fiber/v2"
 
 func (h *productSubCategoryHandler) ProductSubCategoryRoute(userRouter, superadminRouter fiber.Router) {
 	superadminRouter.Post("/product_category/:category_id/product_subcategory/create", h.middleware.UserBearer, h.middleware.RBACMiddleware("create", "subcategory"), h.createProductSubCategory)
+	superadminRouter.Patch("/product_category/:category_id/product_subcategory/update/:subcategory_id", h.middleware.UserBearer, h.middleware.RBACMiddleware("update", "subcategory"), h.updateProductSubCategory)
 }

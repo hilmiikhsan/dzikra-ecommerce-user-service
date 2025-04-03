@@ -27,4 +27,5 @@ var (
 	ErrProductCategoryAlreadyRegistered    = "Product category already registered"
 	ErrProductCategoryNotFound             = "Product category not found"
 	ErrProductSubCategoryAlreadyRegistered = "Product sub category already registered"
+	ErrProductSubCategoryNotFound          = "Product sub category not found"
 )

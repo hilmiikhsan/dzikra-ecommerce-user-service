@@ -91,6 +91,7 @@ func (s *productCategoryService) UpdateProductCategory(ctx context.Context, id i
 				ID:       productCategoryResult.ID,
 				Category: productCategoryResult.Name,
 			}
+
 			return &response, nil
 		}
 

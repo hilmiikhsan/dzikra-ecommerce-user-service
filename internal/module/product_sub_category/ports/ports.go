@@ -9,8 +9,11 @@ import (
 
 type ProductSubCategoryRepository interface {
 	InsertNewProductSubCategory(ctx context.Context, name string, categoryID int) (*entity.ProductSubCategory, error)
+	FindProductSubCategoryByID(ctx context.Context, id int) (*entity.ProductSubCategory, error)
+	UpdateProducSubCategory(ctx context.Context, name string, subCategoryID int) (*entity.ProductSubCategory, error)
 }
 
 type ProductSubCategoryService interface {
 	CreateProductSubCategory(ctx context.Context, req *dto.CreateOrUpdateProductSubCategoryRequest, categoryID int) (*dto.CreateOrUpdateProductSubCategoryResponse, error)
+	UpdateProductSubCategory(ctx context.Context, req *dto.CreateOrUpdateProductSubCategoryRequest, categoryID, subCategoryID int) (*dto.CreateOrUpdateProductSubCategoryResponse, error)
 }

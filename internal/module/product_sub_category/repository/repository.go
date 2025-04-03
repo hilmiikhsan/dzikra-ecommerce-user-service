@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/entity"
@@ -44,6 +46,40 @@ func (r *productSubCategoryRepository) InsertNewProductSubCategory(ctx context.C
 		}
 
 		log.Error().Err(err).Str("name", name).Msg("repository::InsertNewProductSubCategory - error inserting new product sub category")
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *productSubCategoryRepository) FindProductSubCategoryByID(ctx context.Context, id int) (*entity.ProductSubCategory, error) {
+	var res = new(entity.ProductSubCategory)
+
+	err := r.db.GetContext(ctx, res, r.db.Rebind(queryFindProductSubCategoryByID), id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Int("id", id).Msg("repository::FindProductSubCategoryByProductCategoryID - Failed to find product sub category by product category id")
+			return nil, errors.New(constants.ErrProductSubCategoryNotFound)
+		}
+
+		log.Error().Err(err).Int("id", id).Msg("repository::FindProductSubCategoryByProductCategoryID - error finding product sub category by product category id")
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *productSubCategoryRepository) UpdateProducSubCategory(ctx context.Context, name string, subCategoryID int) (*entity.ProductSubCategory, error) {
+	var res = new(entity.ProductSubCategory)
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryUpdateProductSubCategory), name, subCategoryID, name).Scan(&res.ID, &res.Name, &res.ProductCategoryID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Int("product_category_id", subCategoryID).Str("name", name).Msg("repository::UpdateProducSubCategory - product sub category is already registered")
+			return nil, errors.New(constants.ErrProductSubCategoryAlreadyRegistered)
+		}
+
+		log.Error().Err(err).Str("name", name).Msg("repository::UpdateProducSubCategory - error updating product sub category")
 		return nil, err
 	}
 
