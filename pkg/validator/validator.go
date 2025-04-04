@@ -9,6 +9,7 @@ import (
 	// ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	// en_translations "github.com/go-playground/validator/v10/translations/en"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/rs/zerolog/log"
 )
 
@@ -286,13 +287,9 @@ func isNonEmptyArray(fl validator.FieldLevel) bool {
 }
 
 func isXSSSafe(fl validator.FieldLevel) bool {
-	value := fl.Field().String()
+	input := fl.Field().String()
+	p := bluemonday.UGCPolicy()
+	sanitized := p.Sanitize(input)
 
-	// if strings.ContainsAny(value, "<>") {
-	// 	return false
-	// }
-
-	re := regexp.MustCompile(`<[^>]*>`)
-	return !re.MatchString(value)
-	// return true
+	return input == sanitized
 }
