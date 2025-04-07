@@ -131,3 +131,15 @@ func (r *productSubCategoryRepository) SoftDeleteProductSubCategory(ctx context.
 
 	return nil
 }
+
+func (r *productSubCategoryRepository) CountProductSubCategoryByID(ctx context.Context, id int) (int, error) {
+	var count int
+
+	err := r.db.GetContext(ctx, &count, r.db.Rebind(queryCountProductSubCategoryByID), id)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::CountProductSubCategoryByID - error count product sub category by id")
+		return 0, err
+	}
+
+	return count, nil
+}

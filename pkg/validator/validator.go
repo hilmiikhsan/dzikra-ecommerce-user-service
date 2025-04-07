@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"encoding/json"
 	"reflect"
 	"regexp"
 	"strings"
@@ -87,6 +88,12 @@ func NewValidator() *Validator {
 	}
 	if err := v.RegisterValidation("xss_safe", isXSSSafe); err != nil {
 		log.Fatal().Err(err).Msg("Error while registering xss_safe validator")
+	}
+	if err := v.RegisterValidation("json_string", isValidJSON); err != nil {
+		log.Fatal().Err(err).Msg("Error while registering json_string validator")
+	}
+	if err := v.RegisterValidation("non_zero_integer", isNonZeroInt); err != nil {
+		log.Fatal().Err(err).Msg("Error while registering non_zero_integer validator")
 	}
 
 	validatorCustom.validator = v
@@ -292,4 +299,22 @@ func isXSSSafe(fl validator.FieldLevel) bool {
 	sanitized := p.Sanitize(input)
 
 	return input == sanitized
+}
+
+func isValidJSON(fl validator.FieldLevel) bool {
+	input := fl.Field().String()
+	var js json.RawMessage
+
+	return json.Unmarshal([]byte(input), &js) == nil
+}
+
+func isNonZeroInt(fl validator.FieldLevel) bool {
+	switch fl.Field().Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return fl.Field().Int() > 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return fl.Field().Uint() > 0
+	default:
+		return false
+	}
 }

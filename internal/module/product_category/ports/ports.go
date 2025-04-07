@@ -13,6 +13,7 @@ type ProductCategoryRepository interface {
 	UpdateProductCategory(ctx context.Context, id int, name string) (*entity.ProductCategory, error)
 	FindProductCategoryByID(ctx context.Context, id int) (*entity.ProductCategory, error)
 	DeleteProductCategoryByID(ctx context.Context, id int) error
+	CountProductCategoryByID(ctx context.Context, id int) (int, error)
 }
 
 type ProductCategoryService interface {

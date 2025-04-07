@@ -41,4 +41,10 @@ const (
 		DELETE FROM product_categories
 		WHERE id = ? AND deleted_at IS NULL
 	`
+
+	queryCountProductCategoryByID = `
+		SELECT COUNT(id)
+		FROM product_categories
+		WHERE id = ? AND deleted_at IS NULL
+	`
 )

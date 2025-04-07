@@ -55,6 +55,14 @@ type Config struct {
 		Password string `env:"DZIKRA_REDIS_PASSWORD" env-default:"password"`
 		Database int    `env:"DZIKRA_REDIS_DB" env-default:"0"`
 	}
+	MinioStorage struct {
+		Endpoint  string `env:"DZIKRA_MINIO_ENDPOINT" env-default:"localhost:9000"`
+		AccessKey string `env:"DZIKRA_MINIO_ACCESS_KEY" env-default:""`
+		SecretKey string `env:"DZIKRA_MINIO_SECRET_KEY" env-default:""`
+		Bucket    string `env:"DZIKRA_MINIO_BUCKET" env-default:""`
+		UseSSL    bool   `env:"DZIKRA_MINIO_USE_SSL" env-default:"false"`
+		PublicURL string `env:"DZIKRA_MINIO_PUBLIC_URL" env-default:"http://localhost:9000"`
+	}
 }
 
 // Option is Configure type return func.
@@ -119,6 +127,12 @@ func (c *Configure) Initialize() {
 		Envs.RedisDB.Port = utils.GetEnv("DZIKRA_REDIS_PORT", Envs.RedisDB.Port)
 		Envs.RedisDB.Password = utils.GetEnv("DZIKRA_REDIS_PASSWORD", Envs.RedisDB.Password)
 		Envs.RedisDB.Database = utils.GetIntEnv("DZIKRA_REDIS_DB", Envs.RedisDB.Database)
+		Envs.MinioStorage.Endpoint = utils.GetEnv("DZIKRA_MINIO_ENDPOINT", Envs.MinioStorage.Endpoint)
+		Envs.MinioStorage.AccessKey = utils.GetEnv("DZIKRA_MINIO_ACCESS_KEY", Envs.MinioStorage.AccessKey)
+		Envs.MinioStorage.SecretKey = utils.GetEnv("DZIKRA_MINIO_SECRET_KEY", Envs.MinioStorage.SecretKey)
+		Envs.MinioStorage.Bucket = utils.GetEnv("DZIKRA_MINIO_BUCKET", Envs.MinioStorage.Bucket)
+		Envs.MinioStorage.UseSSL = utils.GetBoolEnv("DZIKRA_MINIO_USE_SSL", Envs.MinioStorage.UseSSL)
+		Envs.MinioStorage.PublicURL = utils.GetEnv("DZIKRA_MINIO_PUBLIC_URL", Envs.MinioStorage.PublicURL)
 	})
 }
 

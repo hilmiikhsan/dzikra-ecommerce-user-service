@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -28,4 +29,8 @@ func GenerateUUIDv7String() (uuid.UUID, error) {
 
 func GenerateSessionUUID() string {
 	return uuid.New().String()
+}
+
+func GenerateBucketFileUUID() string {
+	return strings.ReplaceAll(uuid.New().String(), "-", "")
 }

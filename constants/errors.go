@@ -28,4 +28,5 @@ var (
 	ErrProductCategoryNotFound             = "Product category not found"
 	ErrProductSubCategoryAlreadyRegistered = "Product sub category already registered"
 	ErrProductSubCategoryNotFound          = "Product sub category not found"
+	ErrInvalidProductData                  = "Invalid product_data JSON format"
 )

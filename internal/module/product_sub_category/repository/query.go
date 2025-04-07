@@ -55,4 +55,10 @@ const (
 		SET deleted_at = NOW()
 		WHERE id = ? AND deleted_at IS NULL
 	`
+
+	queryCountProductSubCategoryByID = `
+		SELECT COUNT(id)
+		FROM product_sub_categories
+		WHERE id = ? AND deleted_at IS NULL
+	`
 )

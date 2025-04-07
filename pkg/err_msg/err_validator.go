@@ -199,6 +199,12 @@ func errorValidationHandler[T any](err error, payload *T) (int, map[string][]str
 		case "xss_safe":
 			message = fmt.Sprintf("%s must not contain any harmful characters.", fieldInMsg)
 			// message = fmt.Sprintf("%s tidak boleh mengandung karakter berbahaya.", fieldInMsg)
+		case "json_string":
+			message = fmt.Sprintf("%s must be a valid JSON string.", fieldInMsg)
+			// message = fmt.Sprintf("%s harus berupa string JSON yang valid.", fieldInMsg)
+		case "non_zero_integer":
+			message = fmt.Sprintf("%s must be a non-zero integer.", fieldInMsg)
+			// message = fmt.Sprintf("%s harus berupa bilangan bulat tidak nol.", fieldInMsg)
 		}
 
 		errorMessages[field] = append(errorMessages[field], message)

@@ -2,6 +2,7 @@ package route
 
 import (
 	application "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/handler/rest"
+	product "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/handler/rest"
 	productCategory "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/handler/rest"
 	productSubCategory "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/handler/rest"
 	role "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/handler/rest"
@@ -22,6 +23,7 @@ func SetupRoutes(app *fiber.App) {
 	application.NewApplicationHandler().ApplicationRoute(userAPI, superadminAPI)
 	productCategory.NewProductCategoryHandler().ProductCategoryRoute(userAPI, superadminAPI)
 	productSubCategory.NewProductSubCategoryHandler().ProductSubCategoryRoute(userAPI, superadminAPI)
+	product.NewProductHandler().ProductRoute(userAPI, superadminAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {

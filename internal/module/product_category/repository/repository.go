@@ -130,3 +130,15 @@ func (r *productCategoryRepository) DeleteProductCategoryByID(ctx context.Contex
 
 	return nil
 }
+
+func (r *productCategoryRepository) CountProductCategoryByID(ctx context.Context, id int) (int, error) {
+	var count int
+
+	err := r.db.GetContext(ctx, &count, r.db.Rebind(queryCountProductCategoryByID), id)
+	if err != nil {
+		log.Error().Err(err).Int("id", id).Msg("repository::CountProductCategoryByID - error counting product category by id")
+		return 0, err
+	}
+
+	return count, nil
+}

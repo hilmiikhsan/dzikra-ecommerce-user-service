@@ -36,7 +36,6 @@ func NewProductCategoryHandler() *productCategoryHandler {
 
 	// product category service
 	productCategoryService := productCategoryService.NewProductCategoryService(
-		adapter.Adapters.DzikraPostgres,
 		productCategoryRepository,
 	)
 
