@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/ports"
@@ -36,6 +38,33 @@ func (r *productGroceryRepository) InsertNewProductGrocery(ctx context.Context, 
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("repository::InsertNewProductGrocery - error inserting new product grocery")
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *productGroceryRepository) UpdateProductGrocery(ctx context.Context, tx *sqlx.Tx, data *entity.ProductGrocery) (*entity.ProductGrocery, error) {
+	var res = new(entity.ProductGrocery)
+
+	err := tx.QueryRowContext(ctx, r.db.Rebind(queryUpdateProductGrocery),
+		data.MinBuy,
+		data.Discount,
+		data.ID,
+		data.ProductID,
+	).Scan(
+		&res.ID,
+		&res.MinBuy,
+		&res.Discount,
+		&res.ProductID,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Msg("repository::UpdateProductGrocery - product grocery not found or no update performed")
+			return nil, fmt.Errorf("product grocery with id %d and product_id %d not found", data.ID, data.ProductID)
+		}
+
+		log.Error().Err(err).Msg("repository::UpdateProductGrocery - error updating product grocery")
 		return nil, err
 	}
 

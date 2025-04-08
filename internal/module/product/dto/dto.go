@@ -14,7 +14,7 @@ type CreateOrUpdateProductResponse struct {
 	ID             int                             `json:"id"`
 	Name           string                          `json:"name"`
 	Description    string                          `json:"desc"`
-	Spec           string                          `json:"spec"`
+	Specification  string                          `json:"spec"`
 	RealPrice      int                             `json:"real_price"`
 	CapitalPrice   int                             `json:"capital_price"`
 	DiscountPrice  int                             `json:"discount_price"`
@@ -42,6 +42,8 @@ type ProductData struct {
 	Weight        float64                       `json:"weight" validate:"numeric"`
 	CategoryID    string                        `json:"category_id" validate:"required,xss_safe"`
 	SubCategoryID string                        `json:"subcategory_id" validate:"required,xss_safe"`
+	ImageToKeep   []int                         `json:"image_to_keep,omitempty"`
+	DelVariants   []int                         `json:"del_variants,omitempty"`
 }
 
 type UploadFileRequest struct {

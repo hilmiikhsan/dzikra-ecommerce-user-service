@@ -12,6 +12,7 @@ type ProductVariant struct {
 }
 
 type Variant struct {
+	ID             int     `json:"id,omitempty"`
 	VariantSubName string  `json:"variant_sub_name" validate:"required,max=100,xss_safe"`
 	VariantStock   int     `json:"variant_stock" validate:"numeric"`
 	RealPrice      int     `json:"real_price" validate:"numeric"`

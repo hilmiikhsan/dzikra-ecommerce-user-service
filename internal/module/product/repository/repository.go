@@ -21,18 +21,6 @@ func NewProductRepository(db *sqlx.DB) *productRepository {
 	}
 }
 
-func (r *productRepository) CountProductByName(ctx context.Context, name string) (int, error) {
-	var count int
-
-	err := r.db.GetContext(ctx, &count, queryCountProductByName, name)
-	if err != nil {
-		log.Error().Err(err).Msg("repository::CountProductByName - error count product query")
-		return 0, err
-	}
-
-	return count, nil
-}
-
 func (r *productRepository) InsertNewProduct(ctx context.Context, tx *sqlx.Tx, data *entity.Product) (*entity.Product, error) {
 	var res = new(entity.Product)
 
@@ -68,4 +56,54 @@ func (r *productRepository) InsertNewProduct(ctx context.Context, tx *sqlx.Tx, d
 	}
 
 	return res, nil
+}
+
+func (r *productRepository) UpdateProduct(ctx context.Context, tx *sqlx.Tx, id int, data *entity.Product) (*entity.Product, error) {
+	var res = new(entity.Product)
+
+	err := tx.QueryRowContext(ctx, r.db.Rebind(queryUpdateProduct),
+		data.Name,
+		data.RealPrice,
+		data.DiscountPrice,
+		data.CapitalPrice,
+		data.Description,
+		data.Spesification,
+		data.Stock,
+		data.Weight,
+		data.VariantName,
+		data.ProductCategoryID,
+		data.ProductSubCategoryID,
+		id,
+	).Scan(
+		&res.ID,
+		&res.Name,
+		&res.RealPrice,
+		&res.DiscountPrice,
+		&res.CapitalPrice,
+		&res.Description,
+		&res.Spesification,
+		&res.Stock,
+		&res.Weight,
+		&res.VariantName,
+		&res.ProductCategoryID,
+		&res.ProductSubCategoryID,
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::UpdateProduct - error updating product")
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *productRepository) CountProductByName(ctx context.Context, name string) (int, error) {
+	var count int
+
+	err := r.db.GetContext(ctx, &count, queryCountProductByName, name)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::CountProductByName - error count product query")
+		return 0, err
+	}
+
+	return count, nil
 }

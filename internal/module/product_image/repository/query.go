@@ -31,14 +31,33 @@ const (
 	`
 
 	queryCountProductImages = `
-		SELECT COUNT(*) FROM product_images
+		SELECT COUNT(id) FROM product_images
 		WHERE product_id = ? AND deleted_at IS NULL
 	`
 
 	queryUpdateProductImageURL = `
 		UPDATE product_images
-		SET image_url = ?
+		SET 
+			image_url = ?
 		WHERE id = ? AND deleted_at IS NULL
 		RETURNING id, image_url, product_id, sort
+	`
+
+	queryFindProductImagesByProductID = `
+		SELECT 
+			id, 
+			image_url, 
+			product_id, 
+			sort
+		FROM product_images
+		WHERE product_id = ? AND deleted_at IS NULL
+		ORDER BY sort ASC
+	`
+
+	queryDeleteProductImage = `
+		UPDATE product_images
+		SET 
+			deleted_at = CURRENT_TIMESTAMP
+		WHERE id = ? AND deleted_at IS NULL
 	`
 )

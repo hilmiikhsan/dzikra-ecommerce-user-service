@@ -8,6 +8,7 @@ type ProductGrocery struct {
 }
 
 type GroceryPrice struct {
+	ID       int `json:"id,omitempty"`
 	MinBuy   int `json:"min_buy" validate:"numeric"`
 	Discount int `json:"discount" validate:"numeric"`
 }

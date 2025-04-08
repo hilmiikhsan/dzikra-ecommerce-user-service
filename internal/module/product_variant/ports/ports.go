@@ -9,4 +9,6 @@ import (
 
 type ProductVariantRepository interface {
 	InsertNewProductVariant(ctx context.Context, tx *sqlx.Tx, data *entity.ProductVariant) (*entity.ProductVariant, error)
+	UpdateProductVariant(ctx context.Context, tx *sqlx.Tx, data *entity.ProductVariant) (*entity.ProductVariant, error)
+	DeleteProductVariant(ctx context.Context, tx *sqlx.Tx, id, productID int) error
 }

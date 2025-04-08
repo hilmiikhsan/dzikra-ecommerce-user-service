@@ -13,4 +13,6 @@ type ProductImageRepository interface {
 	ReorderProductImages(ctx context.Context, tx *sqlx.Tx, productID int) error
 	CountProductImagesByProductID(ctx context.Context, productID int) (int, error)
 	UpdateProductImageURL(ctx context.Context, id int, url string) (*entity.ProductImage, error)
+	FindProductImagesByProductID(ctx context.Context, productID int) ([]entity.ProductImage, error)
+	DeleteProductImage(ctx context.Context, tx *sqlx.Tx, id int) error
 }

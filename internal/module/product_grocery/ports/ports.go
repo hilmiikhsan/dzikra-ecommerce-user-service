@@ -9,4 +9,5 @@ import (
 
 type ProductGroceryRepository interface {
 	InsertNewProductGrocery(ctx context.Context, tx *sqlx.Tx, data *entity.ProductGrocery) (*entity.ProductGrocery, error)
+	UpdateProductGrocery(ctx context.Context, tx *sqlx.Tx, data *entity.ProductGrocery) (*entity.ProductGrocery, error)
 }

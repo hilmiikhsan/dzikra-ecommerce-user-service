@@ -112,3 +112,25 @@ func (r *productImageRepository) UpdateProductImageURL(ctx context.Context, id i
 
 	return res, nil
 }
+
+func (r *productImageRepository) FindProductImagesByProductID(ctx context.Context, productID int) ([]entity.ProductImage, error) {
+	var res []entity.ProductImage
+
+	err := r.db.SelectContext(ctx, &res, r.db.Rebind(queryFindProductImagesByProductID), productID)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::FindProductImagesByProductID - error fetching product images")
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *productImageRepository) DeleteProductImage(ctx context.Context, tx *sqlx.Tx, id int) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(queryDeleteProductImage), id)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::DeleteProductImage - error deleting product image")
+		return err
+	}
+
+	return nil
+}
