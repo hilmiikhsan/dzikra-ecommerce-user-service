@@ -525,3 +525,35 @@ func (s *productService) UpdateProduct(ctx context.Context, productID int, req *
 
 	return &sanitizedResponse, nil
 }
+
+func (s *productService) GetListProduct(ctx context.Context, page, limit int, search string) (*dto.GetListProductResponse, error) {
+	// calculate pagination
+	currentPage, perPage, offset := utils.Paginate(page, limit)
+
+	// get list product
+	products, total, err := s.productRepository.FindListProduct(ctx, perPage, offset, search)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListProduct - error getting list product")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if products is nil
+	if products == nil {
+		products = []dto.GetListProduct{}
+	}
+
+	// calculate total pages
+	totalPages := utils.CalculateTotalPages(total, perPage)
+
+	// create map response
+	response := dto.GetListProductResponse{
+		Product:     products,
+		TotalPages:  totalPages,
+		CurrentPage: currentPage,
+		PageSize:    perPage,
+		TotalData:   total,
+	}
+
+	// return response
+	return &response, nil
+}

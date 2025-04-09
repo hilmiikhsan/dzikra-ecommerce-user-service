@@ -12,9 +12,11 @@ type ProductRepository interface {
 	InsertNewProduct(ctx context.Context, tx *sqlx.Tx, data *entity.Product) (*entity.Product, error)
 	UpdateProduct(ctx context.Context, tx *sqlx.Tx, id int, data *entity.Product) (*entity.Product, error)
 	CountProductByName(ctx context.Context, name string) (int, error)
+	FindListProduct(ctx context.Context, limit, offset int, search string) ([]dto.GetListProduct, int, error)
 }
 
 type ProductService interface {
 	CreateProduct(ctx context.Context, req *dto.ProductData, payloadFiles []dto.UploadFileRequest) (*dto.CreateOrUpdateProductResponse, error)
 	UpdateProduct(ctx context.Context, productID int, req *dto.ProductData, payloadFiles []dto.UploadFileRequest) (*dto.CreateOrUpdateProductResponse, error)
+	GetListProduct(ctx context.Context, page, limit int, search string) (*dto.GetListProductResponse, error)
 }

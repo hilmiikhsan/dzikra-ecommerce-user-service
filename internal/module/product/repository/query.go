@@ -64,4 +64,55 @@ const (
 	queryCountProductByName = `
 		SELECT COUNT(id) FROM products WHERE name = ? AND deleted_at IS NULL
 	`
+
+	queryCountListProduct = `
+		SELECT COUNT(*)
+		FROM products p
+		WHERE ($1 = '' OR p.name ILIKE '%' || $1 || '%')
+		AND p.deleted_at IS NULL
+	`
+
+	queryFindListProduct = `
+		SELECT 
+			p.id AS id,
+			p.name AS name,
+			p.description AS description,
+			p.specification AS specification,
+			p.real_price AS real_price,
+			p.capital_price AS capital_price,
+			p.discount_price AS discount_price,
+			p.stock AS stock,
+			p.weight AS weight,
+			p.variant_name AS variant_name,
+			pc.id AS product_category_id,
+			pc.name AS product_category_name,
+			psc.id AS product_sub_id,
+			psc.name AS product_sub_category_name,
+			psc.product_category_id AS product_sub_category_id,
+			pv.id AS product_variant_id,
+			pv.variant_sub_name AS product_variant_sub_name,
+			pv.variant_stock AS product_variant_stock,
+			pv.variant_weight AS product_variant_weight,
+			pv.capital_price AS product_variant_capital_price,
+			pv.real_price AS product_variant_real_price,
+			pv.discount_price AS product_variant_discount_price,
+			pv.product_id AS product_variant_product_id,
+			pg.id AS product_grocery_id,
+			pg.min_buy AS product_grocery_min_buy,
+			pg.discount AS product_grocery_discount,
+			pg.product_id AS product_grocery_product_id,
+			pi.id AS product_image_id,
+			pi.image_url AS product_image_url,
+			pi.sort AS product_image_sort,
+			pi.product_id AS product_image_product_id
+		FROM products p
+		JOIN product_categories pc ON p.product_category_id = pc.id
+		JOIN product_sub_categories psc ON p.product_sub_category_id = psc.id
+		LEFT JOIN product_variants pv ON pv.product_id = p.id
+		LEFT JOIN product_groceries pg ON pg.product_id = p.id
+		LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.deleted_at IS NULL
+		WHERE ($1 = '' OR p.name ILIKE '%' || $1 || '%')
+		ORDER BY p.id
+		LIMIT $2 OFFSET $3
+	`
 )

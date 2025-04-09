@@ -1,6 +1,6 @@
 package dto
 
-type GetListProductCategory struct {
+type GetListProductCategoryResponse struct {
 	Category    []GetListCategory `json:"category"`
 	TotalPages  int               `json:"total_pages"`
 	CurrentPage int               `json:"current_page"`

@@ -27,3 +27,9 @@ type GetListSubCategory struct {
 	SubCategory string                          `json:"subcategory"`
 	Category    productCategory.GetListCategory `json:"category"`
 }
+
+type ProductSubCategory struct {
+	ID          int    `json:"id"`
+	SubCategory string `json:"subcategory"`
+	CategoryID  int    `json:"category_id"`
+}

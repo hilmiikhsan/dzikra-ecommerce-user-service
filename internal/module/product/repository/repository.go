@@ -2,9 +2,16 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/ports"
+	productCategoryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/dto"
+	productGroceryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/dto"
+	productImageDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/dto"
+	productSubCategoryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/dto"
+	productVariantDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/dto"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
@@ -106,4 +113,124 @@ func (r *productRepository) CountProductByName(ctx context.Context, name string)
 	}
 
 	return count, nil
+}
+
+func (r *productRepository) FindListProduct(ctx context.Context, limit, offset int, search string) ([]dto.GetListProduct, int, error) {
+	var total int
+	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListProduct), search); err != nil {
+		log.Error().Err(err).Msg("repository::FindListProduct - error counting products")
+		return nil, 0, fmt.Errorf("error counting products: %w", err)
+	}
+
+	var rows []entity.Product
+	if err := r.db.SelectContext(ctx, &rows, r.db.Rebind(queryFindListProduct), search, limit, offset); err != nil {
+		log.Error().Err(err).Msg("repository::FindListProduct - error selecting list of products")
+		return nil, 0, fmt.Errorf("error selecting list of products: %w", err)
+	}
+
+	productMap := make(map[int]*dto.GetListProduct)
+	for _, row := range rows {
+		prod, exists := productMap[row.ID]
+		if !exists {
+			prod = &dto.GetListProduct{
+				ID:            row.ID,
+				Name:          row.Name,
+				Description:   row.Description,
+				Specification: row.Spesification,
+				RealPrice:     row.RealPrice,
+				CapitalPrice:  row.CapitalPrice,
+				DiscountPrice: row.DiscountPrice,
+				Stock:         row.Stock,
+				Weight:        row.Weight,
+				VariantName:   row.VariantName,
+				ProductCategory: productCategoryDto.GetListCategory{
+					ID:       row.ProductCategoryID,
+					Category: row.ProductCategoryName,
+				},
+				ProductSubCategory: productSubCategoryDto.ProductSubCategory{
+					ID:          row.ProductSubID,
+					SubCategory: row.ProductSubCategoryName,
+					CategoryID:  row.ProductSubCategoryID,
+				},
+				ProductVariant: []productVariantDto.ProductVariant{},
+				ProductGrocery: []productGroceryDto.ProductGrocery{},
+				ProductImage:   []productImageDto.ProductImage{},
+			}
+			productMap[row.ID] = prod
+		}
+
+		if row.ProductVariantID.Valid {
+			variantID := int(row.ProductVariantID.Int64)
+			alreadyExists := false
+			for _, v := range prod.ProductVariant {
+				if v.ID == variantID {
+					alreadyExists = true
+					break
+				}
+			}
+			if !alreadyExists {
+				variant := productVariantDto.ProductVariant{
+					ID:             variantID,
+					VariantSubName: row.ProductVariantSubName.String,
+					VariantStock:   int(row.ProductVariantStock.Int64),
+					VariantWeight:  row.ProductVariantWeight.Float64,
+					CapitalPrice:   int(row.ProductVariantCapitalPrice.Int64),
+					RealPrice:      int(row.ProductVariantRealPrice.Int64),
+					DiscountPrice:  int(row.ProductVariantDiscountPrice.Int64),
+					ProductID:      int(row.ProductVariantProductID.Int64),
+				}
+
+				prod.ProductVariant = append(prod.ProductVariant, variant)
+			}
+		}
+
+		if row.ProductGroceryID.Valid {
+			groceryID := int(row.ProductGroceryID.Int64)
+			alreadyExists := false
+			for _, g := range prod.ProductGrocery {
+				if g.ID == groceryID {
+					alreadyExists = true
+					break
+				}
+			}
+			if !alreadyExists {
+				grocery := productGroceryDto.ProductGrocery{
+					ID:        groceryID,
+					MinBuy:    int(row.ProductGroceryMinBuy.Int64),
+					Discount:  int(row.ProductGroceryDiscount.Int64),
+					ProductID: int(row.ProductGroceryProductID.Int64),
+				}
+
+				prod.ProductGrocery = append(prod.ProductGrocery, grocery)
+			}
+		}
+
+		if row.ProductImageID.Valid {
+			imageID := int(row.ProductImageID.Int64)
+			alreadyExists := false
+			for _, img := range prod.ProductImage {
+				if img.ID == imageID {
+					alreadyExists = true
+					break
+				}
+			}
+			if !alreadyExists {
+				image := productImageDto.ProductImage{
+					ID:        imageID,
+					ImageURL:  row.ProductImageURL.String,
+					Position:  int(row.ProductImageSort.Int64),
+					ProductID: int(row.ProductImageProductID.Int64),
+				}
+
+				prod.ProductImage = append(prod.ProductImage, image)
+			}
+		}
+	}
+
+	products := make([]dto.GetListProduct, 0, len(productMap))
+	for _, prod := range productMap {
+		products = append(products, *prod)
+	}
+
+	return products, total, nil
 }

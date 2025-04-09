@@ -14,7 +14,7 @@ import (
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/utils"
 )
 
-func (s *productCategoryService) GetListProductCategory(ctx context.Context, page, limit int, search string) (*dto.GetListProductCategory, error) {
+func (s *productCategoryService) GetListProductCategory(ctx context.Context, page, limit int, search string) (*dto.GetListProductCategoryResponse, error) {
 	// calculate pagination
 	currentPage, perPage, offset := utils.Paginate(page, limit)
 
@@ -34,7 +34,7 @@ func (s *productCategoryService) GetListProductCategory(ctx context.Context, pag
 	totalPages := utils.CalculateTotalPages(total, perPage)
 
 	// create map response
-	response := dto.GetListProductCategory{
+	response := dto.GetListProductCategoryResponse{
 		Category:    productCategories,
 		TotalPages:  totalPages,
 		CurrentPage: currentPage,

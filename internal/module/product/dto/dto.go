@@ -1,8 +1,10 @@
 package dto
 
 import (
+	productCategory "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/dto"
 	productGrocery "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/dto"
 	productImage "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/dto"
+	productSubCategory "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/dto"
 	productVariant "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/dto"
 )
 
@@ -52,4 +54,30 @@ type UploadFileRequest struct {
 	FileHeaderSize int64  `json:"-"`
 	ContentType    string `json:"-"`
 	Filename       string `json:"-"`
+}
+
+type GetListProductResponse struct {
+	Product     []GetListProduct `json:"product"`
+	TotalPages  int              `json:"total_pages"`
+	CurrentPage int              `json:"current_page"`
+	PageSize    int              `json:"page_size"`
+	TotalData   int              `json:"total_data"`
+}
+
+type GetListProduct struct {
+	ID                 int                                   `json:"id"`
+	Name               string                                `json:"name"`
+	Description        string                                `json:"desc"`
+	Specification      string                                `json:"spec"`
+	RealPrice          int                                   `json:"real_price"`
+	CapitalPrice       int                                   `json:"capital_price"`
+	DiscountPrice      int                                   `json:"discount_price"`
+	Stock              int                                   `json:"stock"`
+	Weight             float64                               `json:"weight"`
+	ProductCategory    productCategory.GetListCategory       `json:"product_category"`
+	ProductSubCategory productSubCategory.ProductSubCategory `json:"product_subcategory"`
+	VariantName        string                                `json:"variant_name"`
+	ProductVariant     []productVariant.ProductVariant       `json:"product_variant"`
+	ProductGrocery     []productGrocery.ProductGrocery       `json:"product_grocery"`
+	ProductImage       []productImage.ProductImage           `json:"product_image"`
 }

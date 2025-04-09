@@ -17,7 +17,7 @@ type ProductCategoryRepository interface {
 }
 
 type ProductCategoryService interface {
-	GetListProductCategory(ctx context.Context, page, limit int, search string) (*dto.GetListProductCategory, error)
+	GetListProductCategory(ctx context.Context, page, limit int, search string) (*dto.GetListProductCategoryResponse, error)
 	CreateProductCategory(ctx context.Context, name string) (*dto.CreateOrProductCategoryResponse, error)
 	UpdateProductCategory(ctx context.Context, id int, name string) (*dto.CreateOrProductCategoryResponse, error)
 	RemoveProductCategory(ctx context.Context, id int) error
