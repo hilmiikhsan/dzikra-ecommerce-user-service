@@ -134,3 +134,13 @@ func (r *productImageRepository) DeleteProductImage(ctx context.Context, tx *sql
 
 	return nil
 }
+
+func (r *productImageRepository) SoftDeleteProductImagesByProductID(ctx context.Context, tx *sqlx.Tx, productID int) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteProductImagesByProductID), productID)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::SoftDeleteProductImagesByProductID - error soft deleting product images")
+		return err
+	}
+
+	return nil
+}

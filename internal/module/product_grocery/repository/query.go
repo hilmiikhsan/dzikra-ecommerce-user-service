@@ -22,4 +22,11 @@ const (
 			discount,
 			product_id
 	`
+
+	querySoftDeleteProductGroceriesByProductID = `
+		UPDATE product_groceries 
+		SET 
+			deleted_at = NOW() 
+		WHERE product_id = ? AND deleted_at IS NULL
+	`
 )

@@ -276,3 +276,25 @@ func (r *productRepository) FindProductByID(ctx context.Context, id int) (*entit
 
 	return res, nil
 }
+
+func (r *productRepository) SoftDeleteProductByID(ctx context.Context, tx *sqlx.Tx, id int) error {
+	result, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteProductByID), id)
+	if err != nil {
+		log.Error().Err(err).Int("id", id).Msg("repository::SoftDeleteProductByID - Failed to soft delete product")
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Error().Err(err).Msg("repository::SoftDeleteProductByID - Failed to fetch rows affected")
+		return err
+	}
+
+	if rowsAffected == 0 {
+		errNotFound := errors.New(constants.ErrProductNotFound)
+		log.Error().Err(errNotFound).Int("id", id).Msg("repository::SoftDeleteProductByID - Product not found")
+		return errNotFound
+	}
+
+	return nil
+}

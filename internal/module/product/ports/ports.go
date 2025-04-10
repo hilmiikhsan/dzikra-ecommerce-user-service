@@ -14,6 +14,7 @@ type ProductRepository interface {
 	CountProductByName(ctx context.Context, name string) (int, error)
 	FindListProduct(ctx context.Context, limit, offset int, search string) ([]dto.GetListProduct, int, error)
 	FindProductByID(ctx context.Context, id int) (*entity.Product, error)
+	SoftDeleteProductByID(ctx context.Context, tx *sqlx.Tx, id int) error
 }
 
 type ProductService interface {
@@ -21,4 +22,5 @@ type ProductService interface {
 	UpdateProduct(ctx context.Context, productID int, req *dto.ProductData, payloadFiles []dto.UploadFileRequest) (*dto.CreateOrUpdateProductResponse, error)
 	GetListProduct(ctx context.Context, page, limit int, search string) (*dto.GetListProductResponse, error)
 	GetDetailProduct(ctx context.Context, id int) (*dto.GetListProduct, error)
+	RemoveProduct(ctx context.Context, id int) error
 }

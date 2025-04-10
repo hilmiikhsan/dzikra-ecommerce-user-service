@@ -96,3 +96,13 @@ func (r *productVariantRepository) DeleteProductVariant(ctx context.Context, tx 
 
 	return nil
 }
+
+func (r *productVariantRepository) SoftDeleteProductVariantsByProductID(ctx context.Context, tx *sqlx.Tx, productID int) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteProductVariantsByProductID), productID)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::SoftDeleteProductVariantsByProductID - error soft deleting product variants")
+		return err
+	}
+
+	return nil
+}

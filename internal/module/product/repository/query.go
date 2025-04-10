@@ -111,8 +111,8 @@ const (
 		LEFT JOIN product_variants pv ON pv.product_id = p.id
 		LEFT JOIN product_groceries pg ON pg.product_id = p.id
 		LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.deleted_at IS NULL
-		WHERE ($1 = '' OR p.name ILIKE '%' || $1 || '%')
-		ORDER BY p.id
+		WHERE p.deleted_at IS NULL AND ($1 = '' OR p.name ILIKE '%' || $1 || '%')
+		ORDER BY p.created_at DESC, p.id DESC
 		LIMIT $2 OFFSET $3
 	`
 
@@ -167,5 +167,12 @@ const (
 		FROM product_images
 		WHERE product_id = ? AND deleted_at IS NULL
 		ORDER BY sort
+	`
+
+	querySoftDeleteProductByID = `
+		UPDATE products 
+		SET 
+			deleted_at = NOW() 
+		WHERE id = ? AND deleted_at IS NULL
 	`
 )

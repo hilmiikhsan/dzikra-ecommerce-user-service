@@ -38,3 +38,15 @@ func (s *minioService) UploadFile(ctx context.Context, objectName string, file m
 
 	return fileURL, nil
 }
+
+func (s *minioService) DeleteFile(ctx context.Context, objectName string) error {
+	err := s.client.RemoveObject(ctx, s.bucketName, objectName, minio.RemoveObjectOptions{})
+	if err != nil {
+		log.Error().Err(err).Msgf("minio::DeleteFile - error deleting object %s", objectName)
+		return fmt.Errorf("failed to delete object %s: %w", objectName, err)
+	}
+
+	log.Info().Msgf("minio::DeleteFile - successfully deleted object %s", objectName)
+
+	return nil
+}

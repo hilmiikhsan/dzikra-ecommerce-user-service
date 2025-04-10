@@ -30,4 +30,7 @@ var (
 	ErrProductSubCategoryNotFound          = "Product sub category not found"
 	ErrInvalidProductData                  = "Invalid product_data JSON format"
 	ErrProductNotFound                     = "Product not found"
+	ErrProductVariantsNotFound             = "Product variants not found"
+	ErrProductImagesNotFound               = "Product images not found"
+	ErrProductGroceriesNotFound            = "Product groceries not found"
 )

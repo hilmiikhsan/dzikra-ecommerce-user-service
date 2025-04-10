@@ -60,4 +60,11 @@ const (
 			deleted_at = CURRENT_TIMESTAMP
 		WHERE id = ? AND deleted_at IS NULL
 	`
+
+	querySoftDeleteProductImagesByProductID = `
+		UPDATE product_images 
+		SET 
+			deleted_at = NOW() 
+		WHERE product_id = ? AND deleted_at IS NULL
+	`
 )

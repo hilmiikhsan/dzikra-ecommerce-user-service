@@ -70,3 +70,13 @@ func (r *productGroceryRepository) UpdateProductGrocery(ctx context.Context, tx 
 
 	return res, nil
 }
+
+func (r *productGroceryRepository) SoftDeleteProductGroceriesByProductID(ctx context.Context, tx *sqlx.Tx, productID int) error {
+	_, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteProductGroceriesByProductID), productID)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::SoftDeleteProductGroceriesByProductID - error soft deleting product groceries")
+		return err
+	}
+
+	return nil
+}

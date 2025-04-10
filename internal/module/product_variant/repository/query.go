@@ -48,4 +48,11 @@ const (
 		DELETE FROM product_variants
 		WHERE id = ? AND product_id = ?
 	`
+
+	querySoftDeleteProductVariantsByProductID = `
+		UPDATE product_variants 
+		SET 
+			deleted_at = NOW() 
+		WHERE product_id = ? AND deleted_at IS NULL
+	`
 )

@@ -642,3 +642,72 @@ func (s *productService) GetDetailProduct(ctx context.Context, id int) (*dto.Get
 
 	return &sanitizedResponse, nil
 }
+
+func (s *productService) RemoveProduct(ctx context.Context, id int) error {
+	// begin transaction
+	tx, err := s.db.Beginx()
+	if err != nil {
+		log.Error().Err(err).Msg("service::RemoveProduct - Failed to begin transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error().Err(rbErr).Msg("service::RemoveProduct - Failed to rollback transaction")
+			}
+		}
+	}()
+
+	// soft delete product
+	if err := s.productRepository.SoftDeleteProductByID(ctx, tx, id); err != nil {
+		if strings.Contains(err.Error(), constants.ErrProductNotFound) {
+			log.Error().Err(err).Msg("service::RemoveProduct - Product not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::RemoveProduct - error soft deleting product")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete product variants
+	if err := s.productVariantRepository.SoftDeleteProductVariantsByProductID(ctx, tx, id); err != nil {
+		log.Error().Err(err).Msg("service::RemoveProduct - error soft deleting product variants")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete product groceries
+	if err := s.productGroceryRepository.SoftDeleteProductGroceriesByProductID(ctx, tx, id); err != nil {
+		log.Error().Err(err).Msg("service::RemoveProduct - error soft deleting product groceries")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if product images exist
+	existingImages, err := s.productImageRepository.FindProductImagesByProductID(ctx, id)
+	if err != nil {
+		log.Error().Err(err).Msg("service::DeleteProduct - error fetching product images")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete product images
+	if err := s.productImageRepository.SoftDeleteProductImagesByProductID(ctx, tx, id); err != nil {
+		log.Error().Err(err).Msg("service::RemoveProduct - error soft deleting product images")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// commit transaction
+	if err = tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("service::RemoveProduct - failed to commit transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// delete files from minio
+	for _, img := range existingImages {
+		if err := s.minioService.DeleteFile(ctx, img.ImageURL); err != nil {
+			log.Error().Err(err).Msgf("service::DeleteProduct - failed to delete file '%s' from minio", img.ImageURL)
+		} else {
+			log.Info().Msgf("Successfully deleted file '%s' from minio", img.ImageURL)
+		}
+	}
+
+	return nil
+}

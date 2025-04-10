@@ -15,4 +15,5 @@ type ProductImageRepository interface {
 	UpdateProductImageURL(ctx context.Context, id int, url string) (*entity.ProductImage, error)
 	FindProductImagesByProductID(ctx context.Context, productID int) ([]entity.ProductImage, error)
 	DeleteProductImage(ctx context.Context, tx *sqlx.Tx, id int) error
+	SoftDeleteProductImagesByProductID(ctx context.Context, tx *sqlx.Tx, productID int) error
 }
