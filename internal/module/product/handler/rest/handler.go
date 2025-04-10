@@ -215,3 +215,30 @@ func (h *productHandler) getListProduct(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
+
+func (h *productHandler) getDetailProduct(c *fiber.Ctx) error {
+	var (
+		ctx   = c.Context()
+		idStr = c.Params("product_id")
+	)
+
+	if strings.Contains(idStr, ":product_id") {
+		log.Warn().Msg("handler::getDetailProduct - invalid product ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product ID"))
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Warn().Err(err).Msg("handler::getDetailProduct - invalid id parameter")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid id parameter"))
+	}
+
+	res, err := h.service.GetDetailProduct(ctx, id)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getDetailProduct - failed to get detail of product")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}

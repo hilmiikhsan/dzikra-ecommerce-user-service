@@ -115,4 +115,57 @@ const (
 		ORDER BY p.id
 		LIMIT $2 OFFSET $3
 	`
+
+	queryFindProductByID = `
+		SELECT 
+			id,
+			name,
+			description,
+			specification,
+			real_price,
+			capital_price,
+			discount_price,
+			stock,
+			weight,
+			variant_name,
+			product_category_id,
+			product_sub_category_id
+		FROM products
+		WHERE id = ? AND deleted_at IS NULL
+	`
+
+	queryFindVariants = `
+		SELECT 
+			id,
+			variant_sub_name,
+			variant_stock,
+			variant_weight,
+			capital_price,
+			real_price,
+			discount_price,
+			product_id
+		FROM product_variants
+		WHERE product_id = ?
+	`
+
+	queryFindGroceries = `
+		SELECT 
+			id,
+			min_buy,
+			discount,
+			product_id
+		FROM product_groceries
+		WHERE product_id = ?
+	`
+
+	queryFindImages = `
+		SELECT 
+			id,
+			image_url,
+			sort,
+			product_id
+		FROM product_images
+		WHERE product_id = ? AND deleted_at IS NULL
+		ORDER BY sort
+	`
 )

@@ -2,16 +2,22 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/ports"
 	productCategoryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/dto"
 	productGroceryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/dto"
+	productGrocery "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/entity"
 	productImageDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/dto"
+	productImage "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/entity"
 	productSubCategoryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/dto"
 	productVariantDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/dto"
+	productVariant "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/entity"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
@@ -233,4 +239,40 @@ func (r *productRepository) FindListProduct(ctx context.Context, limit, offset i
 	}
 
 	return products, total, nil
+}
+
+func (r *productRepository) FindProductByID(ctx context.Context, id int) (*entity.Product, error) {
+	res := new(entity.Product)
+	if err := r.db.GetContext(ctx, res, r.db.Rebind(queryFindProductByID), id); err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Int("id", id).Msg("repository::FindProductByID - Failed to find product by id")
+			return nil, errors.New(constants.ErrProductNotFound)
+		}
+
+		log.Error().Err(err).Msg("repository::FindProductByID - error fetching product")
+		return nil, err
+	}
+
+	var variants []productVariant.ProductVariant
+	if err := r.db.SelectContext(ctx, &variants, r.db.Rebind(queryFindVariants), id); err != nil && err != sql.ErrNoRows {
+		log.Error().Err(err).Msg("repository::FindProductByID - error fetching product variants")
+		return nil, err
+	}
+	res.ProductVariant = variants
+
+	var groceries []productGrocery.ProductGrocery
+	if err := r.db.SelectContext(ctx, &groceries, r.db.Rebind(queryFindGroceries), id); err != nil && err != sql.ErrNoRows {
+		log.Error().Err(err).Msg("repository::FindProductByID - error fetching product groceries")
+		return nil, err
+	}
+	res.ProductGrocery = groceries
+
+	var images []productImage.ProductImage
+	if err := r.db.SelectContext(ctx, &images, r.db.Rebind(queryFindImages), id); err != nil && err != sql.ErrNoRows {
+		log.Error().Err(err).Msg("repository::FindProductByID - error fetching product images")
+		return nil, err
+	}
+	res.ProductImage = images
+
+	return res, nil
 }

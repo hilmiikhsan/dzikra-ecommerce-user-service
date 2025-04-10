@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -11,10 +12,12 @@ import (
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/dto"
 	product "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/entity"
+	productCategoryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/dto"
 	productGroceryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/dto"
 	productGrocery "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/entity"
 	productImageDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/dto"
 	productImage "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/entity"
+	productSubCategoryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/dto"
 	productVariantDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/dto"
 	productVariant "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
@@ -241,7 +244,7 @@ func (s *productService) CreateProduct(ctx context.Context, req *dto.ProductData
 
 	// Sanitize response
 	policy := bluemonday.UGCPolicy()
-	sanitizedResponse := utils.SanitizeProductResponse(*response, policy)
+	sanitizedResponse := utils.SanitizeCreateOrUpdateProductResponse(*response, policy)
 
 	return &sanitizedResponse, nil
 }
@@ -521,7 +524,7 @@ func (s *productService) UpdateProduct(ctx context.Context, productID int, req *
 
 	// Sanitize response
 	policy := bluemonday.UGCPolicy()
-	sanitizedResponse := utils.SanitizeProductResponse(*response, policy)
+	sanitizedResponse := utils.SanitizeCreateOrUpdateProductResponse(*response, policy)
 
 	return &sanitizedResponse, nil
 }
@@ -556,4 +559,86 @@ func (s *productService) GetListProduct(ctx context.Context, page, limit int, se
 
 	// return response
 	return &response, nil
+}
+
+func (s *productService) GetDetailProduct(ctx context.Context, id int) (*dto.GetListProduct, error) {
+	// find product by id
+	productResult, err := s.productRepository.FindProductByID(ctx, id)
+	if err != nil {
+		// check if product not found
+		if err == sql.ErrNoRows || strings.Contains(err.Error(), constants.ErrProductNotFound) {
+			log.Error().Err(err).Msg("service::GetDetailProduct - Product not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::GetDetailProduct - Error finding product by id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// Map entity to DTO
+	response := &dto.GetListProduct{
+		ID:            productResult.ID,
+		Name:          productResult.Name,
+		Description:   productResult.Description,
+		Specification: productResult.Spesification,
+		RealPrice:     productResult.RealPrice,
+		CapitalPrice:  productResult.CapitalPrice,
+		DiscountPrice: productResult.DiscountPrice,
+		Stock:         productResult.Stock,
+		Weight:        productResult.Weight,
+		VariantName:   productResult.VariantName,
+		ProductCategory: productCategoryDto.GetListCategory{
+			ID:       productResult.ProductCategoryID,
+			Category: "",
+		},
+		ProductSubCategory: productSubCategoryDto.ProductSubCategory{
+			ID:          productResult.ProductSubCategoryID,
+			SubCategory: "", // Sama seperti di atas
+			CategoryID:  productResult.ProductSubCategoryID,
+		},
+		ProductVariant: []productVariantDto.ProductVariant{},
+		ProductGrocery: []productGroceryDto.ProductGrocery{},
+		ProductImage:   []productImageDto.ProductImage{},
+	}
+
+	// Map variant
+	for _, variant := range productResult.ProductVariant {
+		response.ProductVariant = append(response.ProductVariant, productVariantDto.ProductVariant{
+			ID:             variant.ID,
+			VariantSubName: variant.VariantSubName,
+			VariantStock:   variant.VariantStock,
+			VariantWeight:  variant.VariantWeight,
+			CapitalPrice:   variant.CapitalPrice,
+			RealPrice:      variant.RealPrice,
+			DiscountPrice:  variant.DiscountPrice,
+			ProductID:      variant.ProductID,
+		})
+	}
+
+	// Map groceries
+	for _, grocery := range productResult.ProductGrocery {
+		response.ProductGrocery = append(response.ProductGrocery, productGroceryDto.ProductGrocery{
+			ID:        grocery.ID,
+			MinBuy:    grocery.MinBuy,
+			Discount:  grocery.Discount,
+			ProductID: grocery.ProductID,
+		})
+	}
+
+	// Map images
+	publicURL := config.Envs.MinioStorage.PublicURL
+	for _, image := range productResult.ProductImage {
+		response.ProductImage = append(response.ProductImage, productImageDto.ProductImage{
+			ID:        image.ID,
+			ImageURL:  utils.FormatMediaPathURL(image.ImageURL, publicURL),
+			Position:  image.Sort,
+			ProductID: image.ProductID,
+		})
+	}
+
+	// Sanitasi response untuk menghindari XSS
+	policy := bluemonday.UGCPolicy()
+	sanitizedResponse := utils.SanitizeGetListProduct(*response, policy)
+
+	return &sanitizedResponse, nil
 }
