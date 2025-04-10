@@ -46,6 +46,29 @@ func (s *productCategoryService) GetListProductCategory(ctx context.Context, pag
 	return &response, nil
 }
 
+func (s *productCategoryService) GetDetailProductCategory(ctx context.Context, id int) (*dto.GetListCategory, error) {
+	// find product category by id
+	productCategory, err := s.productCategoryRepository.FindProductCategoryByID(ctx, id)
+	if err != nil {
+		// check if product category not found
+		if err == sql.ErrNoRows || strings.Contains(err.Error(), constants.ErrProductCategoryNotFound) {
+			log.Error().Err(err).Msg("service::GetDetailProductCategory - Product category not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductCategoryNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::GetDetailProductCategory - Error finding product category by id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// mapping response
+	response := &dto.GetListCategory{
+		ID:       productCategory.ID,
+		Category: productCategory.Name,
+	}
+
+	return response, nil
+}
+
 func (s *productCategoryService) CreateProductCategory(ctx context.Context, name string) (*dto.CreateOrProductCategoryResponse, error) {
 	// insert new product category
 	res, err := s.productCategoryRepository.InsertNewProductCategory(ctx, name)

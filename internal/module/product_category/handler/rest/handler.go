@@ -29,6 +29,33 @@ func (h *productCategoryHandler) getListProductCategory(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
 
+func (h *productCategoryHandler) getDetailProductCategory(c *fiber.Ctx) error {
+	var (
+		ctx   = c.Context()
+		idStr = c.Params("id_category")
+	)
+
+	if strings.Contains(idStr, ":id_category") {
+		log.Warn().Msg("handler::getDetailProductCategory - Invalid product category ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product category ID"))
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Warn().Err(err).Msg("handler::getDetailProductCategory - Invalid id parameter")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid id parameter"))
+	}
+
+	res, err := h.service.GetDetailProductCategory(ctx, id)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getDetailProductCategory - Failed to get detail product category")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}
+
 func (h *productCategoryHandler) createProductCategory(c *fiber.Ctx) error {
 	var (
 		req = new(dto.CreateOrUpdateProductCategoryRequest)
