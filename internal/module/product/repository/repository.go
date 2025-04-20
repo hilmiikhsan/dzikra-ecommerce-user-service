@@ -127,20 +127,22 @@ func (r *productRepository) CountProductByName(ctx context.Context, name string)
 	return count, nil
 }
 
-func (r *productRepository) FindListProduct(ctx context.Context, limit, offset int, search string) ([]dto.GetListProduct, int, error) {
+func (r *productRepository) FindListProduct(ctx context.Context, limit, offset int, search string, categoryID, subcategoryID int) ([]dto.GetListProduct, int, error) {
 	var total int
-	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListProduct), search); err != nil {
+	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListProduct), search, categoryID, subcategoryID); err != nil {
 		log.Error().Err(err).Msg("repository::FindListProduct - error counting products")
 		return nil, 0, fmt.Errorf("error counting products: %w", err)
 	}
 
 	var rows []entity.Product
-	if err := r.db.SelectContext(ctx, &rows, r.db.Rebind(queryFindListProduct), search, limit, offset); err != nil {
+	if err := r.db.SelectContext(ctx, &rows, r.db.Rebind(queryFindListProduct), search, categoryID, subcategoryID, limit, offset); err != nil {
 		log.Error().Err(err).Msg("repository::FindListProduct - error selecting list of products")
 		return nil, 0, fmt.Errorf("error selecting list of products: %w", err)
 	}
 
-	productMap := make(map[int]*dto.GetListProduct)
+	productMap := make(map[int]*dto.GetListProduct, len(rows))
+	ordered := make([]*dto.GetListProduct, 0, len(rows))
+
 	for _, row := range rows {
 		prod, exists := productMap[row.ID]
 		if !exists {
@@ -168,7 +170,9 @@ func (r *productRepository) FindListProduct(ctx context.Context, limit, offset i
 				ProductGrocery: []productGroceryDto.ProductGrocery{},
 				ProductImage:   []productImageDto.ProductImage{},
 			}
+
 			productMap[row.ID] = prod
+			ordered = append(ordered, prod)
 		}
 
 		if row.ProductVariantID.Valid {
@@ -239,12 +243,12 @@ func (r *productRepository) FindListProduct(ctx context.Context, limit, offset i
 		}
 	}
 
-	products := make([]dto.GetListProduct, 0, len(productMap))
-	for _, prod := range productMap {
-		products = append(products, *prod)
+	results := make([]dto.GetListProduct, len(ordered))
+	for i, p := range ordered {
+		results[i] = *p
 	}
 
-	return products, total, nil
+	return results, total, nil
 }
 
 func (r *productRepository) FindProductByID(ctx context.Context, id int) (*entity.Product, error) {

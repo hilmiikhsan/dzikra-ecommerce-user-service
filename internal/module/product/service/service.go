@@ -548,12 +548,12 @@ func (s *productService) UpdateProduct(ctx context.Context, productID int, req *
 	return &sanitizedResponse, nil
 }
 
-func (s *productService) GetListProduct(ctx context.Context, page, limit int, search string) (*dto.GetListProductResponse, error) {
+func (s *productService) GetListProduct(ctx context.Context, page, limit int, search string, categoryID, subcategoryID int) (*dto.GetListProductResponse, error) {
 	// calculate pagination
 	currentPage, perPage, offset := utils.Paginate(page, limit)
 
 	// get list product
-	products, total, err := s.productRepository.FindListProduct(ctx, perPage, offset, search)
+	products, total, err := s.productRepository.FindListProduct(ctx, perPage, offset, search, categoryID, subcategoryID)
 	if err != nil {
 		log.Error().Err(err).Msg("service::GetListProduct - error getting list product")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))

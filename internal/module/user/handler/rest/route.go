@@ -3,7 +3,7 @@ package rest
 import "github.com/gofiber/fiber/v2"
 
 func (h *userHandler) UserRoute(userRouter, superadminRouter fiber.Router) {
-	// Auths
+	// auth user endpoint
 	userRouter.Post("/register", h.register)
 	userRouter.Post("/otp", h.verification)
 	userRouter.Post("/new-otp", h.sendOtpNumberVerification)
@@ -14,7 +14,7 @@ func (h *userHandler) UserRoute(userRouter, superadminRouter fiber.Router) {
 	userRouter.Post("/forgot-password", h.forgotPassword)
 	userRouter.Post("/reset-password", h.resetPassword)
 
-	// Users
+	// user superadmin endpoint
 	superadminRouter.Get("/users", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "users"), h.getListUser)
 	superadminRouter.Get("/users/:user_id", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "users"), h.getDetailUser)
 	superadminRouter.Post("/users/create", h.middleware.UserBearer, h.middleware.RBACMiddleware("create", "users"), h.createUser)

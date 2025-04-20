@@ -18,16 +18,17 @@ func SetupRoutes(app *fiber.App) {
 	var (
 		userAPI       = app.Group("/api/users")
 		superadminAPI = app.Group("/api/superadmin")
+		publicAPI     = app.Group("/api")
 	)
 
 	user.NewUserHandler().UserRoute(userAPI, superadminAPI)
 	role.NewRoleHandler().RoleRoute(userAPI, superadminAPI)
-	application.NewApplicationHandler().ApplicationRoute(userAPI, superadminAPI)
-	productCategory.NewProductCategoryHandler().ProductCategoryRoute(userAPI, superadminAPI)
-	productSubCategory.NewProductSubCategoryHandler().ProductSubCategoryRoute(userAPI, superadminAPI)
-	product.NewProductHandler().ProductRoute(userAPI, superadminAPI)
-	voucher.NewVoucherHandler().VoucherRoute(userAPI, superadminAPI)
-	banner.NewBannerHandler().BannerRoute(userAPI, superadminAPI)
+	application.NewApplicationHandler().ApplicationRoute(superadminAPI)
+	productCategory.NewProductCategoryHandler().ProductCategoryRoute(publicAPI, superadminAPI)
+	productSubCategory.NewProductSubCategoryHandler().ProductSubCategoryRoute(publicAPI, superadminAPI)
+	product.NewProductHandler().ProductRoute(publicAPI, superadminAPI)
+	voucher.NewVoucherHandler().VoucherRoute(superadminAPI)
+	banner.NewBannerHandler().BannerRoute(superadminAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {

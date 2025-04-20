@@ -68,8 +68,12 @@ const (
 	queryCountListProduct = `
 		SELECT COUNT(*)
 		FROM products p
-		WHERE ($1 = '' OR p.name ILIKE '%' || $1 || '%')
-		AND p.deleted_at IS NULL
+		WHERE 
+			p.deleted_at IS NULL 
+			AND ($1 = '' OR p.name ILIKE '%' || $1 || '%')
+			AND ($2 = 0 OR p.product_category_id = $2)
+			AND ($3 = 0 OR p.product_sub_category_id = $3)
+
 	`
 
 	queryFindListProduct = `
@@ -111,9 +115,13 @@ const (
 		LEFT JOIN product_variants pv ON pv.product_id = p.id
 		LEFT JOIN product_groceries pg ON pg.product_id = p.id
 		LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.deleted_at IS NULL
-		WHERE p.deleted_at IS NULL AND ($1 = '' OR p.name ILIKE '%' || $1 || '%')
+		WHERE 
+			p.deleted_at IS NULL  
+			AND ($1 = '' OR p.name ILIKE '%' || $1 || '%')
+			AND ($2 = 0 OR p.product_category_id = $2)
+			AND ($3 = 0 OR p.product_sub_category_id = $3)
 		ORDER BY p.created_at DESC, p.id DESC
-		LIMIT $2 OFFSET $3
+		LIMIT $4 OFFSET $5
 	`
 
 	queryFindProductByID = `

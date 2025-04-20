@@ -200,13 +200,15 @@ func (h *productHandler) updateProduct(c *fiber.Ctx) error {
 
 func (h *productHandler) getListProduct(c *fiber.Ctx) error {
 	var (
-		ctx    = c.Context()
-		page   = c.QueryInt("page", 1)
-		limit  = c.QueryInt("limit", 10)
-		search = c.Query("search", "")
+		ctx           = c.Context()
+		page          = c.QueryInt("page", 1)
+		limit         = c.QueryInt("limit", 10)
+		search        = c.Query("search", "")
+		categoryID    = c.QueryInt("category", 0)
+		subCategoryID = c.QueryInt("subcategory", 0)
 	)
 
-	res, err := h.service.GetListProduct(ctx, page, limit, search)
+	res, err := h.service.GetListProduct(ctx, page, limit, search, categoryID, subCategoryID)
 	if err != nil {
 		log.Error().Err(err).Msg("handler::getListProduct - failed to get list of products")
 		code, errs := err_msg.Errors[error](err)

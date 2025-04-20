@@ -32,10 +32,10 @@ func (h *productCategoryHandler) getListProductCategory(c *fiber.Ctx) error {
 func (h *productCategoryHandler) getDetailProductCategory(c *fiber.Ctx) error {
 	var (
 		ctx   = c.Context()
-		idStr = c.Params("id_category")
+		idStr = c.Params("category_id")
 	)
 
-	if strings.Contains(idStr, ":id_category") {
+	if strings.Contains(idStr, ":category_id") {
 		log.Warn().Msg("handler::getDetailProductCategory - Invalid product category ID")
 		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product category ID"))
 	}
