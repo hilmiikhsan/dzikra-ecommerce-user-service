@@ -462,7 +462,7 @@ func (s *productService) UpdateProduct(ctx context.Context, productID int, req *
 	for i, fileReq := range payloadFiles {
 		ext := strings.ToLower(filepath.Ext(fileReq.Filename))
 		objectName := fmt.Sprintf("product_images/%s_%d%s", utils.GenerateBucketFileUUID(), newImageRecords[i].Sort, ext)
-		byteFile := utils.NewByteFile(fileReq.File) // ByteFile mengembalikan objek io.ReadSeeker
+		byteFile := utils.NewByteFile(fileReq.File)
 
 		_, err := s.minioService.UploadFile(ctx, objectName, byteFile, fileReq.FileHeaderSize, fileReq.ContentType)
 		if err != nil {
