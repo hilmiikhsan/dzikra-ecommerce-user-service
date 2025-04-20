@@ -1,0 +1,7 @@
+package rest
+
+import "github.com/gofiber/fiber/v2"
+
+func (h *voucherHandler) VoucherRoute(userRouter, superadminRouter fiber.Router) {
+	superadminRouter.Post("/voucher/create", h.middleware.UserBearer, h.middleware.RBACMiddleware("create", "voucher"), h.createVoucher)
+}

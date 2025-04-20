@@ -43,6 +43,8 @@ func (s *Seed) run(table string, total int) {
 		s.applicationPermissionWebSeed()
 	case "application-permissions-pos":
 		s.applicationPermissionPOSSeed()
+	case "voucher-type":
+		s.voucherTypesSeed()
 	case "all":
 		s.rolesSeed()
 		s.permissionEcommerceSeed()
@@ -54,6 +56,7 @@ func (s *Seed) run(table string, total int) {
 		s.applicationPermissionEcommerceSeed()
 		s.applicationPermissionWebSeed()
 		s.applicationPermissionPOSSeed()
+		s.voucherTypesSeed()
 	case "delete-all":
 		s.deleteAll()
 	default:

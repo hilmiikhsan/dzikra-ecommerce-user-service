@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	// "github.com/go-playground/locales/en"
 	// ut "github.com/go-playground/universal-translator"
@@ -94,6 +95,12 @@ func NewValidator() *Validator {
 	}
 	if err := v.RegisterValidation("non_zero_integer", isNonZeroInt); err != nil {
 		log.Fatal().Err(err).Msg("Error while registering non_zero_integer validator")
+	}
+	if err := v.RegisterValidation("date_format", isValidTimeFormat); err != nil {
+		log.Fatal().Err(err).Msg("Error while registering date_format validator")
+	}
+	if err := v.RegisterValidation("number", isInteger); err != nil {
+		log.Fatal().Err(err).Msg("Error while registering integer validator")
 	}
 
 	validatorCustom.validator = v
@@ -317,4 +324,25 @@ func isNonZeroInt(fl validator.FieldLevel) bool {
 	default:
 		return false
 	}
+}
+
+func isInteger(fl validator.FieldLevel) bool {
+	kind := fl.Field().Kind()
+	switch kind {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return true
+	default:
+		return false
+	}
+}
+
+func isValidTimeFormat(fl validator.FieldLevel) bool {
+	val := fl.Field().String()
+	if val == "" {
+		return false
+	}
+
+	_, err := time.Parse("2006-01-02T15:04:05.000Z", val)
+	return err == nil
 }

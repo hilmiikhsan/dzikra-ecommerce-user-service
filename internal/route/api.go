@@ -7,6 +7,7 @@ import (
 	productSubCategory "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/handler/rest"
 	role "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/handler/rest"
 	user "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/handler/rest"
+	voucher "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/voucher/handler/rest"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/response"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
@@ -24,6 +25,7 @@ func SetupRoutes(app *fiber.App) {
 	productCategory.NewProductCategoryHandler().ProductCategoryRoute(userAPI, superadminAPI)
 	productSubCategory.NewProductSubCategoryHandler().ProductSubCategoryRoute(userAPI, superadminAPI)
 	product.NewProductHandler().ProductRoute(userAPI, superadminAPI)
+	voucher.NewVoucherHandler().VoucherRoute(userAPI, superadminAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {

@@ -205,6 +205,12 @@ func errorValidationHandler[T any](err error, payload *T) (int, map[string][]str
 		case "non_zero_integer":
 			message = fmt.Sprintf("%s must be a non-zero integer.", fieldInMsg)
 			// message = fmt.Sprintf("%s harus berupa bilangan bulat tidak nol.", fieldInMsg)
+		case "date_format":
+			message = fmt.Sprintf("%s must be a valid date format (Ex: %s).", fieldInMsg, err.Param())
+			// message = fmt.Sprintf("%s bukan format tanggal yang valid (Contoh: %s).", fieldInMsg, err.Param())
+		case "number":
+			message = fmt.Sprintf("%s must be a number.", fieldInMsg)
+			// message = fmt.Sprintf("%s harus angka.", fieldInMsg)
 		}
 
 		errorMessages[field] = append(errorMessages[field], message)

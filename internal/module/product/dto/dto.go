@@ -34,7 +34,7 @@ type ProductData struct {
 	Name          string                        `json:"name" validate:"required,min=3,max=100,xss_safe"`
 	Description   string                        `json:"desc" validate:"required,max=255,xss_safe"`
 	Spec          string                        `json:"spec" validate:"required,max=255,xss_safe"`
-	RealPrice     int                           `json:"real_price" validate:"required,non_zero_integer,gt=0"`
+	RealPrice     int                           `json:"real_price" validate:"required,numeric,non_zero_integer,gt=0"`
 	DiscountPrice int                           `json:"discount_price" validate:"numeric"`
 	Stock         int                           `json:"stock" validate:"numeric"`
 	CapitalPrice  int                           `json:"capital_price" validate:"numeric"`

@@ -33,4 +33,8 @@ var (
 	ErrProductVariantsNotFound             = "Product variants not found"
 	ErrProductImagesNotFound               = "Product images not found"
 	ErrProductGroceriesNotFound            = "Product groceries not found"
+	ErrVoucherTypeNotFound                 = "Voucher type not found"
+	ErrVoucherCodeAlreadyRegistered        = "Voucher code already registered"
+	ErrInvalidStartAt                      = "Invalid startAt format, expected YYYY-MM-DD HH:MM:SS"
+	ErrInvalidEndAt                        = "Invalid endAt format, expected YYYY-MM-DD HH:MM:SS"
 )
