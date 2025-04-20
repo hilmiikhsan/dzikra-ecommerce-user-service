@@ -38,7 +38,7 @@ type Permissions struct {
 
 type GetListRole struct {
 	Roles       []GetListRolePermission `json:"roles"`
-	TotalPages  int                     `json:"total_pages"`
+	TotalPages  int                     `json:"total_page"`
 	CurrentPage int                     `json:"current_page"`
 	PageSize    int                     `json:"page_size"`
 	TotalData   int                     `json:"total_data"`

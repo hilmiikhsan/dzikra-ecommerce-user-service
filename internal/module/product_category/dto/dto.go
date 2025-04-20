@@ -2,7 +2,7 @@ package dto
 
 type GetListProductCategoryResponse struct {
 	Category    []GetListCategory `json:"category"`
-	TotalPages  int               `json:"total_pages"`
+	TotalPages  int               `json:"total_page"`
 	CurrentPage int               `json:"current_page"`
 	PageSize    int               `json:"page_size"`
 	TotalData   int               `json:"total_data"`

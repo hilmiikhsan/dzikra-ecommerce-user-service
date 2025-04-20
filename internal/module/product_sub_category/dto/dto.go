@@ -16,7 +16,7 @@ type CreateOrUpdateProductSubCategoryResponse struct {
 
 type GetListProductSubCategory struct {
 	SubCategory []GetListSubCategory `json:"subcategory"`
-	TotalPages  int                  `json:"total_pages"`
+	TotalPages  int                  `json:"total_page"`
 	CurrentPage int                  `json:"current_page"`
 	PageSize    int                  `json:"page_size"`
 	TotalData   int                  `json:"total_data"`

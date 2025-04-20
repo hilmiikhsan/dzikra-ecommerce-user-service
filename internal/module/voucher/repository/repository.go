@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/voucher/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/voucher/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/voucher/ports"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
@@ -68,4 +69,38 @@ func (r *voucherRepository) InsertNewVoucher(ctx context.Context, data *entity.V
 	}
 
 	return res, nil
+}
+
+func (r *voucherRepository) FindListVoucher(ctx context.Context, limit, offset int, search string) ([]dto.GetListVoucher, int, error) {
+	var responses []entity.Voucher
+
+	if err := r.db.SelectContext(ctx, &responses, r.db.Rebind(queryFindListVoucher), search, limit, offset); err != nil {
+		log.Error().Err(err).Msg("repository::FindListVoucher - error executing query")
+		return nil, 0, err
+	}
+
+	var total int
+
+	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListVoucher), search); err != nil {
+		log.Error().Err(err).Msg("repository::FindListVoucher - error counting voucher")
+		return nil, 0, err
+	}
+
+	vouchers := make([]dto.GetListVoucher, 0, len(responses))
+	for _, v := range responses {
+		vouchers = append(vouchers, dto.GetListVoucher{
+			ID:            v.ID,
+			Name:          v.Name,
+			VoucherQuota:  v.VoucherQuota,
+			CreatedAt:     utils.FormatTime(v.CreatedAt),
+			StartAt:       utils.FormatTime(v.StartAt),
+			EndAt:         utils.FormatTime(v.EndAt),
+			Code:          v.Code,
+			Discount:      v.Discount,
+			VoucherTypeID: v.VoucherType,
+			VoucherUse:    v.VoucherUse,
+		})
+	}
+
+	return vouchers, total, nil
 }

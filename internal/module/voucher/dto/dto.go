@@ -20,3 +20,24 @@ type CreateVoucherResponse struct {
 	StartAt       string `json:"start_at"`
 	EndAt         string `json:"end_at"`
 }
+
+type GetListVoucherResponse struct {
+	Voucher     []GetListVoucher `json:"voucher"`
+	TotalPages  int              `json:"total_page"`
+	CurrentPage int              `json:"current_page"`
+	PageSize    int              `json:"page_size"`
+	TotalData   int              `json:"total_data"`
+}
+
+type GetListVoucher struct {
+	ID            int    `json:"id"`
+	Name          string `json:"name"`
+	VoucherQuota  int    `json:"voucher_quota"`
+	Code          string `json:"code"`
+	Discount      int    `json:"discount"`
+	VoucherUse    int    `json:"voucher_use"`
+	VoucherTypeID string `json:"voucher_type_id"`
+	CreatedAt     string `json:"created_at"`
+	StartAt       string `json:"start_at"`
+	EndAt         string `json:"end_at"`
+}

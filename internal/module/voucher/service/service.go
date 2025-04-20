@@ -72,3 +72,35 @@ func (s *voucherService) CreateVoucher(ctx context.Context, req *dto.CreateVouch
 
 	return res, nil
 }
+
+func (s *voucherService) GetListVoucher(ctx context.Context, page, limit int, search string) (*dto.GetListVoucherResponse, error) {
+	// calculate pagination
+	currentPage, perPage, offset := utils.Paginate(page, limit)
+
+	// get list voucher
+	vouchers, total, err := s.voucherRepository.FindListVoucher(ctx, perPage, offset, search)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListVoucher - error getting list voucher")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if vouchers is nil
+	if vouchers == nil {
+		vouchers = []dto.GetListVoucher{}
+	}
+
+	// calculate total pages
+	totalPages := utils.CalculateTotalPages(total, perPage)
+
+	// create map response
+	response := dto.GetListVoucherResponse{
+		Voucher:     vouchers,
+		TotalPages:  totalPages,
+		CurrentPage: currentPage,
+		PageSize:    perPage,
+		TotalData:   total,
+	}
+
+	// return response
+	return &response, nil
+}
