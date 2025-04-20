@@ -168,3 +168,49 @@ func (s *voucherService) UpdateVoucher(ctx context.Context, id int, req *dto.Cre
 		EndAt:         utils.FormatTime(updated.EndAt),
 	}, nil
 }
+
+func (s *voucherService) RemoveVoucher(ctx context.Context, id int) error {
+	// begin transaction
+	tx, err := s.db.Beginx()
+	if err != nil {
+		log.Error().Err(err).Msg("service::RemoveVoucher - Failed to begin transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error().Err(rbErr).Msg("service::RemoveVoucher - Failed to rollback transaction")
+			}
+		}
+	}()
+
+	// soft delete voucher
+	if err := s.voucherRepository.SoftDeleteVoucherByID(ctx, tx, id); err != nil {
+		if strings.Contains(err.Error(), constants.ErrVoucherNotFound) {
+			log.Error().Err(err).Msg("service::RemoveVoucher - Voucher not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrVoucherNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::RemoveVoucher - error soft deleting voucher")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete voucher usage
+	if err := s.voucherUsageRepository.SoftDeleteVoucherUsageByVoucherID(ctx, tx, id); err != nil {
+		if strings.Contains(err.Error(), constants.ErrVoucherUsageNotFound) {
+			log.Error().Err(err).Msg("service::RemoveVoucher - Voucher usage not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrVoucherUsageNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::RemoveVoucher - error soft deleting voucher usage")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// commit transaction
+	if err = tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("service::RemoveVoucher - failed to commit transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
+}

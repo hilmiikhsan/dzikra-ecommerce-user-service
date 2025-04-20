@@ -133,7 +133,7 @@ func (r *voucherRepository) UpdateVoucher(ctx context.Context, data *entity.Vouc
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			errMessage := fmt.Errorf("repository::UpdateVoucher - product voucher with id %d not found", data.ID)
+			errMessage := fmt.Errorf("repository::UpdateVoucher - voucher with id %d not found", data.ID)
 			log.Error().Err(err).Msg(errMessage.Error())
 			return nil, errors.New(constants.ErrVoucherNotFound)
 		}
@@ -158,4 +158,26 @@ func (r *voucherRepository) UpdateVoucher(ctx context.Context, data *entity.Vouc
 	}
 
 	return res, nil
+}
+
+func (r *voucherRepository) SoftDeleteVoucherByID(ctx context.Context, tx *sqlx.Tx, id int) error {
+	result, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteVoucherByID), id)
+	if err != nil {
+		log.Error().Err(err).Int("id", id).Msg("repository::SoftDeleteVoucherByID - Failed to soft delete voucher")
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Error().Err(err).Msg("repository::SoftDeleteVoucherByID - Failed to fetch rows affected")
+		return err
+	}
+
+	if rowsAffected == 0 {
+		errNotFound := errors.New(constants.ErrVoucherNotFound)
+		log.Error().Err(errNotFound).Int("id", id).Msg("repository::SoftDeleteVoucherByID - Voucher not found")
+		return errNotFound
+	}
+
+	return nil
 }

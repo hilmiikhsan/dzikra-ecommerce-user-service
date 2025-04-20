@@ -80,4 +80,11 @@ const (
 			voucher_type_id,
 			created_at
 		`
+
+	querySoftDeleteVoucherByID = `
+		UPDATE vouchers 
+		SET 
+			deleted_at = NOW() 
+		WHERE id = ? AND deleted_at IS NULL
+	`
 )

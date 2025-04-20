@@ -38,4 +38,5 @@ var (
 	ErrInvalidStartAt                      = "Invalid startAt format, expected YYYY-MM-DD HH:MM:SS"
 	ErrInvalidEndAt                        = "Invalid endAt format, expected YYYY-MM-DD HH:MM:SS"
 	ErrVoucherNotFound                     = "Voucher not found"
+	ErrVoucherUsageNotFound                = "Voucher usage not found"
 )

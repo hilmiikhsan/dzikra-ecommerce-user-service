@@ -2,6 +2,7 @@ package rest
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/voucher/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
@@ -90,4 +91,31 @@ func (h *voucherHandler) updateVoucher(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}
+
+func (h *voucherHandler) removeVoucher(c *fiber.Ctx) error {
+	var (
+		ctx          = c.Context()
+		voucherIDStr = c.Params("voucher_id")
+	)
+
+	if strings.Contains(voucherIDStr, ":voucher_id") {
+		log.Warn().Msg("handler::removeVoucher - invalid voucher ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid product ID"))
+	}
+
+	id, err := strconv.Atoi(voucherIDStr)
+	if err != nil {
+		log.Warn().Err(err).Msg("handler::removeVoucher - invalid id parameter")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid id parameter"))
+	}
+
+	err = h.service.RemoveVoucher(ctx, id)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::removeVoucher - failed to remove voucher")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
 }
