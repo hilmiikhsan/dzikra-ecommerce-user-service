@@ -13,3 +13,17 @@ type CreateBannerResponse struct {
 	ImageURL    string `json:"image_url"`
 	Description string `json:"desc"`
 }
+
+type GetListBannerResponse struct {
+	Banner      []GetListBanner `json:"banner"`
+	TotalPages  int             `json:"total_page"`
+	CurrentPage int             `json:"current_page"`
+	PageSize    int             `json:"page_size"`
+	TotalData   int             `json:"total_data"`
+}
+
+type GetListBanner struct {
+	ID          int    `json:"id"`
+	ImageURL    string `json:"image_url"`
+	Description string `json:"desc"`
+}

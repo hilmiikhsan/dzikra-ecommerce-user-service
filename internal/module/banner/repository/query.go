@@ -8,4 +8,23 @@ const (
 			description
 		) VALUES (?, ?) RETURNING id, image_url, description
 	`
+
+	queryFindListBanner = `
+		SELECT
+			id,
+			image_url,
+			description
+		FROM banners
+		WHERE
+			deleted_at IS NULL AND
+			description ILIKE '%' || ? || '%'
+		ORDER BY created_at DESC, id DESC
+		LIMIT ? OFFSET ?
+	`
+
+	queryCountListBanner = `
+		SELECT COUNT(*)
+		FROM banners
+		WHERE description ILIKE '%' || ? || '%' AND deleted_at IS NULL
+	`
 )

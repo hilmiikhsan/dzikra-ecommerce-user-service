@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/banner/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/banner/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/banner/ports"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -41,4 +44,33 @@ func (r *bannerRepository) InsertNewBanner(ctx context.Context, data *entity.Ban
 	}
 
 	return res, nil
+}
+
+func (r *bannerRepository) FindListBanner(ctx context.Context, limit, offset int, search string) ([]dto.GetListBanner, int, error) {
+	var responses []entity.Banner
+
+	if err := r.db.SelectContext(ctx, &responses, r.db.Rebind(queryFindListBanner), search, limit, offset); err != nil {
+		log.Error().Err(err).Msg("repository::FindListBanner - error executing query")
+		return nil, 0, err
+	}
+
+	var total int
+
+	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListBanner), search); err != nil {
+		log.Error().Err(err).Msg("repository::FindListVoucher - error counting banner")
+		return nil, 0, err
+	}
+
+	publicURL := config.Envs.MinioStorage.PublicURL
+
+	banners := make([]dto.GetListBanner, 0, len(responses))
+	for _, v := range responses {
+		banners = append(banners, dto.GetListBanner{
+			ID:          v.ID,
+			ImageURL:    utils.FormatMediaPathURL(v.ImageURL, publicURL),
+			Description: v.Description,
+		})
+	}
+
+	return banners, total, nil
 }

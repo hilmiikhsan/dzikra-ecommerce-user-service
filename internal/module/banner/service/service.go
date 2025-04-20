@@ -56,3 +56,35 @@ func (s *bannerService) CreateBanner(ctx context.Context, description string, pa
 
 	return &sanitizedResponse, nil
 }
+
+func (s *bannerService) GetListBanner(ctx context.Context, page, limit int, search string) (*dto.GetListBannerResponse, error) {
+	// calculate pagination
+	currentPage, perPage, offset := utils.Paginate(page, limit)
+
+	// get list banner
+	banners, total, err := s.bannerRepository.FindListBanner(ctx, perPage, offset, search)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListBanner - error getting list banner")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if banners is nil
+	if banners == nil {
+		banners = []dto.GetListBanner{}
+	}
+
+	// calculate total pages
+	totalPages := utils.CalculateTotalPages(total, perPage)
+
+	// create map response
+	response := dto.GetListBannerResponse{
+		Banner:      banners,
+		TotalPages:  totalPages,
+		CurrentPage: currentPage,
+		PageSize:    perPage,
+		TotalData:   total,
+	}
+
+	// return response
+	return &response, nil
+}

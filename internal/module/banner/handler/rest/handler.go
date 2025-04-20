@@ -102,3 +102,21 @@ func (h *bannerHandler) createBanner(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(response.Success(res, ""))
 }
+
+func (h *bannerHandler) getListBanner(c *fiber.Ctx) error {
+	var (
+		ctx    = c.Context()
+		page   = c.QueryInt("page", 1)
+		limit  = c.QueryInt("limit", 10)
+		search = c.Query("search", "")
+	)
+
+	res, err := h.service.GetListBanner(ctx, page, limit, search)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getListBanner - Failed to get list banner")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}
