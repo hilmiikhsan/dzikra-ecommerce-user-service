@@ -102,6 +102,12 @@ func (r *productRepository) UpdateProduct(ctx context.Context, tx *sqlx.Tx, id i
 		&res.ProductSubCategoryID,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			errMessage := fmt.Errorf("repository::UpdateProduct - product with id %d not found", id)
+			log.Error().Err(err).Msg(errMessage.Error())
+			return nil, errors.New(constants.ErrProductNotFound)
+		}
+
 		log.Error().Err(err).Msg("repository::UpdateProduct - error updating product")
 		return nil, err
 	}

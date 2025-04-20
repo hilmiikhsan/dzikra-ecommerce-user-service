@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"strconv"
+
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/voucher/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/response"
@@ -10,7 +12,7 @@ import (
 
 func (h *voucherHandler) createVoucher(c *fiber.Ctx) error {
 	var (
-		req = new(dto.CreateVoucherRequest)
+		req = new(dto.CreateOrUpdateVoucherRequest)
 		ctx = c.Context()
 	)
 
@@ -46,6 +48,43 @@ func (h *voucherHandler) getListVoucher(c *fiber.Ctx) error {
 	res, err := h.service.GetListVoucher(ctx, page, limit, search)
 	if err != nil {
 		log.Error().Err(err).Msg("handler::getListVoucher - Failed to get list voucher")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}
+
+func (h *voucherHandler) updateVoucher(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	voucherIDStr := c.Params("voucher_id")
+	if voucherIDStr == "" {
+		log.Warn().Msg("handler::updateVoucher - Voucher ID is required")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Voucher ID is required"))
+	}
+
+	id, err := strconv.Atoi(voucherIDStr)
+	if err != nil {
+		log.Warn().Err(err).Msg("handler::updateVoucher - Invalid voucher ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid voucher ID"))
+	}
+
+	req := new(dto.CreateOrUpdateVoucherRequest)
+	if err := c.BodyParser(req); err != nil {
+		log.Warn().Err(err).Msg("handler::updateVoucher - parse body")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Failed to parse request body"))
+	}
+
+	if err := h.validator.Validate(req); err != nil {
+		log.Warn().Err(err).Msg("handler::updateVoucher - validation")
+		code, errs := err_msg.Errors(err, req)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	res, err := h.service.UpdateVoucher(ctx, id, req)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::updateVoucher - service error")
 		code, errs := err_msg.Errors[error](err)
 		return c.Status(code).JSON(response.Error(errs))
 	}

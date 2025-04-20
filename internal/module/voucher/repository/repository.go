@@ -2,6 +2,9 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/voucher/dto"
@@ -103,4 +106,56 @@ func (r *voucherRepository) FindListVoucher(ctx context.Context, limit, offset i
 	}
 
 	return vouchers, total, nil
+}
+
+func (r *voucherRepository) UpdateVoucher(ctx context.Context, data *entity.Voucher) (*entity.Voucher, error) {
+	var res = new(entity.Voucher)
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryUpdateVoucher),
+		data.Name,
+		data.VoucherQuota,
+		data.Code,
+		data.Discount,
+		data.StartAt,
+		data.EndAt,
+		data.VoucherTypeID,
+		data.ID,
+	).Scan(
+		&res.ID,
+		&res.Name,
+		&res.VoucherQuota,
+		&res.Code,
+		&res.Discount,
+		&res.StartAt,
+		&res.EndAt,
+		&res.VoucherTypeID,
+		&res.CreatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			errMessage := fmt.Errorf("repository::UpdateVoucher - product voucher with id %d not found", data.ID)
+			log.Error().Err(err).Msg(errMessage.Error())
+			return nil, errors.New(constants.ErrVoucherNotFound)
+		}
+
+		uniqueConstraints := map[string]string{
+			"vouchers_code_key": constants.ErrVoucherCodeAlreadyRegistered,
+		}
+
+		val, handleErr := utils.HandleInsertUniqueError(err, data, uniqueConstraints)
+		if handleErr != nil {
+			log.Error().Err(handleErr).Any("payload", data).Msg("repository::UpdateVoucher - unique violation")
+			return nil, handleErr
+		}
+
+		if voucher, ok := val.(*entity.Voucher); ok {
+			log.Error().Err(err).Any("payload", data).Msg("repository::UpdateVoucher - unique violation")
+			return voucher, nil
+		}
+
+		log.Error().Err(err).Any("payload", data).Msg("repository::UpdateVoucher - error updating voucher")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return res, nil
 }

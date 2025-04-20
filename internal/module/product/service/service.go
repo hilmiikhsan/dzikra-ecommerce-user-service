@@ -315,6 +315,11 @@ func (s *productService) UpdateProduct(ctx context.Context, productID int, req *
 		ProductSubCategoryID: subCategoryID,
 	})
 	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrProductNotFound) {
+			log.Error().Err(err).Msg("service::UpdateProduct - product not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductNotFound))
+		}
+
 		log.Error().Err(err).Msg("service::UpdateProduct - error updating product")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
@@ -335,9 +340,15 @@ func (s *productService) UpdateProduct(ctx context.Context, productID int, req *
 				ProductID:      productID,
 			})
 			if err != nil {
+				if strings.Contains(err.Error(), constants.ErrProductVariantsNotFound) {
+					log.Error().Err(err).Msg("service::UpdateProduct - product variant not found")
+					return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductVariantsNotFound))
+				}
+
 				log.Error().Err(err).Msg("service::UpdateProduct - error updating product variant")
 				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 			}
+
 			productVariantResults = append(productVariantResults, updatedVariant)
 		} else {
 			// insert new product variant
@@ -354,6 +365,7 @@ func (s *productService) UpdateProduct(ctx context.Context, productID int, req *
 				log.Error().Err(err).Msg("service::UpdateProduct - error inserting new product variant")
 				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 			}
+
 			productVariantResults = append(productVariantResults, newVariant)
 		}
 	}
@@ -377,9 +389,15 @@ func (s *productService) UpdateProduct(ctx context.Context, productID int, req *
 				ProductID: productID,
 			})
 			if err != nil {
+				if strings.Contains(err.Error(), constants.ErrProductGroceriesNotFound) {
+					log.Error().Err(err).Msg("service::UpdateProduct - product grocery not found")
+					return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductGroceriesNotFound))
+				}
+
 				log.Error().Err(err).Msg("service::UpdateProduct - error updating product grocery")
 				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 			}
+
 			productGroceryResults = append(productGroceryResults, updatedGrocery)
 		} else {
 			newGrocery, err := s.productGroceryRepository.InsertNewProductGrocery(ctx, tx, &productGrocery.ProductGrocery{
@@ -391,6 +409,7 @@ func (s *productService) UpdateProduct(ctx context.Context, productID int, req *
 				log.Error().Err(err).Msg("service::UpdateProduct - error inserting new product grocery")
 				return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 			}
+
 			productGroceryResults = append(productGroceryResults, newGrocery)
 		}
 	}

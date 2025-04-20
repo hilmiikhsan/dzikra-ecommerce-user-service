@@ -1,6 +1,6 @@
 package dto
 
-type CreateVoucherRequest struct {
+type CreateOrUpdateVoucherRequest struct {
 	Name         string `json:"name" validate:"required,min=3,max=100,xss_safe"`
 	Code         string `json:"code" validate:"required,min=3,max=100,xss_safe"`
 	VoucherQuota int    `json:"voucher_quota" validate:"numeric,non_zero_integer,gt=0"`
@@ -10,7 +10,7 @@ type CreateVoucherRequest struct {
 	EndAt        string `json:"end_at" validate:"required,date_format"`
 }
 
-type CreateVoucherResponse struct {
+type CreateOrUpdateVoucherResponse struct {
 	Name          string `json:"name"`
 	Code          string `json:"code"`
 	Discount      int    `json:"discount"`

@@ -3,8 +3,10 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/ports"
 	"github.com/jmoiron/sqlx"
@@ -60,8 +62,9 @@ func (r *productGroceryRepository) UpdateProductGrocery(ctx context.Context, tx 
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Error().Err(err).Msg("repository::UpdateProductGrocery - product grocery not found or no update performed")
-			return nil, fmt.Errorf("product grocery with id %d and product_id %d not found", data.ID, data.ProductID)
+			errMessage := fmt.Errorf("repository::UpdateProductGrocery - product grocery with id %d and product_id %d not found", data.ID, data.ProductID)
+			log.Error().Err(err).Msg(errMessage.Error())
+			return nil, errors.New(constants.ErrProductGroceriesNotFound)
 		}
 
 		log.Error().Err(err).Msg("repository::UpdateProductGrocery - error updating product grocery")

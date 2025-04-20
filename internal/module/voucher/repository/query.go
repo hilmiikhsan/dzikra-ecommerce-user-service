@@ -56,4 +56,28 @@ const (
 		FROM vouchers vc
 		WHERE name ILIKE '%' || ? || '%' AND deleted_at IS NULL
 	`
+
+	queryUpdateVoucher = `
+		UPDATE vouchers
+		SET 
+			name             = ?,
+			voucher_quota    = ?,
+			code             = ?,
+			discount         = ?,
+			start_at         = ?,
+			end_at           = ?,
+			voucher_type_id  = ?,
+			updated_at       = CURRENT_TIMESTAMP
+		WHERE id = ? AND deleted_at IS NULL
+		RETURNING
+			id,
+			name,
+			voucher_quota,
+			code,
+			discount,
+			start_at,
+			end_at,
+			voucher_type_id,
+			created_at
+		`
 )

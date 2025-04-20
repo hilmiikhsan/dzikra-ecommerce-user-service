@@ -3,8 +3,10 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/ports"
 	"github.com/jmoiron/sqlx"
@@ -76,8 +78,9 @@ func (r *productVariantRepository) UpdateProductVariant(ctx context.Context, tx 
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Error().Err(err).Msg("repository::UpdateProductVariant - product variant not found or no update performed")
-			return nil, fmt.Errorf("product variant with id %d and product_id %d not found", data.ID, data.ProductID)
+			errMessage := fmt.Errorf("repository::UpdateProductVariant - product variant with id %d and product_id %d not found", data.ID, data.ProductID)
+			log.Error().Err(err).Msg(errMessage.Error())
+			return nil, errors.New(constants.ErrProductVariantsNotFound)
 		}
 
 		log.Error().Err(err).Msg("repository::UpdateProductVariant - error updating product variant")
