@@ -17,7 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (s *bannerService) CreateBanner(ctx context.Context, description string, payloadFile dto.UploadFileRequest) (*dto.CreateBannerResponse, error) {
+func (s *bannerService) CreateBanner(ctx context.Context, description string, payloadFile dto.UploadFileRequest) (*dto.CreateOrUpdateBannerResponse, error) {
 	// mapping file upload
 	ext := strings.ToLower(filepath.Ext(payloadFile.Filename))
 	objectName := fmt.Sprintf("banner_images/%s_%s", utils.GenerateBucketFileUUID(), ext)
@@ -44,7 +44,7 @@ func (s *bannerService) CreateBanner(ctx context.Context, description string, pa
 
 	// mapping response
 	publicURL := config.Envs.MinioStorage.PublicURL
-	response := &dto.CreateBannerResponse{
+	response := &dto.CreateOrUpdateBannerResponse{
 		ID:          bannerResult.ID,
 		ImageURL:    utils.FormatMediaPathURL(bannerResult.ImageURL, publicURL),
 		Description: bannerResult.Description,
@@ -87,4 +87,66 @@ func (s *bannerService) GetListBanner(ctx context.Context, page, limit int, sear
 
 	// return response
 	return &response, nil
+}
+
+func (s *bannerService) UpdateBanner(ctx context.Context, id int, description string, payloadFile dto.UploadFileRequest) (*dto.CreateOrUpdateBannerResponse, error) {
+	// find banner by id
+	bannerResult, err := s.bannerRepository.FindBannerByID(ctx, id)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrBannerNotFound) {
+			log.Error().Err(err).Msg("service::UpdateBanner - banner not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrBannerNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::UpdateBanner - Failed to find banner by ID")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if banner result is empty
+	if bannerResult.ImageURL != "" {
+		// delete old banner image
+		if err := s.minioService.DeleteFile(ctx, bannerResult.ImageURL); err != nil {
+			log.Error().Err(err).Msg("service::UpdateBanner - Failed to delete old banner image")
+			return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+	}
+
+	// mapping file upload
+	ext := strings.ToLower(filepath.Ext(payloadFile.Filename))
+	objectName := fmt.Sprintf("banner_images/%s_%s", utils.GenerateBucketFileUUID(), ext)
+	byteFile := utils.NewByteFile(payloadFile.File)
+
+	// update new banner
+	bannerNewResult, err := s.bannerRepository.UpdateBanner(ctx, &entity.Banner{
+		ImageURL:    objectName,
+		Description: description,
+		ID:          id,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("service::CreateBanner - Failed to update new banner")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// upload file to minio
+	uploadedPath, err := s.minioService.UploadFile(ctx, objectName, byteFile, payloadFile.FileHeaderSize, payloadFile.ContentType)
+	if err != nil {
+		log.Error().Err(err).Msg("service::CreateBanner - Failed to upload file to minio")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	log.Info().Msgf("Uploaded image URL: %s", uploadedPath)
+
+	// mapping response
+	publicURL := config.Envs.MinioStorage.PublicURL
+	response := &dto.CreateOrUpdateBannerResponse{
+		ID:          bannerNewResult.ID,
+		ImageURL:    utils.FormatMediaPathURL(bannerNewResult.ImageURL, publicURL),
+		Description: bannerNewResult.Description,
+	}
+
+	// Sanitize response
+	policy := bluemonday.UGCPolicy()
+	sanitizedResponse := utils.SanitizeCreateOrUpdateBannerResponse(*response, policy)
+
+	return &sanitizedResponse, nil
 }

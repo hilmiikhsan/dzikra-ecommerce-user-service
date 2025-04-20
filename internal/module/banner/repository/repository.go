@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
@@ -73,4 +75,45 @@ func (r *bannerRepository) FindListBanner(ctx context.Context, limit, offset int
 	}
 
 	return banners, total, nil
+}
+
+func (r *bannerRepository) UpdateBanner(ctx context.Context, data *entity.Banner) (*entity.Banner, error) {
+	var res = new(entity.Banner)
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryUpdateBanner),
+		data.ImageURL,
+		data.Description,
+		data.ID,
+	).Scan(
+		&res.ID,
+		&res.ImageURL,
+		&res.Description,
+	)
+	if err != nil {
+		log.Error().Err(err).Any("payload", data).Msg("repository::UpdateBanner - Failed to update banner")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return res, nil
+}
+
+func (r *bannerRepository) FindBannerByID(ctx context.Context, id int) (*entity.Banner, error) {
+	var res = new(entity.Banner)
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryFindBannerByID), id).Scan(
+		&res.ID,
+		&res.ImageURL,
+		&res.Description,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Any("id", id).Msg("repository::FindBannerByID - banner is not found")
+			return nil, errors.New(constants.ErrBannerNotFound)
+		}
+
+		log.Error().Err(err).Msg("repository::FindBannerByID - Failed to find banner by ID")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return res, nil
 }

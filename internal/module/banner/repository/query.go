@@ -27,4 +27,22 @@ const (
 		FROM banners
 		WHERE description ILIKE '%' || ? || '%' AND deleted_at IS NULL
 	`
+
+	queryUpdateBanner = `
+		UPDATE banners
+		SET
+			image_url = ?,
+			description = ?
+		WHERE id = ? AND deleted_at IS NULL
+		RETURNING id, image_url, description
+	`
+
+	queryFindBannerByID = `
+		SELECT
+			id,
+			image_url,
+			description
+		FROM banners
+		WHERE id = ? AND deleted_at IS NULL
+	`
 )

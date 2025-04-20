@@ -8,7 +8,7 @@ type UploadFileRequest struct {
 	Filename       string `json:"-"`
 }
 
-type CreateBannerResponse struct {
+type CreateOrUpdateBannerResponse struct {
 	ID          int    `json:"id"`
 	ImageURL    string `json:"image_url"`
 	Description string `json:"desc"`

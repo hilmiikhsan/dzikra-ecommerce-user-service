@@ -55,7 +55,7 @@ func SanitizeGetListProduct(resp product.GetListProduct, policy *bluemonday.Poli
 }
 
 // SanitizeCreateOrUpdateBannerResponse sanitizes the CreateOrUpdateBannerResponse by removing any potentially harmful content
-func SanitizeCreateOrUpdateBannerResponse(resp banner.CreateBannerResponse, policy *bluemonday.Policy) banner.CreateBannerResponse {
+func SanitizeCreateOrUpdateBannerResponse(resp banner.CreateOrUpdateBannerResponse, policy *bluemonday.Policy) banner.CreateOrUpdateBannerResponse {
 	resp.ImageURL = policy.Sanitize(resp.ImageURL)
 	resp.Description = policy.Sanitize(resp.Description)
 
