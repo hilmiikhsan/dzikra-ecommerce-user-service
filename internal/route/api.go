@@ -28,7 +28,7 @@ func SetupRoutes(app *fiber.App) {
 	productSubCategory.NewProductSubCategoryHandler().ProductSubCategoryRoute(publicAPI, superadminAPI)
 	product.NewProductHandler().ProductRoute(publicAPI, superadminAPI)
 	voucher.NewVoucherHandler().VoucherRoute(superadminAPI)
-	banner.NewBannerHandler().BannerRoute(superadminAPI)
+	banner.NewBannerHandler().BannerRoute(publicAPI, superadminAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {

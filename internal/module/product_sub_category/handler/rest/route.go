@@ -10,6 +10,5 @@ func (h *productSubCategoryHandler) ProductSubCategoryRoute(publicRouter, supera
 	superadminRouter.Delete("/product_subcategory/remove/:subcategory_id", h.middleware.UserBearer, h.middleware.RBACMiddleware("delete", "subcategory"), h.removeProductSubCategory)
 
 	// public endpoint
-	publicRouter.Get("/product_subcategory/:subcategory_id", h.getListProductSubCategory)
 	publicRouter.Get("/product_category/:category_id/product_subcategory", h.getListProductSubCategory)
 }
