@@ -45,4 +45,11 @@ const (
 		FROM banners
 		WHERE id = ? AND deleted_at IS NULL
 	`
+
+	querySoftDeleteBannerByID = `
+		UPDATE banners
+		SET 
+			deleted_at = NOW()
+		WHERE id = ? AND deleted_at IS NULL
+	`
 )

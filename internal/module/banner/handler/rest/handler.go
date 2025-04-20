@@ -221,3 +221,30 @@ func (h *bannerHandler) updateBanner(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }
+
+func (h *bannerHandler) removeBanner(c *fiber.Ctx) error {
+	var (
+		ctx         = c.Context()
+		bannerIDStr = c.Params("banner_id")
+	)
+
+	if strings.Contains(bannerIDStr, ":banner_id") {
+		log.Warn().Msg("handler::removeBanner - invalid banner ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid banner ID"))
+	}
+
+	id, err := strconv.Atoi(bannerIDStr)
+	if err != nil {
+		log.Warn().Err(err).Msg("handler::removeBanner - invalid id parameter")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid id parameter"))
+	}
+
+	err = h.service.RemoveBanner(ctx, id)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::removeBanner - failed to remove banner")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
+}

@@ -150,3 +150,36 @@ func (s *bannerService) UpdateBanner(ctx context.Context, id int, description st
 
 	return &sanitizedResponse, nil
 }
+
+func (s *bannerService) RemoveBanner(ctx context.Context, id int) error {
+	// find banner by id
+	bannerResult, err := s.bannerRepository.FindBannerByID(ctx, id)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrBannerNotFound) {
+			log.Error().Err(err).Msg("service::RemoveBanner - banner not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrBannerNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::RemoveBanner - Failed to find banner by ID")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// delete old banner image
+	if err := s.minioService.DeleteFile(ctx, bannerResult.ImageURL); err != nil {
+		log.Error().Err(err).Msg("service::RemoveBanner - Failed to delete old banner image")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete banner
+	if err := s.bannerRepository.SoftDeleteBannerByID(ctx, id); err != nil {
+		if strings.Contains(err.Error(), constants.ErrBannerNotFound) {
+			log.Error().Err(err).Msg("service::RemoveBanner - Banner not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrBannerNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::RemoveBanner - Failed to soft delete banner")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
+}

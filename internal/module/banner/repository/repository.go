@@ -117,3 +117,13 @@ func (r *bannerRepository) FindBannerByID(ctx context.Context, id int) (*entity.
 
 	return res, nil
 }
+
+func (r *bannerRepository) SoftDeleteBannerByID(ctx context.Context, id int) error {
+	_, err := r.db.ExecContext(ctx, r.db.Rebind(querySoftDeleteBannerByID), id)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::SoftDeleteBannerByID - Failed to soft delete banner by ID")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
+}
