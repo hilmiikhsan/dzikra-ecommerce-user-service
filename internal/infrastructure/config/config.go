@@ -63,6 +63,13 @@ type Config struct {
 		UseSSL    bool   `env:"DZIKRA_MINIO_USE_SSL" env-default:"false"`
 		PublicURL string `env:"DZIKRA_MINIO_PUBLIC_URL" env-default:"http://localhost:9000"`
 	}
+	RajaOngkir struct {
+		ApiKey              string `env:"RAJAONGKIR_API_KEY" env-default:""`
+		ApiKeyType          string `env:"RAJAONGKIR_API_KEY_TYPE" env-default:"pro"`
+		BaseURL             string `env:"RAJAONGKIR_BASE_URL" env-default:""`
+		OriginCityID        string `env:"ORIGIN_CITY_ID" env-default:""`
+		OriginSubDistrictID string `env:"ORIGIN_SUBDISTRICT_ID" env-default:""`
+	}
 }
 
 // Option is Configure type return func.
@@ -133,6 +140,11 @@ func (c *Configure) Initialize() {
 		Envs.MinioStorage.Bucket = utils.GetEnv("DZIKRA_MINIO_BUCKET", Envs.MinioStorage.Bucket)
 		Envs.MinioStorage.UseSSL = utils.GetBoolEnv("DZIKRA_MINIO_USE_SSL", Envs.MinioStorage.UseSSL)
 		Envs.MinioStorage.PublicURL = utils.GetEnv("DZIKRA_MINIO_PUBLIC_URL", Envs.MinioStorage.PublicURL)
+		Envs.RajaOngkir.ApiKey = utils.GetEnv("RAJAONGKIR_API_KEY", Envs.RajaOngkir.ApiKey)
+		Envs.RajaOngkir.ApiKeyType = utils.GetEnv("RAJAONGKIR_API_KEY_TYPE", Envs.RajaOngkir.ApiKeyType)
+		Envs.RajaOngkir.BaseURL = utils.GetEnv("RAJAONGKIR_BASE_URL", Envs.RajaOngkir.BaseURL)
+		Envs.RajaOngkir.OriginCityID = utils.GetEnv("ORIGIN_CITY_ID", Envs.RajaOngkir.OriginCityID)
+		Envs.RajaOngkir.OriginSubDistrictID = utils.GetEnv("ORIGIN_SUBDISTRICT_ID", Envs.RajaOngkir.OriginSubDistrictID)
 	})
 }
 

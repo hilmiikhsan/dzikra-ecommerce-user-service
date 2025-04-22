@@ -6,6 +6,7 @@ import (
 	product "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/handler/rest"
 	productCategory "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/handler/rest"
 	productSubCategory "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/handler/rest"
+	province "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/province/handler/rest"
 	role "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/handler/rest"
 	user "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/handler/rest"
 	voucher "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/voucher/handler/rest"
@@ -29,6 +30,7 @@ func SetupRoutes(app *fiber.App) {
 	product.NewProductHandler().ProductRoute(publicAPI, superadminAPI)
 	voucher.NewVoucherHandler().VoucherRoute(superadminAPI)
 	banner.NewBannerHandler().BannerRoute(publicAPI, superadminAPI)
+	province.NewProvinceHandler().ProvinceRoute(publicAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {
