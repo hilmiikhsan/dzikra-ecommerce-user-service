@@ -2,6 +2,7 @@ package route
 
 import (
 	banner "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/banner/handler/rest"
+	city "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/city/handler/rest"
 	application "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/handler/rest"
 	product "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/handler/rest"
 	productCategory "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_category/handler/rest"
@@ -31,6 +32,7 @@ func SetupRoutes(app *fiber.App) {
 	voucher.NewVoucherHandler().VoucherRoute(superadminAPI)
 	banner.NewBannerHandler().BannerRoute(publicAPI, superadminAPI)
 	province.NewProvinceHandler().ProvinceRoute(publicAPI)
+	city.NewCityHandler().CityRoute(publicAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {

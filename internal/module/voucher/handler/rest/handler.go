@@ -101,7 +101,7 @@ func (h *voucherHandler) removeVoucher(c *fiber.Ctx) error {
 
 	if strings.Contains(voucherIDStr, ":voucher_id") {
 		log.Warn().Msg("handler::removeVoucher - invalid voucher ID")
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid banner ID"))
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid voucher ID"))
 	}
 
 	id, err := strconv.Atoi(voucherIDStr)
