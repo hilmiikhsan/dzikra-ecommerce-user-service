@@ -1,6 +1,6 @@
 package dto
 
-type GetCityResponse struct {
+type GetListCityResponse struct {
 	ID           string `json:"id"`
 	City         string `json:"city"`
 	Type         string `json:"type"`

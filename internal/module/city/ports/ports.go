@@ -7,5 +7,5 @@ import (
 )
 
 type CityService interface {
-	GetListCity(ctx context.Context, provinceID int) ([]dto.GetCityResponse, error)
+	GetListCity(ctx context.Context, provinceID int) ([]dto.GetListCityResponse, error)
 }

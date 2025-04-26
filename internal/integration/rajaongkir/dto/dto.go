@@ -24,3 +24,17 @@ type CityResult struct {
 	ProvinceName string `json:"province"`
 	PostalCode   string `json:"postal_code"`
 }
+
+type RajaOngkirSubDistrictPayload struct {
+	Rajaongkir struct {
+		Results []SubDistrictResult `json:"results"`
+	} `json:"rajaongkir"`
+}
+
+type SubDistrictResult struct {
+	SubDistrictID   string `json:"subdistrict_id"`
+	CityName        string `json:"city_name"`
+	CityType        string `json:"type"`
+	ProvinceName    string `json:"province"`
+	SubDistrictName string `json:"subdistrict_name"`
+}
