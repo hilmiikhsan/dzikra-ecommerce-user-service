@@ -129,3 +129,22 @@ func (h *addressHandler) removeAddress(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
 }
+
+func (h *addressHandler) getListAddress(c *fiber.Ctx) error {
+	var ctx = c.Context()
+
+	userID, ok := c.Locals("user_id").(string)
+	if !ok || userID == "" {
+		log.Error().Msg("middleware::getListAddress - user_id not found in context")
+		return c.Status(fiber.StatusUnauthorized).JSON(response.Error(constants.ErrAccessTokenIsRequired))
+	}
+
+	res, err := h.service.GetListAddress(ctx, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getListAddress - Failed to get list address")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.JSON(response.Success(res, ""))
+}

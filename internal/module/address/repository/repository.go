@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/address/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/address/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/address/ports"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
@@ -129,4 +130,31 @@ func (r *addressRepository) SoftDeleteAddressByID(ctx context.Context, tx *sqlx.
 	}
 
 	return nil
+}
+
+func (r *addressRepository) FindAllAddressByUserID(ctx context.Context, userID uuid.UUID) ([]dto.GetListAddressResponse, error) {
+	var responses []entity.Address
+
+	if err := r.db.SelectContext(ctx, &responses, r.db.Rebind(queryFindAllAddressByUserID), userID); err != nil {
+		log.Error().Err(err).Msg("repository::FindAllAddressByUserID - error executing query")
+		return nil, err
+	}
+
+	addresses := make([]dto.GetListAddressResponse, 0, len(responses))
+	for _, v := range responses {
+		addresses = append(addresses, dto.GetListAddressResponse{
+			ID:                  v.ID,
+			Province:            v.Province,
+			City:                v.City,
+			SubDistrict:         v.SubDistrict,
+			CityVendorID:        v.CityVendorID,
+			ProvinceVendorID:    v.ProvinceVendorID,
+			SubDistrictVendorID: v.SubDistrictVendorID,
+			Address:             v.Address,
+			PostalCode:          v.PostalCode,
+			ReceivedName:        v.ReceivedName,
+		})
+	}
+
+	return addresses, nil
 }

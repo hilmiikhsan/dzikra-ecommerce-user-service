@@ -27,3 +27,16 @@ type CreateOrUpdateAddressResponse struct {
 	ReceivedName        string  `json:"received_name"`
 	UserID              string  `json:"user_id"`
 }
+
+type GetListAddressResponse struct {
+	ID                  int    `json:"id"`
+	Province            string `json:"province"`
+	ProvinceVendorID    string `json:"province_vendor_id"`
+	City                string `json:"city"`
+	CityVendorID        string `json:"city_vendor_id"`
+	SubDistrict         string `json:"subdistrict"`
+	SubDistrictVendorID string `json:"subdistrict_vendor_id"`
+	Address             string `json:"address"`
+	PostalCode          string `json:"postal_code"`
+	ReceivedName        string `json:"received_name"`
+}

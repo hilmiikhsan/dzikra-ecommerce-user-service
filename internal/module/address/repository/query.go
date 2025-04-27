@@ -70,4 +70,20 @@ const (
 			AND user_id = ?
 			AND deleted_at IS NULL
 	`
+
+	queryFindAllAddressByUserID = `
+		SELECT
+			id,
+			province,
+			city,
+			subdistrict,
+			postal_code,
+			address,
+			received_name,
+			city_vendor_id,
+			province_vendor_id,
+			subdistrict_vendor_id
+		FROM addresses
+		WHERE user_id = ? AND deleted_at IS NULL
+	`
 )

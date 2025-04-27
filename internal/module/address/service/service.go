@@ -335,3 +335,26 @@ func (s *addressService) RemoveAddress(ctx context.Context, addressID int, userI
 
 	return nil
 }
+
+func (s *addressService) GetListAddress(ctx context.Context, userID string) ([]dto.GetListAddressResponse, error) {
+	// convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListAddress - failed to parse user_id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get list address
+	addresses, err := s.addressRepository.FindAllAddressByUserID(ctx, userUUID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListAddress - failed to get list address")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if addresses is nil
+	if addresses == nil {
+		addresses = []dto.GetListAddressResponse{}
+	}
+
+	return addresses, nil
+}
