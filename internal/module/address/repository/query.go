@@ -60,4 +60,14 @@ const (
 			province_vendor_id,
 			subdistrict_vendor_id
 	`
+
+	querySoftDeleteAddressByID = `
+		UPDATE addresses 
+		SET 
+			deleted_at = NOW() 
+		WHERE 
+			id = ? 
+			AND user_id = ?
+			AND deleted_at IS NULL
+	`
 )

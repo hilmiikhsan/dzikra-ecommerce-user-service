@@ -292,3 +292,46 @@ func (s addressService) UpdateAddress(ctx context.Context, req *dto.CreateOrUpda
 		UserID:              req.UserID,
 	}, nil
 }
+
+func (s *addressService) RemoveAddress(ctx context.Context, addressID int, userID string) error {
+	// Begin transaction
+	tx, err := s.db.Beginx()
+	if err != nil {
+		log.Error().Err(err).Msg("service::RemoveAddress - Failed to begin transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				log.Error().Err(rollbackErr).Msg("service::RemoveAddress - Failed to rollback transaction")
+			}
+		}
+	}()
+
+	// convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::RemoveAddress - failed to parse user_id")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// soft delete address
+	err = s.addressRepository.SoftDeleteAddressByID(ctx, tx, addressID, userUUID)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrAddressNotFound) {
+			log.Error().Err(err).Msg("service::RemoveAddress - address not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrAddressNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::RemoveAddress - failed to soft delete address")
+		return err_msg.NewCustomErrors(http.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// commit transaction
+	if err = tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("service::RemoveAddress - failed to commit transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
+}

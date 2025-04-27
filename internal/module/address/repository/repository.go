@@ -11,6 +11,7 @@ import (
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/address/ports"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
@@ -106,4 +107,26 @@ func (r *addressRepository) UpdateAddress(ctx context.Context, tx *sqlx.Tx, id i
 	}
 
 	return res, nil
+}
+
+func (r *addressRepository) SoftDeleteAddressByID(ctx context.Context, tx *sqlx.Tx, id int, userID uuid.UUID) error {
+	result, err := tx.ExecContext(ctx, r.db.Rebind(querySoftDeleteAddressByID), id, userID)
+	if err != nil {
+		log.Error().Err(err).Int("id", id).Msg("repository::SoftDeleteAddressByID - Failed to soft delete voucher")
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Error().Err(err).Msg("repository::SoftDeleteAddressByID - Failed to fetch rows affected")
+		return err
+	}
+
+	if rowsAffected == 0 {
+		errNotFound := errors.New(constants.ErrAddressNotFound)
+		log.Error().Err(errNotFound).Int("id", id).Msg("repository::SoftDeleteAddressByID - Voucher not found")
+		return errNotFound
+	}
+
+	return nil
 }
