@@ -2,6 +2,9 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/address/entity"
@@ -55,6 +58,50 @@ func (r *addressRepository) InsertNewAddress(ctx context.Context, tx *sqlx.Tx, d
 	)
 	if err != nil {
 		log.Error().Err(err).Any("payload", data).Msg("repository::InsertNewAddress - Failed to insert new address")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return res, nil
+}
+
+func (r *addressRepository) UpdateAddress(ctx context.Context, tx *sqlx.Tx, id int, data *entity.Address) (*entity.Address, error) {
+	var res = new(entity.Address)
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryUpdateAddress),
+		data.Province,
+		data.City,
+		data.District,
+		data.SubDistrict,
+		data.PostalCode,
+		data.Address,
+		data.ReceivedName,
+		data.UserID,
+		data.CityVendorID,
+		data.ProvinceVendorID,
+		data.SubDistrictVendorID,
+		id,
+	).Scan(
+		&res.ID,
+		&res.Province,
+		&res.City,
+		&res.District,
+		&res.SubDistrict,
+		&res.PostalCode,
+		&res.Address,
+		&res.ReceivedName,
+		&res.UserID,
+		&res.CityVendorID,
+		&res.ProvinceVendorID,
+		&res.SubDistrictVendorID,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			errMessage := fmt.Errorf("repository::UpdateAddress - address with id %d is not found", id)
+			log.Error().Err(err).Msg(errMessage.Error())
+			return nil, errors.New(constants.ErrAddressNotFound)
+		}
+
+		log.Error().Err(err).Any("payload", data).Msg("repository::UpdateAddress - Failed to update address")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 

@@ -40,4 +40,5 @@ var (
 	ErrVoucherNotFound                     = "Voucher not found"
 	ErrVoucherUsageNotFound                = "Voucher usage not found"
 	ErrBannerNotFound                      = "Banner not found"
+	ErrAddressNotFound                     = "Address not found"
 )

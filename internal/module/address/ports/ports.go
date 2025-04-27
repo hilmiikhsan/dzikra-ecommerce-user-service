@@ -10,8 +10,10 @@ import (
 
 type AddressRepository interface {
 	InsertNewAddress(ctx context.Context, tx *sqlx.Tx, data *entity.Address) (*entity.Address, error)
+	UpdateAddress(ctx context.Context, tx *sqlx.Tx, id int, data *entity.Address) (*entity.Address, error)
 }
 
 type AddressService interface {
-	CreateAddress(ctx context.Context, req *dto.CreateAddressRequest) (*dto.CreateAddressResponse, error)
+	CreateAddress(ctx context.Context, req *dto.CreateOrUpdateAddressRequest) (*dto.CreateOrUpdateAddressResponse, error)
+	UpdateAddress(ctx context.Context, req *dto.CreateOrUpdateAddressRequest, addressID int) (*dto.CreateOrUpdateAddressResponse, error)
 }

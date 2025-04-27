@@ -1,6 +1,6 @@
 package dto
 
-type CreateAddressRequest struct {
+type CreateOrUpdateAddressRequest struct {
 	ReceivedName  string `json:"received_name" validate:"required,max=100,min=2,xss_safe"`
 	Province      string `json:"province" validate:"required,max=100,min=2,xss_safe"`
 	ProvinceID    string `json:"province_id" validate:"required,max=100,min=1,xss_safe"`
@@ -13,7 +13,7 @@ type CreateAddressRequest struct {
 	UserID        string `json:"user_id" validate:"required,uuid"`
 }
 
-type CreateAddressResponse struct {
+type CreateOrUpdateAddressResponse struct {
 	ID                  int     `json:"id"`
 	Province            string  `json:"province"`
 	ProvinceVendorID    string  `json:"province_vendor_id"`
