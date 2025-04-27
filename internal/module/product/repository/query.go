@@ -183,4 +183,10 @@ const (
 			deleted_at = NOW() 
 		WHERE id = ? AND deleted_at IS NULL
 	`
+
+	queryCountProductByID = `
+		SELECT COUNT(id) 
+		FROM products 
+		WHERE id = ? AND deleted_at IS NULL
+	`
 )

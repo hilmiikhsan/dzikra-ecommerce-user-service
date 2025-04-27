@@ -32,7 +32,7 @@ func NewAddressRepository(db *sqlx.DB) *addressRepository {
 func (r *addressRepository) InsertNewAddress(ctx context.Context, tx *sqlx.Tx, data *entity.Address) (*entity.Address, error) {
 	var res = new(entity.Address)
 
-	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryInsertNewAddress),
+	err := tx.QueryRowContext(ctx, r.db.Rebind(queryInsertNewAddress),
 		data.Province,
 		data.City,
 		data.District,

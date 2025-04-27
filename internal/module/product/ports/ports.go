@@ -15,6 +15,7 @@ type ProductRepository interface {
 	FindListProduct(ctx context.Context, limit, offset int, search string, categoryID, subcategoryID int) ([]dto.GetListProduct, int, error)
 	FindProductByID(ctx context.Context, id int) (*entity.Product, error)
 	SoftDeleteProductByID(ctx context.Context, tx *sqlx.Tx, id int) error
+	CountProductByID(ctx context.Context, id int) (int, error)
 }
 
 type ProductService interface {

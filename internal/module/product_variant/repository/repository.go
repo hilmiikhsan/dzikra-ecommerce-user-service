@@ -109,3 +109,15 @@ func (r *productVariantRepository) SoftDeleteProductVariantsByProductID(ctx cont
 
 	return nil
 }
+
+func (r *productVariantRepository) CountProductVariantByIDAndProductID(ctx context.Context, id, productID int) (int, error) {
+	var count int
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryCountProductVariantByIDAndProductID), id, productID).Scan(&count)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::CountProductVariantByID - error counting product variant")
+		return 0, err
+	}
+
+	return count, nil
+}

@@ -55,4 +55,12 @@ const (
 			deleted_at = NOW() 
 		WHERE product_id = ? AND deleted_at IS NULL
 	`
+
+	queryCountProductVariantByIDAndProductID = `
+		SELECT COUNT(id) 		
+		FROM product_variants
+		WHERE id = ? 
+		AND product_id = ?
+		AND deleted_at IS NULL
+	`
 )

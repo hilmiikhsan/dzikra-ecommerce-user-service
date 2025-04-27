@@ -118,7 +118,7 @@ func (r *productRepository) UpdateProduct(ctx context.Context, tx *sqlx.Tx, id i
 func (r *productRepository) CountProductByName(ctx context.Context, name string) (int, error) {
 	var count int
 
-	err := r.db.GetContext(ctx, &count, queryCountProductByName, name)
+	err := r.db.GetContext(ctx, &count, r.db.Rebind(queryCountProductByName), name)
 	if err != nil {
 		log.Error().Err(err).Msg("repository::CountProductByName - error count product query")
 		return 0, err
@@ -307,4 +307,16 @@ func (r *productRepository) SoftDeleteProductByID(ctx context.Context, tx *sqlx.
 	}
 
 	return nil
+}
+
+func (r *productRepository) CountProductByID(ctx context.Context, id int) (int, error) {
+	var count int
+
+	err := r.db.GetContext(ctx, &count, r.db.Rebind(queryCountProductByID), id)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::CountProductByID - error count product query")
+		return 0, err
+	}
+
+	return count, nil
 }
