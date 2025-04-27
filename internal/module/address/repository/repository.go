@@ -158,3 +158,31 @@ func (r *addressRepository) FindAllAddressByUserID(ctx context.Context, userID u
 
 	return addresses, nil
 }
+
+func (r *addressRepository) FindDetailAddressByID(ctx context.Context, id int, userID uuid.UUID) (*entity.Address, error) {
+	var res = new(entity.Address)
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryFindAddressByID), id, userID).Scan(
+		&res.ID,
+		&res.Province,
+		&res.City,
+		&res.SubDistrict,
+		&res.PostalCode,
+		&res.Address,
+		&res.ReceivedName,
+		&res.CityVendorID,
+		&res.ProvinceVendorID,
+		&res.SubDistrictVendorID,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Int("id", id).Msg("repository::FindAddressByID - address is not found")
+			return nil, errors.New(constants.ErrAddressNotFound)
+		}
+
+		log.Error().Err(err).Msg("repository::FindAddressByID - Failed to find address by ID")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return res, nil
+}

@@ -358,3 +358,37 @@ func (s *addressService) GetListAddress(ctx context.Context, userID string) ([]d
 
 	return addresses, nil
 }
+
+func (s *addressService) GetDetailAddress(ctx context.Context, addressID int, userID string) (*dto.GetListAddressResponse, error) {
+	// convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetDetailAddress - failed to parse user_id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get detail address
+	address, err := s.addressRepository.FindDetailAddressByID(ctx, addressID, userUUID)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrAddressNotFound) {
+			log.Error().Err(err).Msg("service::GetDetailAddress - address not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrAddressNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::GetDetailAddress - failed to get detail address")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return &dto.GetListAddressResponse{
+		ID:                  address.ID,
+		Province:            address.Province,
+		City:                address.City,
+		SubDistrict:         address.SubDistrict,
+		Address:             address.Address,
+		PostalCode:          address.PostalCode,
+		CityVendorID:        address.CityVendorID,
+		ProvinceVendorID:    address.ProvinceVendorID,
+		SubDistrictVendorID: address.SubDistrictVendorID,
+		ReceivedName:        address.ReceivedName,
+	}, nil
+}

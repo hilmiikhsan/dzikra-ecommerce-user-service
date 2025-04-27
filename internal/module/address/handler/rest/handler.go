@@ -148,3 +148,28 @@ func (h *addressHandler) getListAddress(c *fiber.Ctx) error {
 
 	return c.JSON(response.Success(res, ""))
 }
+
+func (h *addressHandler) getDetailAddress(c *fiber.Ctx) error {
+	var ctx = c.Context()
+
+	userID, ok := c.Locals("user_id").(string)
+	if !ok || userID == "" {
+		log.Error().Msg("middleware::getDetailAddress - user_id not found in context")
+		return c.Status(fiber.StatusUnauthorized).JSON(response.Error(constants.ErrAccessTokenIsRequired))
+	}
+
+	addressID, err := strconv.Atoi(c.Params("address_id"))
+	if err != nil {
+		log.Warn().Msg("handler::getDetailAddress - Invalid address ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid address ID"))
+	}
+
+	res, err := h.service.GetDetailAddress(ctx, addressID, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getDetailAddress - Failed to get detail address")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.JSON(response.Success(res, ""))
+}
