@@ -612,7 +612,7 @@ func (s *productService) GetDetailProduct(ctx context.Context, id int) (*dto.Get
 		},
 		ProductSubCategory: productSubCategoryDto.ProductSubCategory{
 			ID:          productResult.ProductSubCategoryID,
-			SubCategory: "", // Sama seperti di atas
+			SubCategory: "",
 			CategoryID:  productResult.ProductSubCategoryID,
 		},
 		ProductVariant: []productVariantDto.ProductVariant{},

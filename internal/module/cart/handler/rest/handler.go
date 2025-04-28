@@ -43,3 +43,22 @@ func (h *cartHandler) addToCartItem(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(response.Success(res, ""))
 }
+
+func (h *cartHandler) getListCart(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	userID, ok := c.Locals("user_id").(string)
+	if !ok || userID == "" {
+		log.Error().Msg("middleware::getListCart - user_id not found in context")
+		return c.Status(fiber.StatusUnauthorized).JSON(response.Error(constants.ErrAccessTokenIsRequired))
+	}
+
+	res, err := h.service.GetListCart(ctx, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getListCart - Failed to get list cart")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}

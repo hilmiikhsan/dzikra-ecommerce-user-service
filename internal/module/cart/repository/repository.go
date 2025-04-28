@@ -2,9 +2,14 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/ports"
+	productGroceryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/dto"
+	productImageDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/dto"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
@@ -43,4 +48,86 @@ func (r *cartRepository) InsertNewCart(ctx context.Context, tx *sqlx.Tx, data *e
 	}
 
 	return res, nil
+}
+
+func (r *cartRepository) FindListCartByUserID(ctx context.Context, userID uuid.UUID) ([]dto.GetListCartResponse, error) {
+	var rows []entity.Cart
+	if err := r.db.SelectContext(ctx, &rows, r.db.Rebind(queryFindListCartByUserID), userID); err != nil {
+		log.Error().Err(err).Msg("repository::FindListCartByUserID - error executing query")
+		return nil, fmt.Errorf("error querying cart: %w", err)
+	}
+
+	cartMap := make(map[int]*dto.GetListCartResponse, len(rows))
+	ordered := make([]*dto.GetListCartResponse, 0, len(rows))
+
+	for _, row := range rows {
+		crt, exists := cartMap[row.ID]
+		if !exists {
+			crt = &dto.GetListCartResponse{
+				ID:                          row.ID,
+				Quantity:                    row.Quantity,
+				ProductID:                   row.ProductID,
+				ProductVariantID:            row.ProductVariantID,
+				ProductName:                 row.ProductName,
+				ProductRealPrice:            row.ProductRealPrice,
+				ProductDiscountPrice:        row.ProductDiscountPrice,
+				ProductStock:                row.ProductStock,
+				ProductVariantName:          row.ProductVariantName,
+				ProductGrocery:              []productGroceryDto.ProductGrocery{},
+				ProductVariantSubName:       row.ProductVariantSubName.String,
+				ProductVariantRealPrice:     row.ProductVariantRealPrice.String,
+				ProductVariantDiscountPrice: row.ProductVariantDiscountPrice.String,
+				ProductVariantStock:         int(row.ProductVariantStock.Int64),
+				ProductImage:                []productImageDto.ProductImage{},
+			}
+
+			cartMap[row.ID] = crt
+			ordered = append(ordered, crt)
+		}
+
+		if row.ProductGroceryID.Valid {
+			gid := int(row.ProductGroceryID.Int64)
+			dup := false
+			for _, g := range crt.ProductGrocery {
+				if g.ID == gid {
+					dup = true
+					break
+				}
+			}
+			if !dup {
+				crt.ProductGrocery = append(crt.ProductGrocery, productGroceryDto.ProductGrocery{
+					ID:        gid,
+					MinBuy:    int(row.ProductGroceryMinBuy.Int64),
+					Discount:  int(row.ProductGroceryDiscount.Int64),
+					ProductID: int(row.ProductGroceryProductID.Int64),
+				})
+			}
+		}
+
+		if row.ProductImageID.Valid {
+			iid := int(row.ProductImageID.Int64)
+			dup := false
+			for _, img := range crt.ProductImage {
+				if img.ID == iid {
+					dup = true
+					break
+				}
+			}
+			if !dup {
+				crt.ProductImage = append(crt.ProductImage, productImageDto.ProductImage{
+					ID:        iid,
+					ImageURL:  row.ProductImageURL.String,
+					Position:  int(row.ProductImageSort.Int64),
+					ProductID: int(row.ProductImageProductID.Int64),
+				})
+			}
+		}
+	}
+
+	result := make([]dto.GetListCartResponse, len(ordered))
+	for i, p := range ordered {
+		result[i] = *p
+	}
+
+	return result, nil
 }

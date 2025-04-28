@@ -84,3 +84,26 @@ func (s *cartService) AddCartItem(ctx context.Context, req *dto.AddCartItemReque
 		CreatedAt:        utils.FormatTime(res.CreatedAt),
 	}, nil
 }
+
+func (s *cartService) GetListCart(ctx context.Context, userID string) (*[]dto.GetListCartResponse, error) {
+	// convert user id to uuid
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListCart - failed to parse user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// get cart by user id
+	carts, err := s.cartRepository.FindListCartByUserID(ctx, userUUID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListCart - failed to get cart by user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if carts is nil
+	if carts == nil {
+		carts = []dto.GetListCartResponse{}
+	}
+
+	return &carts, nil
+}
