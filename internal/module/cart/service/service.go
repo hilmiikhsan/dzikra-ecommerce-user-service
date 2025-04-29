@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/dto"
@@ -13,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (s *cartService) AddCartItem(ctx context.Context, req *dto.AddCartItemRequest) (*dto.AddCartItemResponse, error) {
+func (s *cartService) AddCartItem(ctx context.Context, req *dto.AddOrUpdateCartItemRequest) (*dto.AddOrUpdateCartItemResponse, error) {
 	// check count product data
 	productCount, err := s.productRepository.CountProductByID(ctx, req.ProductID)
 	if err != nil {
@@ -75,7 +76,7 @@ func (s *cartService) AddCartItem(ctx context.Context, req *dto.AddCartItemReque
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
-	return &dto.AddCartItemResponse{
+	return &dto.AddOrUpdateCartItemResponse{
 		ID:               res.ID,
 		UserID:           res.UserID.String(),
 		ProductID:        res.ProductID,
@@ -106,4 +107,82 @@ func (s *cartService) GetListCart(ctx context.Context, userID string) (*[]dto.Ge
 	}
 
 	return &carts, nil
+}
+
+func (s *cartService) UpdateCartItem(ctx context.Context, req *dto.AddOrUpdateCartItemRequest, id int) (*dto.AddOrUpdateCartItemResponse, error) {
+	// check count product data
+	productCount, err := s.productRepository.CountProductByID(ctx, req.ProductID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateCartItem - failed to count product")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	if productCount == 0 {
+		log.Warn().Msg("service::UpdateCartItem - product not found")
+		return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductNotFound))
+	}
+
+	// check count product variant data
+	productVariantCount, err := s.productVariantRepository.CountProductVariantByIDAndProductID(ctx, req.ProductVariantID, req.ProductID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateCartItem - failed to count product variant")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	if productVariantCount == 0 {
+		log.Warn().Msg("service::UpdateCartItem - product variant not found")
+		return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrProductVariantsNotFound))
+	}
+
+	// convert user id to int
+	userID, err := uuid.Parse(req.UserID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateCartItem - failed to parse user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// Begin transaction
+	tx, err := s.db.Beginx()
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::UpdateCartItem - Failed to begin transaction")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				log.Error().Err(rollbackErr).Any("payload", req).Msg("service::UpdateCartItem - Failed to rollback transaction")
+			}
+		}
+	}()
+
+	// update cart
+	res, err := s.cartRepository.UpdateCart(ctx, tx, &entity.Cart{
+		UserID:           userID,
+		ProductID:        req.ProductID,
+		ProductVariantID: req.ProductVariantID,
+		Quantity:         req.Quantity,
+		ID:               id,
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrCartNotFound) {
+			log.Error().Err(err).Msg("service::UpdateCartItem - cart not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrCartNotFound))
+		}
+
+		log.Error().Err(err).Any("payload", req).Msg("service::UpdateCartItem - Failed to update cart")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// commit transaction
+	if err = tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("service::UpdateCartItem - failed to commit transaction")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return &dto.AddOrUpdateCartItemResponse{
+		ID:               res.ID,
+		UserID:           res.UserID.String(),
+		ProductID:        res.ProductID,
+		ProductVariantID: res.ProductVariantID,
+		Quantity:         res.Quantity,
+		CreatedAt:        utils.FormatTime(res.CreatedAt),
+	}, nil
 }

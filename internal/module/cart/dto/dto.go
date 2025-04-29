@@ -5,14 +5,14 @@ import (
 	productImage "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/dto"
 )
 
-type AddCartItemRequest struct {
+type AddOrUpdateCartItemRequest struct {
 	ProductID        int    `json:"product_id" validate:"required,numeric,non_zero_integer,gt=0"`
 	ProductVariantID int    `json:"product_variant_id" validate:"required,numeric,non_zero_integer,gt=0"`
 	Quantity         int    `json:"quantity" validate:"required,numeric,non_zero_integer,gt=0"`
 	UserID           string `json:"user_id" validate:"required,xss_safe"`
 }
 
-type AddCartItemResponse struct {
+type AddOrUpdateCartItemResponse struct {
 	ID               int    `json:"id"`
 	UserID           string `json:"user_id"`
 	ProductID        int    `json:"product_id"`

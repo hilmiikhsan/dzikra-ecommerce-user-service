@@ -2,13 +2,18 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/ports"
 	productGroceryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/dto"
 	productImageDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/dto"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -130,4 +135,35 @@ func (r *cartRepository) FindListCartByUserID(ctx context.Context, userID uuid.U
 	}
 
 	return result, nil
+}
+
+func (r *cartRepository) UpdateCart(ctx context.Context, tx *sqlx.Tx, data *entity.Cart) (*entity.Cart, error) {
+	var res = new(entity.Cart)
+
+	err := tx.QueryRowContext(ctx, r.db.Rebind(queryUpdateCart),
+		data.UserID,
+		data.ProductID,
+		data.ProductVariantID,
+		data.Quantity,
+		data.ID,
+	).Scan(
+		&res.ID,
+		&res.UserID,
+		&res.ProductID,
+		&res.ProductVariantID,
+		&res.Quantity,
+		&res.CreatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			errMessage := fmt.Errorf("repository::UpdateCart - cart with id %d is not found", data.ID)
+			log.Error().Err(err).Msg(errMessage.Error())
+			return nil, errors.New(constants.ErrCartNotFound)
+		}
+
+		log.Error().Err(err).Any("payload", data).Msg("repository::UpdateCart - Failed to update cart")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return res, nil
 }

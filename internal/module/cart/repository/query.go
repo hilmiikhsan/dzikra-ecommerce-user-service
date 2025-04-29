@@ -49,4 +49,21 @@ const (
 		WHERE c.user_id = $1 AND c.deleted_at IS NULL
 		ORDER BY c.id, pi.sort
 	`
+
+	queryUpdateCart = `
+		UPDATE carts
+		SET
+			user_id = ?,
+			product_id = ?,
+			product_variant_id = ?,
+			quantity = ?
+		WHERE id = ? AND deleted_at IS NULL
+		RETURNING
+			id, 
+			user_id, 
+			product_id, 
+			product_variant_id, 
+			quantity, 
+			created_at
+	`
 )
