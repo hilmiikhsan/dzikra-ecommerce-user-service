@@ -86,18 +86,18 @@ func (s *cartService) AddCartItem(ctx context.Context, req *dto.AddOrUpdateCartI
 	}, nil
 }
 
-func (s *cartService) GetListCart(ctx context.Context, userID string) (*[]dto.GetListCartResponse, error) {
+func (s *cartService) GetListCartItem(ctx context.Context, userID string) (*[]dto.GetListCartResponse, error) {
 	// convert user id to uuid
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		log.Error().Err(err).Msg("service::GetListCart - failed to parse user id")
+		log.Error().Err(err).Msg("service::GetListCartItem - failed to parse user id")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
 	// get cart by user id
 	carts, err := s.cartRepository.FindListCartByUserID(ctx, userUUID)
 	if err != nil {
-		log.Error().Err(err).Msg("service::GetListCart - failed to get cart by user id")
+		log.Error().Err(err).Msg("service::GetListCartItem - failed to get cart by user id")
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
@@ -185,4 +185,40 @@ func (s *cartService) UpdateCartItem(ctx context.Context, req *dto.AddOrUpdateCa
 		Quantity:         res.Quantity,
 		CreatedAt:        utils.FormatTime(res.CreatedAt),
 	}, nil
+}
+
+func (s *cartService) DeleteCartItem(ctx context.Context, id int) error {
+	// Begin transaction
+	tx, err := s.db.Beginx()
+	if err != nil {
+		log.Error().Err(err).Msg("service::DeleteCartItem - Failed to begin transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				log.Error().Err(rollbackErr).Msg("service::DeleteCartItem - Failed to rollback transaction")
+			}
+		}
+	}()
+
+	// delete cart
+	err = s.cartRepository.DeleteCartByID(ctx, tx, id)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrCartNotFound) {
+			log.Error().Err(err).Msg("service::DeleteCartItem - cart not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrCartNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::DeleteCartItem - Failed to delete cart")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// commit transaction
+	if err = tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("service::DeleteCartItem - failed to commit transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
 }

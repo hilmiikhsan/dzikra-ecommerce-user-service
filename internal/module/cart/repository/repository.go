@@ -12,8 +12,6 @@ import (
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/ports"
 	productGroceryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/dto"
 	productImageDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/dto"
-	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
-	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -162,8 +160,30 @@ func (r *cartRepository) UpdateCart(ctx context.Context, tx *sqlx.Tx, data *enti
 		}
 
 		log.Error().Err(err).Any("payload", data).Msg("repository::UpdateCart - Failed to update cart")
-		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		return nil, err
 	}
 
 	return res, nil
+}
+
+func (r *cartRepository) DeleteCartByID(ctx context.Context, tx *sqlx.Tx, id int) error {
+	result, err := r.db.ExecContext(ctx, r.db.Rebind(queryDeleteCartByID), id)
+	if err != nil {
+		log.Error().Err(err).Int("id", id).Msg("repository::DeleteCartByID - Failed to soft delete cart")
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Error().Err(err).Msg("repository::DeleteCartByID - Failed to fetch rows affected")
+		return err
+	}
+
+	if rowsAffected == 0 {
+		errNotFound := errors.New(constants.ErrCartNotFound)
+		log.Error().Err(errNotFound).Int("id", id).Msg("repository::DeleteCartByID - Cart not found")
+		return errNotFound
+	}
+
+	return nil
 }

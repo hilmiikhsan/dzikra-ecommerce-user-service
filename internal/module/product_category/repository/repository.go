@@ -117,15 +117,22 @@ func (r *productCategoryRepository) FindProductCategoryByID(ctx context.Context,
 }
 
 func (r *productCategoryRepository) DeleteProductCategoryByID(ctx context.Context, id int) error {
-	_, err := r.db.ExecContext(ctx, r.db.Rebind(queryDeleteProductCategoryByID), id)
+	result, err := r.db.ExecContext(ctx, r.db.Rebind(queryDeleteProductCategoryByID), id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Error().Err(err).Int("id", id).Msg("repository::DeleteProductCategoryByID - Failed to delete product category by id")
-			return errors.New(constants.ErrProductCategoryNotFound)
-		}
-
-		log.Error().Err(err).Int("id", id).Msg("repository::DeleteProductCategoryByID - error deleting product category by id")
+		log.Error().Err(err).Int("id", id).Msg("repository::DeleteProductCategoryByID - Failed to soft delete Product category")
 		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Error().Err(err).Msg("repository::DeleteProductCategoryByID - Failed to fetch rows affected")
+		return err
+	}
+
+	if rowsAffected == 0 {
+		errNotFound := errors.New(constants.ErrProductCategoryNotFound)
+		log.Error().Err(errNotFound).Int("id", id).Msg("repository::DeleteProductCategoryByID - Product Category not found")
+		return errNotFound
 	}
 
 	return nil

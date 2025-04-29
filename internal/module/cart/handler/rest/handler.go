@@ -47,18 +47,18 @@ func (h *cartHandler) addToCartItem(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(response.Success(res, ""))
 }
 
-func (h *cartHandler) getListCart(c *fiber.Ctx) error {
+func (h *cartHandler) getListCartItem(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	userID, ok := c.Locals("user_id").(string)
 	if !ok || userID == "" {
-		log.Error().Msg("middleware::getListCart - user_id not found in context")
+		log.Error().Msg("middleware::getListCartItem - user_id not found in context")
 		return c.Status(fiber.StatusUnauthorized).JSON(response.Error(constants.ErrAccessTokenIsRequired))
 	}
 
-	res, err := h.service.GetListCart(ctx, userID)
+	res, err := h.service.GetListCartItem(ctx, userID)
 	if err != nil {
-		log.Error().Err(err).Msg("handler::getListCart - Failed to get list cart")
+		log.Error().Err(err).Msg("handler::getListCartItem - Failed to get list cart")
 		code, errs := err_msg.Errors[error](err)
 		return c.Status(code).JSON(response.Error(errs))
 	}
@@ -111,4 +111,35 @@ func (h *cartHandler) updateCartItem(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}
+
+func (h *cartHandler) deleteCartItem(c *fiber.Ctx) error {
+	var (
+		ctx       = c.Context()
+		cartIDStr = c.Params("cart_id")
+	)
+
+	if strings.Contains(cartIDStr, ":cart_id") {
+		log.Warn().Msg("handler::deleteCartItem - invalid cart ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid cart ID"))
+	}
+
+	id, err := strconv.Atoi(cartIDStr)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::deleteCartItem - Failed to convert id to int")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Failed to convert id to int"))
+	}
+
+	err = h.service.DeleteCartItem(ctx, id)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::deleteCartItem - Failed to delete cart item")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	resp := map[string]string{
+		"message": "Item berhasil dihapus dari keranjang.",
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(resp, ""))
 }

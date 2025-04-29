@@ -66,4 +66,8 @@ const (
 			quantity, 
 			created_at
 	`
+
+	queryDeleteCartByID = `
+		DELETE FROM carts WHERE id = ? AND deleted_at IS NULL
+	`
 )
