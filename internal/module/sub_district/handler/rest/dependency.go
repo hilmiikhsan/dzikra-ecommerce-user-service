@@ -3,6 +3,7 @@ package rest
 import (
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/adapter"
 	redisRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/redis"
+	rajaongkirPorts "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/integration/rajaongkir/service"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/sub_district/ports"
 	subDistrictService "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/sub_district/service"
 )
@@ -21,9 +22,12 @@ func NewSubDistrict() *subDistrict {
 	// redis
 	redisRepository := redisRepository.NewRedisRepository(adapter.Adapters.DzikraRedis)
 
+	// integration service
+	rajaongkirService := rajaongkirPorts.NewRajaongkirService(redisRepository)
+
 	// sub district service
 	subDistrictService := subDistrictService.NewSubDistrictService(
-		redisRepository,
+		rajaongkirService,
 	)
 
 	// handler

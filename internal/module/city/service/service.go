@@ -2,81 +2,21 @@ package service
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
-	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
-	rajaongkir "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/integration/rajaongkir/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/city/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
 	"github.com/rs/zerolog/log"
 )
 
 func (s *cityService) GetListCity(ctx context.Context, provinceID int) ([]dto.GetListCityResponse, error) {
-	// declare key cache list city
-	key := fmt.Sprintf("%s:%d", constants.CacheKeyCitys, provinceID)
-
-	// 1) Try load from cache
-	if cached, err := s.redisRepository.Get(ctx, key); err == nil && cached != "" {
-		var out []dto.GetListCityResponse
-		if err := json.Unmarshal([]byte(cached), &out); err == nil {
-			log.Debug().Msg("service::GetCityResponse - cache HIT")
-			return out, nil
-		}
-
-		log.Warn().Err(err).Msg("service::GetCityResponse - invalid cache, fetching fresh")
-	}
-
-	// cache not found or invalid, fetch from RajaOngkir API
-	url := fmt.Sprintf("%s/city?province=%d", config.Envs.RajaOngkir.BaseURL, provinceID)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	// get lis city
+	cityResults, err := s.rajaongkirService.GetListCity(ctx, provinceID)
 	if err != nil {
-		log.Error().Err(err).Msg("service::GetCityResponse - NewRequest failed")
+		log.Error().Err(err).Msg("service::GetListCity - Failed to get list city")
 		return nil, err_msg.NewCustomErrors(http.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
-	// set headers
-	req.Header.Set("key", config.Envs.RajaOngkir.ApiKey)
-
-	// Send request
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error().Err(err).Msg("service::GetCityResponse - HTTP request failed")
-		return nil, err_msg.NewCustomErrors(http.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
-	}
-	defer resp.Body.Close()
-
-	// decode json response
-	var payload rajaongkir.RajaOngkirCityPayload
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-		log.Error().Err(err).Msg("service::GetCityResponse - Decode JSON failed")
-		return nil, err_msg.NewCustomErrors(http.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
-	}
-
-	// mapping response data
-	out := make([]dto.GetListCityResponse, len(payload.Rajaongkir.Results))
-	for i, data := range payload.Rajaongkir.Results {
-		out[i] = dto.GetListCityResponse{
-			ID:           data.CityID,
-			City:         data.CityName,
-			Type:         data.Type,
-			ProvinceName: data.ProvinceName,
-			PostalCode:   data.PostalCode,
-		}
-	}
-
-	// set cache
-	if bytes, err := json.Marshal(out); err == nil {
-		if err := s.redisRepository.Set(ctx, key, string(bytes), constants.CacheTTL); err != nil {
-			log.Warn().Err(err).Msg("service::GetCityResponse - failed to set cache")
-		}
-	} else {
-		log.Warn().Err(err).Msg("service::GetCityResponse - failed to marshal cache data")
-	}
-
-	return out, nil
+	return cityResults, nil
 }

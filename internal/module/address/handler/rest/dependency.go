@@ -3,6 +3,7 @@ package rest
 import (
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/adapter"
 	redisRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/redis"
+	rajaongkirService "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/integration/rajaongkir/service"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/middleware"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/address/ports"
 	addressRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/address/repository"
@@ -37,10 +38,13 @@ func NewAddressHandler() *addressHandler {
 	// repository
 	addressRepository := addressRepository.NewAddressRepository(adapter.Adapters.DzikraPostgres)
 
+	// integration service
+	rajaongkirService := rajaongkirService.NewRajaongkirService(redisRepository)
+
 	// service
-	provinceService := provinceService.NewProvinceService(redisRepository)
-	cityService := cityService.NewCityService(redisRepository)
-	subDistrictPorts := subDistrictPorts.NewSubDistrictService(redisRepository)
+	provinceService := provinceService.NewProvinceService(rajaongkirService)
+	cityService := cityService.NewCityService(rajaongkirService)
+	subDistrictPorts := subDistrictPorts.NewSubDistrictService(rajaongkirService)
 
 	// address service
 	addressService := addressService.NewAddressService(

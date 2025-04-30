@@ -1,20 +1,20 @@
 package service
 
 import (
-	redisPorts "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/redis/ports"
+	rajaongkirPorts "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/integration/rajaongkir/ports"
 	cityPorts "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/city/ports"
 )
 
 var _ cityPorts.CityService = &cityService{}
 
 type cityService struct {
-	redisRepository redisPorts.RedisRepository
+	rajaongkirService rajaongkirPorts.RajaongkirService
 }
 
 func NewCityService(
-	redisRepository redisPorts.RedisRepository,
+	rajaongkirService rajaongkirPorts.RajaongkirService,
 ) *cityService {
 	return &cityService{
-		redisRepository: redisRepository,
+		rajaongkirService: rajaongkirService,
 	}
 }
