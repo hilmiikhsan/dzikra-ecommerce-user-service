@@ -1,15 +1,18 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/integration/rajaongkir/dto"
+	address "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/address/entity"
 	city "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/city/dto"
 	province "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/province/dto"
 	subDistrict "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/sub_district/dto"
@@ -207,4 +210,76 @@ func (s *rajaongkirService) GetListSubDistrict(ctx context.Context, districtID i
 	}
 
 	return out, nil
+}
+
+func (s *rajaongkirService) GetShippingCost(ctx context.Context, weight, courier string, address *address.Address) ([]dto.CostResult, error) {
+	key := fmt.Sprintf("%s:%d:%s:%s",
+		constants.CacheKeyShippingCost,
+		address.ID,
+		courier,
+		weight,
+	)
+
+	if cached, err := s.redisRepository.Get(ctx, key); err == nil && cached != "" {
+		var out []dto.CostResult
+
+		if err := json.Unmarshal([]byte(cached), &out); err == nil {
+			log.Debug().Msg("service::GetShippingCost - cache HIT")
+			return out, nil
+		}
+
+		log.Warn().Err(err).Msg("service::GetShippingCost - invalid cache, fetching fresh")
+	}
+
+	values := url.Values{}
+
+	if config.Envs.RajaOngkir.ApiKeyType == "BASIC" {
+		values.Set("origin", config.Envs.RajaOngkir.OriginCityID)
+		values.Set("destination", address.CityVendorID)
+	} else {
+		values.Set("origin", config.Envs.RajaOngkir.OriginSubDistrictID)
+		values.Set("originType", "subdistrict")
+		values.Set("destination", address.SubDistrictVendorID)
+		values.Set("destinationType", "subdistrict")
+	}
+
+	values.Set("weight", weight)
+	values.Set("courier", courier)
+
+	endpoint := fmt.Sprintf("%s/cost", config.Envs.RajaOngkir.BaseURL)
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewBufferString(values.Encode()))
+	if err != nil {
+		log.Error().Err(err).Msg("service::CalculateShippingCost - failed to build request")
+		return nil, err_msg.NewCustomErrors(http.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	httpReq.Header.Set("key", config.Envs.RajaOngkir.ApiKey)
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		log.Error().Err(err).Msg("service::CalculateShippingCost - API call failed")
+		return nil, err_msg.NewCustomErrors(http.StatusBadGateway, err_msg.WithMessage(constants.ErrExternalServiceUnavailable))
+	}
+	defer resp.Body.Close()
+
+	var payload dto.RajaOngkirCostPayload
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		log.Error().Err(err).Msg("rajaongkir::GetShippingCost - decode failed")
+		return nil, err_msg.NewCustomErrors(http.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	results := payload.Rajaongkir.Results
+
+	if data, err := json.Marshal(results); err == nil {
+		if err := s.redisRepository.Set(ctx, key, string(data), constants.CacheShippingCostTTL); err != nil {
+			log.Warn().Err(err).Msg("service::GetShippingCost - failed to set cache")
+		}
+	} else {
+		log.Warn().Err(err).Msg("service::GetShippingCost - failed to marshal cache data")
+	}
+
+	return results, nil
 }

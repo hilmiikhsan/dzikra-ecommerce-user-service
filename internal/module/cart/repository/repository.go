@@ -75,6 +75,8 @@ func (r *cartRepository) FindListCartByUserID(ctx context.Context, userID uuid.U
 				ProductRealPrice:            row.ProductRealPrice,
 				ProductDiscountPrice:        row.ProductDiscountPrice,
 				ProductStock:                row.ProductStock,
+				ProductWeight:               row.ProductWeight,
+				ProductVariantWeight:        float64(row.ProductVariantWeight.Float64),
 				ProductVariantName:          row.ProductVariantName,
 				ProductGrocery:              []productGroceryDto.ProductGrocery{},
 				ProductVariantSubName:       row.ProductVariantSubName.String,

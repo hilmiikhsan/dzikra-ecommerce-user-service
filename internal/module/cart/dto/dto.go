@@ -30,6 +30,8 @@ type GetListCartResponse struct {
 	ProductRealPrice            string                          `json:"product_real_price"`
 	ProductDiscountPrice        string                          `json:"product_discount_price"`
 	ProductStock                int                             `json:"product_stock"`
+	ProductWeight               float64                         `json:"product_weight"`
+	ProductVariantWeight        float64                         `json:"product_variant_weight"`
 	ProductVariantName          string                          `json:"product_variant_name"`
 	ProductGrocery              []productGrocery.ProductGrocery `json:"product_grocery"`
 	ProductVariantSubName       string                          `json:"product_variant_sub_name"`

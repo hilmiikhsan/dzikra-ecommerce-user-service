@@ -42,4 +42,6 @@ var (
 	ErrBannerNotFound                      = "Banner not found"
 	ErrAddressNotFound                     = "Address not found"
 	ErrCartNotFound                        = "Cart not found"
+	ErrCartItemIsEmpty                     = "Cart item is empty"
+	ErrExternalServiceUnavailable          = "External service unavailable"
 )

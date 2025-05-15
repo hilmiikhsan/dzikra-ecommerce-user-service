@@ -29,7 +29,7 @@ func NewJWT(db redisPorts.RedisRepository) *jwtHandler {
 func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClaimsPayload) (*GenerateTokenResponse, error) {
 	// Hapus token lama berdasarkan pola lama (jika masih diperlukan, namun pada multiple session sebaiknya dihapus berdasarkan sessionID tertentu)
 	for _, tokenType := range []string{constants.AccessTokenType, constants.RefreshTokenType} {
-		key := fmt.Sprintf("%s:%s", payload.Email, tokenType)
+		key := fmt.Sprintf("%s:%s:%s", payload.Email, payload.SessionID, tokenType)
 		err := j.db.Del(ctx, key)
 		if err != nil {
 			log.Error().Err(err).Msgf("jwthandler::GenerateTokenString - Error while deleting %s from Redis", tokenType)

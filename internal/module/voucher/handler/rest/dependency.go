@@ -39,7 +39,7 @@ func NewVoucherHandler() *voucherHandler {
 	voucherUsageRepository := voucherUsageRepository.NewVoucherUsageRepository(adapter.Adapters.DzikraPostgres)
 
 	// service
-	userService := service.NewVoucherService(
+	voucherService := service.NewVoucherService(
 		adapter.Adapters.DzikraPostgres,
 		voucherRepository,
 		voucherTypeRepository,
@@ -47,7 +47,7 @@ func NewVoucherHandler() *voucherHandler {
 	)
 
 	// handler
-	handler.service = userService
+	handler.service = voucherService
 	handler.middleware = *middlewareHandler
 	handler.validator = validator
 

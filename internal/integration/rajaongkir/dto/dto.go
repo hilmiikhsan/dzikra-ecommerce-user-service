@@ -38,3 +38,23 @@ type SubDistrictResult struct {
 	ProvinceName    string `json:"province"`
 	SubDistrictName string `json:"subdistrict_name"`
 }
+
+type RajaOngkirCostPayload struct {
+	Rajaongkir struct {
+		Results []CostResult `json:"results"`
+	} `json:"rajaongkir"`
+}
+
+type CostResult struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+	Cost []struct {
+		Service     string `json:"service"`
+		Description string `json:"description"`
+		Cost        []struct {
+			Value int    `json:"value"`
+			Etd   string `json:"etd"`
+			Note  string `json:"note"`
+		} `json:"cost"`
+	} `json:"costs"`
+}

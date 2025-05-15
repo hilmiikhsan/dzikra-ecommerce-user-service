@@ -11,6 +11,7 @@ import (
 	productSubCategory "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/handler/rest"
 	province "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/province/handler/rest"
 	role "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/handler/rest"
+	shipping "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/shipping/handler/rest"
 	subDistrict "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/sub_district/handler/rest"
 	user "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/handler/rest"
 	voucher "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/voucher/handler/rest"
@@ -39,6 +40,7 @@ func SetupRoutes(app *fiber.App) {
 	subDistrict.NewSubDistrict().SubDistrictRoute(publicAPI)
 	address.NewAddressHandler().AddressRoute(userAPI)
 	cart.NewCartHandler().CartRoute(userAPI)
+	shipping.NewShippingHandler().ShippingRoute(userAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {
