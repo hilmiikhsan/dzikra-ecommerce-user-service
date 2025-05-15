@@ -214,3 +214,66 @@ func (s *voucherService) RemoveVoucher(ctx context.Context, id int) error {
 
 	return nil
 }
+
+func (s *voucherService) VoucherUse(ctx context.Context, req *dto.VoucherUseRequest, userID string) (*dto.VoucherUseResponse, error) {
+	// check if voucher code already exists
+	voucher, err := s.voucherRepository.FindVoucherByCode(ctx, req.Code)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrVoucherNotFound) {
+			log.Error().Err(err).Msg("service::VoucherUse - voucher not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrVoucherNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::VoucherUse - error finding voucher by code")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// check if voucher is expired
+	if utils.IsVoucherExpired(voucher.EndAt) {
+		log.Error().Err(err).Msg("service::VoucherUse - voucher is expired")
+		return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage(constants.ErrVoucherExpired))
+	}
+
+	// check if voucher is has been run out
+	if voucher.VoucherQuota <= 0 {
+		log.Error().Err(err).Msg("service::VoucherUse - Voucher has been run out")
+		return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage(constants.ErrVoucherHasBeenRunOut))
+	}
+
+	// check if voucher is already used
+	voucherUsage, err := s.voucherUsageRepository.FindVoucherUsageByVoucherIdAndUserId(ctx, voucher.ID, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("service::VoucherUse - error finding voucher usage by voucher id and user id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	if voucherUsage != nil && voucherUsage.IsUse {
+		log.Error().Err(err).Msg("service::VoucherUse - voucher already used")
+		return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrVoucherAlreadyUsed))
+	}
+
+	// insert new voucher usage
+	if err := s.voucherUsageRepository.InsertNewVoucherUsage(ctx, voucher.ID, userID); err != nil {
+		if strings.Contains(err.Error(), constants.ErrVoucherHasBeenRunOut) {
+			log.Error().Err(err).Msg("service::VoucherUse - voucher usage already used")
+			return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage(constants.ErrVoucherHasBeenRunOut))
+		}
+
+		log.Error().Err(err).Msg("service::VoucherUse - error inserting new voucher usage")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// create response
+	res := &dto.VoucherUseResponse{
+		ID:            voucher.ID,
+		Name:          voucher.Name,
+		VoucherQuota:  voucher.VoucherQuota,
+		Code:          voucher.Code,
+		Discount:      voucher.Discount,
+		VoucherTypeID: voucher.VoucherType,
+		CreatedAt:     utils.FormatTime(voucher.CreatedAt),
+		StartAt:       utils.FormatToWIB(voucher.StartAt),
+		EndAt:         utils.FormatToWIB(voucher.EndAt),
+	}
+
+	return res, nil
+}

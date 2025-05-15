@@ -44,4 +44,7 @@ var (
 	ErrCartNotFound                        = "Cart not found"
 	ErrCartItemIsEmpty                     = "Cart item is empty"
 	ErrExternalServiceUnavailable          = "External service unavailable"
+	ErrVoucherHasBeenRunOut                = "Voucher has been run out"
+	ErrVoucherExpired                      = "Voucher is expired"
+	ErrVoucherAlreadyUsed                  = "Voucher already used"
 )

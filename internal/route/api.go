@@ -33,7 +33,7 @@ func SetupRoutes(app *fiber.App) {
 	productCategory.NewProductCategoryHandler().ProductCategoryRoute(publicAPI, superadminAPI)
 	productSubCategory.NewProductSubCategoryHandler().ProductSubCategoryRoute(publicAPI, superadminAPI)
 	product.NewProductHandler().ProductRoute(publicAPI, superadminAPI)
-	voucher.NewVoucherHandler().VoucherRoute(superadminAPI)
+	voucher.NewVoucherHandler().VoucherRoute(superadminAPI, userAPI)
 	banner.NewBannerHandler().BannerRoute(publicAPI, superadminAPI)
 	province.NewProvinceHandler().ProvinceRoute(publicAPI)
 	city.NewCityHandler().CityRoute(publicAPI)

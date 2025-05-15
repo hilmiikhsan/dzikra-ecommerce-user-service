@@ -87,4 +87,24 @@ const (
 			deleted_at = NOW() 
 		WHERE id = ? AND deleted_at IS NULL
 	`
+
+	queryFindVoucherByCode = `
+		SELECT
+			v.id,
+			v.name,
+			v.voucher_quota,
+			v.code,
+			v.discount,
+			v.start_at,
+			v.end_at,
+			v.voucher_type_id,
+			v.created_at,
+			vt.type AS voucher_type
+		FROM vouchers v
+		LEFT JOIN voucher_types vt ON v.voucher_type_id = vt.id
+		WHERE 
+			v.deleted_at IS NULL 
+			AND v.code = ?
+		LIMIT 1
+	`
 )

@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/middleware"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/voucher/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/response"
@@ -118,4 +119,32 @@ func (h *voucherHandler) removeVoucher(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.Success("OK", ""))
+}
+
+func (h *voucherHandler) voucherUse(c *fiber.Ctx) error {
+	var (
+		ctx    = c.Context()
+		req    = new(dto.VoucherUseRequest)
+		locals = middleware.GetLocals(c)
+	)
+
+	if err := c.BodyParser(req); err != nil {
+		log.Warn().Err(err).Msg("handler::voucherUse - Failed to parse request body")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Failed to parse request body"))
+	}
+
+	if err := h.validator.Validate(req); err != nil {
+		log.Warn().Err(err).Msg("handler::voucherUse - Invalid request body")
+		code, errs := err_msg.Errors(err, req)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	res, err := h.service.VoucherUse(ctx, req, locals.UserID)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::voucherUse - Failed to use voucher")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
 }

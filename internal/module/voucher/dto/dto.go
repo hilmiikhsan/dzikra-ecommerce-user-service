@@ -41,3 +41,19 @@ type GetListVoucher struct {
 	StartAt       string `json:"start_at"`
 	EndAt         string `json:"end_at"`
 }
+
+type VoucherUseRequest struct {
+	Code string `json:"code" validate:"required,min=3,max=15,xss_safe"`
+}
+
+type VoucherUseResponse struct {
+	ID            int    `json:"id"`
+	Name          string `json:"name"`
+	VoucherQuota  int    `json:"voucher_quota"`
+	Code          string `json:"code"`
+	Discount      int    `json:"discount"`
+	VoucherTypeID string `json:"voucher_type_id"`
+	CreatedAt     string `json:"created_at"`
+	StartAt       string `json:"start_at"`
+	EndAt         string `json:"end_at"`
+}
