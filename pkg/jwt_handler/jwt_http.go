@@ -64,6 +64,7 @@ func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClai
 			DeviceID:   payload.DeviceID,
 			DeviceType: payload.DeviceType,
 			FcmToken:   payload.FcmToken,
+			UserRoles:  payload.UserRoles,
 			CreatedAt:  now,
 			RegisteredClaims: jwt.RegisteredClaims{
 				Subject:   "user",

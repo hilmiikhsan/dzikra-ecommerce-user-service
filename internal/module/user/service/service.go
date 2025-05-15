@@ -372,21 +372,6 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 		return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage(constants.ErrEmailOrPasswordIsIncorrect))
 	}
 
-	// generate token
-	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
-		UserID:     userResult.ID.String(),
-		Email:      userResult.Email,
-		FullName:   userResult.FullName,
-		SessionID:  utils.GenerateSessionUUID(),
-		DeviceID:   req.DeviceID,
-		DeviceType: req.DeviceType,
-		FcmToken:   req.FcmToken,
-	})
-	if err != nil {
-		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to generate token string")
-		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
-	}
-
 	// get user profile
 	userProfileResult, err := s.userProfileRepository.FindByUserID(ctx, userResult.ID.String())
 	if err != nil {
@@ -408,6 +393,22 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 	userRoleMap := utils.MapUserRoleResponse(userRolePermissionResults)
+
+	// generate token
+	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
+		UserID:     userResult.ID.String(),
+		Email:      userResult.Email,
+		FullName:   userResult.FullName,
+		SessionID:  utils.GenerateSessionUUID(),
+		DeviceID:   req.DeviceID,
+		DeviceType: req.DeviceType,
+		FcmToken:   req.FcmToken,
+		UserRoles:  userRoleMap,
+	})
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to generate token string")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
 
 	// Begin transaction
 	tx, err := s.db.Begin()
@@ -621,21 +622,6 @@ func (s *userService) RefreshToken(ctx context.Context, accessToken string, loca
 		return nil, err_msg.NewCustomErrors(fiber.StatusUnauthorized, err_msg.WithMessage(constants.ErrInvalidAccessToken))
 	}
 
-	// generate new token
-	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
-		UserID:     claims.UserID,
-		Email:      claims.Email,
-		FullName:   claims.FullName,
-		SessionID:  utils.GenerateSessionUUID(),
-		DeviceID:   claims.DeviceID,
-		DeviceType: claims.DeviceType,
-		FcmToken:   claims.FcmToken,
-	})
-	if err != nil {
-		log.Error().Err(err).Any("payload", claims).Msg("service::RefreshToken - Failed to generate token string")
-		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
-	}
-
 	// find user by id
 	userResult, err := s.userRepository.FindByID(ctx, claims.UserID)
 	if err != nil {
@@ -664,6 +650,22 @@ func (s *userService) RefreshToken(ctx context.Context, accessToken string, loca
 		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 	userRoleMap := utils.MapUserRoleResponse(userRolePermissionResults)
+
+	// generate new token
+	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
+		UserID:     claims.UserID,
+		Email:      claims.Email,
+		FullName:   claims.FullName,
+		SessionID:  utils.GenerateSessionUUID(),
+		DeviceID:   claims.DeviceID,
+		DeviceType: claims.DeviceType,
+		FcmToken:   claims.FcmToken,
+		UserRoles:  userRoleMap,
+	})
+	if err != nil {
+		log.Error().Err(err).Any("payload", claims).Msg("service::RefreshToken - Failed to generate token string")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
 
 	// mapping refresh token response data
 	res = &dto.AuthUserResponse{
