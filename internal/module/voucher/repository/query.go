@@ -107,4 +107,20 @@ const (
 			AND v.code = ?
 		LIMIT 1
 	`
+
+	queryFindVoucherByID = `
+		SELECT
+			id,
+			name,
+			voucher_quota,
+			code,
+			discount,
+			start_at,
+			end_at,
+			created_at
+		FROM vouchers
+		WHERE 
+			deleted_at IS NULL 
+			AND id = ?
+	`
 )

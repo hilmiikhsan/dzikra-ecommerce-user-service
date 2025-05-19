@@ -29,4 +29,16 @@ const (
 			deleted_at = NOW() 
 		WHERE product_id = ? AND deleted_at IS NULL
 	`
+
+	queryFindProductGroceryByProductID = `
+		SELECT
+			id,
+			min_buy,
+			discount,
+			product_id
+		FROM product_groceries
+		WHERE 
+			product_id = ? 
+			AND deleted_at IS NULL
+	`
 )

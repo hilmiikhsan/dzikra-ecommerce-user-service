@@ -209,3 +209,29 @@ func (r *voucherRepository) FindVoucherByCode(ctx context.Context, code string) 
 
 	return res, nil
 }
+
+func (r *voucherRepository) FindVoucherByID(ctx context.Context, id int) (*entity.Voucher, error) {
+	var res = new(entity.Voucher)
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryFindVoucherByID), id).Scan(
+		&res.ID,
+		&res.Name,
+		&res.VoucherQuota,
+		&res.Code,
+		&res.Discount,
+		&res.StartAt,
+		&res.EndAt,
+		&res.CreatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Msg("repository::FindVoucherByID - voucher not found")
+			return nil, errors.New(constants.ErrVoucherNotFound)
+		}
+
+		log.Error().Err(err).Msg("repository::FindVoucherByID - error finding voucher by id")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return res, nil
+}

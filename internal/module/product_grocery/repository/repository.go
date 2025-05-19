@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/ports"
 	"github.com/jmoiron/sqlx"
@@ -82,4 +83,31 @@ func (r *productGroceryRepository) SoftDeleteProductGroceriesByProductID(ctx con
 	}
 
 	return nil
+}
+
+func (r *productGroceryRepository) FindProductGroceryByProductID(ctx context.Context, productID int) ([]dto.GroceryPrice, error) {
+	var res []dto.GroceryPrice
+
+	rows, err := r.db.QueryContext(ctx, r.db.Rebind(queryFindProductGroceryByProductID), productID)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::FindProductGroceryByProductID - error finding product grocery by product ID")
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var item dto.GroceryPrice
+		if err := rows.Scan(
+			&item.ID,
+			&item.MinBuy,
+			&item.Discount,
+		); err != nil {
+			log.Error().Err(err).Msg("repository::FindProductGroceryByProductID - error scanning row")
+			return nil, err
+		}
+
+		res = append(res, item)
+	}
+
+	return res, nil
 }

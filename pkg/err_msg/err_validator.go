@@ -211,6 +211,9 @@ func errorValidationHandler[T any](err error, payload *T) (int, map[string][]str
 		case "number":
 			message = fmt.Sprintf("%s must be a number.", fieldInMsg)
 			// message = fmt.Sprintf("%s harus angka.", fieldInMsg)
+		case "url":
+			message = fmt.Sprintf("%s is not a valid URL.", fieldInMsg)
+			// message = fmt.Sprintf("%s bukan URL yang valid.", fieldInMsg)
 		}
 
 		errorMessages[field] = append(errorMessages[field], message)

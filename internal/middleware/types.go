@@ -1,18 +1,21 @@
 package middleware
 
 import (
+	role "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/dto"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )
 
 type Locals struct {
-	UserID     string
-	Email      string
-	FullName   string
-	SessionID  string
-	DeviceID   string
-	DeviceType string
-	FcmToken   string
+	UserID      string
+	Email       string
+	FullName    string
+	SessionID   string
+	DeviceID    string
+	DeviceType  string
+	FcmToken    string
+	UserRoles   []role.UserRoleDetail
+	PhoneNumber string
 }
 
 func GetLocals(c *fiber.Ctx) *Locals {
@@ -66,6 +69,20 @@ func GetLocals(c *fiber.Ctx) *Locals {
 		log.Warn().Msg("middleware::Locals-GetLocals failed to get fcm_token from locals")
 	}
 
+	userRoles, ok := c.Locals("user_roles").([]role.UserRoleDetail)
+	if ok {
+		l.UserRoles = userRoles
+	} else {
+		log.Warn().Msg("middleware::Locals-GetLocals failed to get user_roles from locals")
+	}
+
+	phoneNumber, ok := c.Locals("phone_number").(string)
+	if ok {
+		l.PhoneNumber = phoneNumber
+	} else {
+		log.Warn().Msg("middleware::Locals-GetLocals failed to get phone_number from locals")
+	}
+
 	return &l
 }
 
@@ -95,4 +112,12 @@ func (l *Locals) GetDeviceType() string {
 
 func (l *Locals) GetFcmToken() string {
 	return l.FcmToken
+}
+
+func (l *Locals) GetUserRoles() []role.UserRoleDetail {
+	return l.UserRoles
+}
+
+func (l *Locals) GetPhoneNumber() string {
+	return l.PhoneNumber
 }

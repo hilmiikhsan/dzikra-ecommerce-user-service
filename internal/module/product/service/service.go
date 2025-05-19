@@ -32,7 +32,7 @@ func (s *productService) CreateProduct(ctx context.Context, req *dto.ProductData
 	productCategoryID, err := strconv.Atoi(req.CategoryID)
 	if err != nil {
 		log.Error().Err(err).Msg("service::CreateProduct - error converting categoryID to int")
-		return nil, err
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
 	// check product category if exist

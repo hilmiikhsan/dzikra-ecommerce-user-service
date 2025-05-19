@@ -105,7 +105,7 @@ func (s *userService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 		userProfileData := &userProfile.UserProfile{
 			ID:          userProfileID,
 			UserID:      userID,
-			PhoneNumber: &req.PhoneNumber,
+			PhoneNumber: req.PhoneNumber,
 		}
 
 		res, err = s.userRepository.InsertNewUser(ctx, tx, userData)
@@ -396,14 +396,15 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 
 	// generate token
 	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
-		UserID:     userResult.ID.String(),
-		Email:      userResult.Email,
-		FullName:   userResult.FullName,
-		SessionID:  utils.GenerateSessionUUID(),
-		DeviceID:   req.DeviceID,
-		DeviceType: req.DeviceType,
-		FcmToken:   req.FcmToken,
-		UserRoles:  userRoleMap,
+		UserID:      userResult.ID.String(),
+		Email:       userResult.Email,
+		FullName:    userResult.FullName,
+		SessionID:   utils.GenerateSessionUUID(),
+		DeviceID:    req.DeviceID,
+		DeviceType:  req.DeviceType,
+		FcmToken:    req.FcmToken,
+		UserRoles:   userRoleMap,
+		PhoneNumber: userProfileResult.PhoneNumber,
 	})
 	if err != nil {
 		log.Error().Err(err).Any("payload", req).Msg("service::Login - Failed to generate token string")
@@ -481,7 +482,7 @@ func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 			CreatedAt: utils.FormatToWIB(*userResult.EmailVerifiedAt),
 		},
 		FullName:    userResult.FullName,
-		PhoneNumber: *userProfileResult.PhoneNumber,
+		PhoneNumber: userProfileResult.PhoneNumber,
 		Token: dto.TokenDetail{
 			Token:     result.AccessToken,
 			ExpiredAt: utils.FormatToWIB(result.TokenExpiredAt),
@@ -601,7 +602,7 @@ func (s *userService) GetCurrentUser(ctx context.Context, locals *middleware.Loc
 			CreatedAt: utils.FormatToWIB(*userResult.EmailVerifiedAt),
 		},
 		FullName:    userResult.FullName,
-		PhoneNumber: *userProfileResult.PhoneNumber,
+		PhoneNumber: userProfileResult.PhoneNumber,
 		UserRole:    userRoleMap,
 	}
 
@@ -653,14 +654,15 @@ func (s *userService) RefreshToken(ctx context.Context, accessToken string, loca
 
 	// generate new token
 	result, err := s.jwt.GenerateTokenString(ctx, jwt_handler.CostumClaimsPayload{
-		UserID:     claims.UserID,
-		Email:      claims.Email,
-		FullName:   claims.FullName,
-		SessionID:  utils.GenerateSessionUUID(),
-		DeviceID:   claims.DeviceID,
-		DeviceType: claims.DeviceType,
-		FcmToken:   claims.FcmToken,
-		UserRoles:  userRoleMap,
+		UserID:      claims.UserID,
+		Email:       claims.Email,
+		FullName:    claims.FullName,
+		SessionID:   utils.GenerateSessionUUID(),
+		DeviceID:    claims.DeviceID,
+		DeviceType:  claims.DeviceType,
+		FcmToken:    claims.FcmToken,
+		UserRoles:   userRoleMap,
+		PhoneNumber: userProfileResult.PhoneNumber,
 	})
 	if err != nil {
 		log.Error().Err(err).Any("payload", claims).Msg("service::RefreshToken - Failed to generate token string")
@@ -675,7 +677,7 @@ func (s *userService) RefreshToken(ctx context.Context, accessToken string, loca
 			CreatedAt: utils.FormatToWIB(*userResult.EmailVerifiedAt),
 		},
 		FullName:    userResult.FullName,
-		PhoneNumber: *userProfileResult.PhoneNumber,
+		PhoneNumber: userProfileResult.PhoneNumber,
 		Token: dto.TokenDetail{
 			Token:     result.AccessToken,
 			ExpiredAt: utils.FormatToWIB(result.TokenExpiredAt),
@@ -982,7 +984,7 @@ func (s *userService) CreateUser(ctx context.Context, req *dto.CreateOrUpdateUse
 	userProfileData := &userProfile.UserProfile{
 		ID:          userProfileID,
 		UserID:      userID,
-		PhoneNumber: &req.PhoneNumber,
+		PhoneNumber: req.PhoneNumber,
 	}
 
 	// insert new user

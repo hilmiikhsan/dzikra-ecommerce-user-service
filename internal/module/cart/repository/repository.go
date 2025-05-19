@@ -189,3 +189,25 @@ func (r *cartRepository) DeleteCartByID(ctx context.Context, tx *sqlx.Tx, id int
 
 	return nil
 }
+
+func (r *cartRepository) DeleteCartByUserID(ctx context.Context, tx *sqlx.Tx, userID uuid.UUID) error {
+	result, err := tx.ExecContext(ctx, r.db.Rebind(queryDeleteCartByUserID), userID)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::DeleteCartByUserID - Failed to soft delete cart")
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Error().Err(err).Msg("repository::DeleteCartByUserID - Failed to fetch rows affected")
+		return err
+	}
+
+	if rowsAffected == 0 {
+		errNotFound := errors.New(constants.ErrCartNotFound)
+		log.Error().Err(errNotFound).Msg("repository::DeleteCartByUserID - Cart not found")
+		return errNotFound
+	}
+
+	return nil
+}

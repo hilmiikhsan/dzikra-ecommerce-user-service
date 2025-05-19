@@ -69,6 +69,12 @@ func (s *shippingService) CalculateShippingCost(ctx context.Context, req *dto.Ca
 		return nil, err_msg.NewCustomErrors(http.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
 	}
 
+	// check if costs is empty
+	if len(costs) == 0 || len(costs[0].Cost) == 0 {
+		log.Error().Msg("service::CalculateShippingCost - No shipping options returned")
+		return nil, err_msg.NewCustomErrors(http.StatusBadRequest, err_msg.WithMessage(constants.ErrNoShippingOptionReturned))
+	}
+
 	// map into module DTO
 	res := make([]dto.CalculateShippingCostResponse, len(costs))
 	for i, c := range costs {

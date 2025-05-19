@@ -38,9 +38,6 @@ type Config struct {
 		JwtTokenExpiration        string `env:"JWT_TOKEN_EXPIRATION" env-default:"15m"`
 		JwtRefreshTokenExpiration string `env:"JWT_REFRESH_TOKEN_EXPIRATION" env-default:"720h"`
 	}
-	Notification struct {
-		NotificationGrpcHost string `env:"NOTIFICATION_GRPC_HOST" env-default:"localhost:7001"`
-	}
 	DzikraPostgres struct {
 		Host     string `env:"DZIKRA_POSTGRES_HOST" env-default:"localhost"`
 		Port     string `env:"DZIKRA_POSTGRES_PORT" env-default:"5432"`
@@ -69,6 +66,12 @@ type Config struct {
 		BaseURL             string `env:"RAJAONGKIR_BASE_URL" env-default:""`
 		OriginCityID        string `env:"ORIGIN_CITY_ID" env-default:""`
 		OriginSubDistrictID string `env:"ORIGIN_SUBDISTRICT_ID" env-default:""`
+	}
+	Notification struct {
+		NotificationGrpcHost string `env:"NOTIFICATION_GRPC_HOST" env-default:"localhost:7001"`
+	}
+	Order struct {
+		OrderGrpcHost string `env:"ORDER_GRPC_HOST" env-default:"localhost:7002"`
 	}
 }
 
@@ -123,7 +126,6 @@ func (c *Configure) Initialize() {
 		Envs.Guard.JwtPrivateKey = utils.GetEnv("JWT_PRIVATE_KEY", Envs.Guard.JwtPrivateKey)
 		Envs.Guard.JwtTokenExpiration = utils.GetEnv("JWT_TOKEN_EXPIRATION", Envs.Guard.JwtTokenExpiration)
 		Envs.Guard.JwtRefreshTokenExpiration = utils.GetEnv("JWT_REFRESH_TOKEN_EXPIRATION", Envs.Guard.JwtRefreshTokenExpiration)
-		Envs.Notification.NotificationGrpcHost = utils.GetEnv("NOTIFICATION_GRPC_HOST", Envs.Notification.NotificationGrpcHost)
 		Envs.DzikraPostgres.Host = utils.GetEnv("DZIKRA_POSTGRES_HOST", Envs.DzikraPostgres.Host)
 		Envs.DzikraPostgres.Port = utils.GetEnv("DZIKRA_POSTGRES_PORT", Envs.DzikraPostgres.Port)
 		Envs.DzikraPostgres.Username = utils.GetEnv("DZIKRA_POSTGRES_USER", Envs.DzikraPostgres.Username)
@@ -145,6 +147,8 @@ func (c *Configure) Initialize() {
 		Envs.RajaOngkir.BaseURL = utils.GetEnv("RAJAONGKIR_BASE_URL", Envs.RajaOngkir.BaseURL)
 		Envs.RajaOngkir.OriginCityID = utils.GetEnv("ORIGIN_CITY_ID", Envs.RajaOngkir.OriginCityID)
 		Envs.RajaOngkir.OriginSubDistrictID = utils.GetEnv("ORIGIN_SUBDISTRICT_ID", Envs.RajaOngkir.OriginSubDistrictID)
+		Envs.Notification.NotificationGrpcHost = utils.GetEnv("NOTIFICATION_GRPC_HOST", Envs.Notification.NotificationGrpcHost)
+		Envs.Order.OrderGrpcHost = utils.GetEnv("ORDER_GRPC_HOST", Envs.Order.OrderGrpcHost)
 	})
 }
 

@@ -2,6 +2,7 @@ package validator
 
 import (
 	"encoding/json"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strings"
@@ -101,6 +102,9 @@ func NewValidator() *Validator {
 	}
 	if err := v.RegisterValidation("number", isInteger); err != nil {
 		log.Fatal().Err(err).Msg("Error while registering integer validator")
+	}
+	if err := v.RegisterValidation("url", isURL); err != nil {
+		log.Fatal().Err(err).Msg("Error while registering url validator")
 	}
 
 	validatorCustom.validator = v
@@ -345,4 +349,15 @@ func isValidTimeFormat(fl validator.FieldLevel) bool {
 
 	_, err := time.Parse("2006-01-02T15:04:05.000Z", val)
 	return err == nil
+}
+
+func isURL(fl validator.FieldLevel) bool {
+	s := fl.Field().String()
+	u, err := url.ParseRequestURI(s)
+	if err != nil {
+		return false
+	}
+
+	// only allow http or https
+	return (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
 }

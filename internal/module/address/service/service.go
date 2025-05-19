@@ -392,3 +392,36 @@ func (s *addressService) GetDetailAddress(ctx context.Context, addressID int, us
 		ReceivedName:        address.ReceivedName,
 	}, nil
 }
+
+func (s *addressService) GetAddressesByIds(ctx context.Context, ids []int64) ([]dto.GetAddressesByIdsResponse, error) {
+	addresses, err := s.addressRepository.FindAddressesByIds(ctx, ids)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetAddressesByIds - error fetching addresses by IDs")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	var result []dto.GetAddressesByIdsResponse
+	for _, address := range addresses {
+		var district string
+		if address.District.Valid {
+			district = address.District.String
+		}
+
+		result = append(result, dto.GetAddressesByIdsResponse{
+			ID:                  address.ID,
+			Province:            address.Province,
+			City:                address.City,
+			SubDistrict:         address.SubDistrict,
+			CityVendorID:        address.CityVendorID,
+			ProvinceVendorID:    address.ProvinceVendorID,
+			SubDistrictVendorID: address.SubDistrictVendorID,
+			Address:             address.Address,
+			PostalCode:          address.PostalCode,
+			ReceivedName:        address.ReceivedName,
+			District:            district,
+			UserID:              address.UserID.String(),
+		})
+	}
+
+	return result, nil
+}

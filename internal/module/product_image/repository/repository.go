@@ -7,6 +7,7 @@ import (
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/ports"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 )
 
@@ -143,4 +144,31 @@ func (r *productImageRepository) SoftDeleteProductImagesByProductID(ctx context.
 	}
 
 	return nil
+}
+
+func (r *productImageRepository) FindImagesByProductIds(ctx context.Context, productIDs []int64) ([]entity.ProductImage, error) {
+	if len(productIDs) == 0 {
+		log.Warn().Msg("repository::GetImagesByProductIds - no product IDs provided")
+		return nil, nil
+	}
+
+	query := `
+        SELECT id, image_url, sort, product_id
+        FROM product_images
+        WHERE product_id = ANY($1)
+          AND deleted_at IS NULL
+        ORDER BY product_id, sort
+    `
+
+	var imgs []entity.ProductImage
+	err := r.db.SelectContext(ctx, &imgs, query, pq.Array(productIDs))
+	if err != nil {
+		log.Error().Err(err).
+			Str("query", query).
+			Interface("ids", productIDs).
+			Msg("repository::GetImagesByProductIds - failed to query")
+		return nil, fmt.Errorf("GetImagesByProductIds: %w", err)
+	}
+
+	return imgs, nil
 }

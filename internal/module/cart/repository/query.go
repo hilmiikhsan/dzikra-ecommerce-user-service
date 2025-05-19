@@ -72,4 +72,8 @@ const (
 	queryDeleteCartByID = `
 		DELETE FROM carts WHERE id = ? AND deleted_at IS NULL
 	`
+
+	queryDeleteCartByUserID = `
+		DELETE FROM carts WHERE user_id = ? AND deleted_at IS NULL
+	`
 )

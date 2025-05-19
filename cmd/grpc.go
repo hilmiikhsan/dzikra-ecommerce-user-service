@@ -7,11 +7,17 @@ import (
 	"runtime"
 	"syscall"
 
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/cmd/proto/address"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/cmd/proto/cart"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/cmd/proto/product_image"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/cmd/proto/tokenvalidation"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/adapter"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
-	grpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/handler/grpc"
+	addressGrpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/address/handler/grpc"
+	cartGrpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/handler/grpc"
+	productImageGrpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/handler/grpc"
+	userGrpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/handler/grpc"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -55,7 +61,10 @@ func RunServeGRPC() {
 		log.Fatal().Err(err).Msg("Failed to sync adapters")
 	}
 
-	tokenvalidation.RegisterTokenValidationServer(grpcServer, grpcHandler.NewUserGrpcAPI())
+	tokenvalidation.RegisterTokenValidationServer(grpcServer, userGrpcHandler.NewUserGrpcAPI())
+	cart.RegisterCartServiceServer(grpcServer, cartGrpcHandler.NewCartGrpcAPI())
+	product_image.RegisterProductImageServiceServer(grpcServer, productImageGrpcHandler.NewProductImageGrpcAPI())
+	address.RegisterAddressServiceServer(grpcServer, addressGrpcHandler.NewAddressGrpcAPI())
 
 	go func() {
 		log.Info().Msgf("gRPC server is running on port %s", envs.App.GrpcPort)

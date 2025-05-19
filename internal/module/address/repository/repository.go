@@ -186,3 +186,44 @@ func (r *addressRepository) FindDetailAddressByID(ctx context.Context, id int, u
 
 	return res, nil
 }
+
+func (r *addressRepository) FindAddressesByIds(ctx context.Context, ids []int64) ([]entity.Address, error) {
+	if len(ids) == 0 {
+		log.Error().Msg("repository::FindAddressesByIds - no ids provided")
+		return nil, nil
+	}
+
+	query, args, err := sqlx.In(`
+        SELECT 
+            id,
+            province,
+            province_vendor_id,
+            city,
+            city_vendor_id,
+            subdistrict,
+            subdistrict_vendor_id,
+            postal_code,
+            address,
+            received_name,
+            user_id
+        FROM addresses
+        WHERE id IN (?)
+    `, ids)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::FindAddressesByIds - failed to build query")
+		return nil, fmt.Errorf("addressRepository.GetByIDs: failed to build query: %w", err)
+	}
+
+	query = r.db.Rebind(query)
+
+	var out []entity.Address
+	if err := r.db.SelectContext(ctx, &out, query, args...); err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Msg("repository::FindAddressesByIds - no addresses found")
+			return []entity.Address{}, nil
+		}
+		return nil, fmt.Errorf("addressRepository.GetByIDs: failed to execute: %w", err)
+	}
+
+	return out, nil
+}

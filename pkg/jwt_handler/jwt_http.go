@@ -57,15 +57,16 @@ func (j *jwtHandler) GenerateTokenString(ctx context.Context, payload CostumClai
 	createToken := func(tokenType string, duration time.Duration) (string, time.Time, error) {
 		expireTime := now.Add(duration)
 		claims := CustomClaims{
-			UserID:     payload.UserID,
-			Email:      payload.Email,
-			FullName:   payload.FullName,
-			SessionID:  payload.SessionID,
-			DeviceID:   payload.DeviceID,
-			DeviceType: payload.DeviceType,
-			FcmToken:   payload.FcmToken,
-			UserRoles:  payload.UserRoles,
-			CreatedAt:  now,
+			UserID:      payload.UserID,
+			Email:       payload.Email,
+			FullName:    payload.FullName,
+			SessionID:   payload.SessionID,
+			DeviceID:    payload.DeviceID,
+			DeviceType:  payload.DeviceType,
+			FcmToken:    payload.FcmToken,
+			UserRoles:   payload.UserRoles,
+			PhoneNumber: payload.PhoneNumber,
+			CreatedAt:   now,
 			RegisteredClaims: jwt.RegisteredClaims{
 				Subject:   "user",
 				Issuer:    config.Envs.App.Name,

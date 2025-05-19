@@ -14,6 +14,7 @@ type VoucherRepository interface {
 	UpdateVoucher(ctx context.Context, data *entity.Voucher) (*entity.Voucher, error)
 	SoftDeleteVoucherByID(ctx context.Context, tx *sqlx.Tx, id int) error
 	FindVoucherByCode(ctx context.Context, code string) (*entity.Voucher, error)
+	FindVoucherByID(ctx context.Context, id int) (*entity.Voucher, error)
 }
 
 type VoucherService interface {

@@ -17,3 +17,11 @@ func FormatToWIB(t time.Time) string {
 	wibZone := time.FixedZone("WIB", 7*3600)
 	return t.In(wibZone).Format("2006-01-02T15:04:05-07:00")
 }
+
+func FormatTimeJakarta() time.Time {
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		return time.Now().UTC()
+	}
+	return time.Now().In(loc)
+}

@@ -15,6 +15,7 @@ type AddressRepository interface {
 	SoftDeleteAddressByID(ctx context.Context, tx *sqlx.Tx, id int, userID uuid.UUID) error
 	FindAllAddressByUserID(ctx context.Context, userID uuid.UUID) ([]dto.GetListAddressResponse, error)
 	FindDetailAddressByID(ctx context.Context, id int, userID uuid.UUID) (*entity.Address, error)
+	FindAddressesByIds(ctx context.Context, ids []int64) ([]entity.Address, error)
 }
 
 type AddressService interface {
@@ -23,4 +24,5 @@ type AddressService interface {
 	RemoveAddress(ctx context.Context, addressID int, userID string) error
 	GetListAddress(ctx context.Context, userID string) ([]dto.GetListAddressResponse, error)
 	GetDetailAddress(ctx context.Context, addressID int, userID string) (*dto.GetListAddressResponse, error)
+	GetAddressesByIds(ctx context.Context, ids []int64) ([]dto.GetAddressesByIdsResponse, error)
 }

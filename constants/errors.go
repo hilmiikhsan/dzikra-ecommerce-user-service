@@ -47,4 +47,6 @@ var (
 	ErrVoucherHasBeenRunOut                = "Voucher has been run out"
 	ErrVoucherExpired                      = "Voucher is expired"
 	ErrVoucherAlreadyUsed                  = "Voucher already used"
+	ErrNoShippingOptionReturned            = "No shipping option returned from external service"
+	ErrSelectedShippingOptionNotFound      = "Selected shipping option not found"
 )

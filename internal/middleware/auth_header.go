@@ -37,6 +37,7 @@ func (m *UserMiddleware) UserBearer(c *fiber.Ctx) error {
 	c.Locals("device_id", claims.DeviceID)
 	c.Locals("device_type", claims.DeviceType)
 	c.Locals("fcm_token", claims.FcmToken)
+	c.Locals("phone_number", claims.PhoneNumber)
 
 	// If the token is valid, pass the request to the next handler
 	return c.Next()
@@ -71,6 +72,7 @@ func (m *UserMiddleware) UserRefreshBearer(c *fiber.Ctx) error {
 	c.Locals("device_id", claims.DeviceID)
 	c.Locals("device_type", claims.DeviceType)
 	c.Locals("fcm_token", claims.FcmToken)
+	c.Locals("phone_number", claims.PhoneNumber)
 
 	// If the token is valid, pass the request to the next handler
 	return c.Next()
