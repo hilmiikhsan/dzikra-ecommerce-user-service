@@ -9,4 +9,5 @@ import (
 type ExternalOrder interface {
 	CreateOrder(ctx context.Context, req *order.CreateOrderRequest) (*order.CreateOrderResponse, error)
 	GetListOrder(ctx context.Context, page, limit int, search, status, userID string) (*order.GetListOrderResponse, error)
+	GetOrderById(ctx context.Context, req *order.GetOrderByIdRequest) (*order.GetOrderByIdResponse, error)
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/external/proto/order"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/middleware"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/order/dto"
 	productGrocery "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_grocery/dto"
@@ -370,9 +371,10 @@ func (s *orderService) GetListOrder(ctx context.Context, page, limit int, search
 		for _, item := range order.OrderItems {
 			var productImages []dto.ProductImage
 			for _, img := range item.ProductImages {
+				publicURL := config.Envs.MinioStorage.PublicURL
 				productImages = append(productImages, dto.ProductImage{
 					ID:        int(img.Id),
-					ImageURL:  img.ImageUrl,
+					ImageURL:  utils.FormatMediaPathURL(img.ImageUrl, publicURL),
 					Position:  int(img.Position),
 					ProductID: int(img.ProductId),
 				})
@@ -450,4 +452,64 @@ func (s *orderService) GetListOrder(ctx context.Context, page, limit int, search
 		PageSize:    int(res.PageSize),
 		TotalData:   int(res.TotalData),
 	}, nil
+}
+
+func (s *orderService) GetWaybillDetails(ctx context.Context, orderID string) (*dto.GetWaybillResponse, error) {
+	res, err := s.externalOrder.GetOrderById(ctx, &order.GetOrderByIdRequest{
+		Id: orderID,
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrOrderNotFound) {
+			log.Error().Err(err).Msg("service::GetWaybillDetails - Order not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrOrderNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::GetWaybillDetails - Failed to get order details")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	if res == nil {
+		log.Error().Msg("service::GetWaybillDetails - Order not found")
+		return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrOrderNotFound))
+	}
+	if res.Order.ShippingName == "" || res.Order.ShippingType == "" {
+		log.Error().Msg("service::GetWaybillDetails - Shipping details not available for this order")
+		return nil, err_msg.NewCustomErrors(fiber.StatusBadRequest, err_msg.WithMessage("shipping details not available for this order"))
+	}
+
+	waybill, err := s.rajaongkirService.GetWaybill(ctx, res.Order.ShippingNumber, strings.ToLower(res.Order.ShippingType))
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetWaybillDetails - Failed to get waybill details")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	result := &dto.GetWaybillResponse{
+		Delivered:    waybill.DeliveryStatus.PODReceiver != "",
+		Destination:  waybill.Summary.Destination,
+		Resi:         waybill.Summary.Resi,
+		ServiceCode:  waybill.Summary.ServiceCode,
+		WaybillDate:  waybill.Summary.WaybillDate,
+		ShipperName:  waybill.Summary.ShipperName,
+		ReceiverName: waybill.Summary.ReceiverName,
+		Origin:       waybill.Summary.Origin,
+		Status:       waybill.Summary.Status,
+		CourierName:  waybill.Summary.CourierName,
+		Manifest:     []dto.WaybillManifest{},
+		DeliveryStatus: dto.DeliveryStatus{
+			Status:      waybill.DeliveryStatus.Status,
+			PODReceiver: waybill.DeliveryStatus.PODReceiver,
+			PODDate:     waybill.DeliveryStatus.PODDate,
+			PODTime:     waybill.DeliveryStatus.PODTime,
+		},
+	}
+
+	for _, m := range waybill.Manifest {
+		result.Manifest = append(result.Manifest, dto.WaybillManifest{
+			Description: m.Description,
+			Date:        m.Date,
+			Time:        m.Time,
+			City:        m.CityName,
+		})
+	}
+
+	return result, nil
 }

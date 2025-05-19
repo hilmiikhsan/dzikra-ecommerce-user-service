@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/entity"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/ports"
@@ -18,6 +19,7 @@ import (
 	productSubCategoryDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_sub_category/dto"
 	productVariantDto "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/dto"
 	productVariant "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/entity"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/utils"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
@@ -231,9 +233,10 @@ func (r *productRepository) FindListProduct(ctx context.Context, limit, offset i
 				}
 			}
 			if !alreadyExists {
+				publicURL := config.Envs.MinioStorage.PublicURL
 				image := productImageDto.ProductImage{
 					ID:        imageID,
-					ImageURL:  row.ProductImageURL.String,
+					ImageURL:  utils.FormatMediaPathURL(row.ProductImageURL.String, publicURL),
 					Position:  int(row.ProductImageSort.Int64),
 					ProductID: int(row.ProductImageProductID.Int64),
 				}

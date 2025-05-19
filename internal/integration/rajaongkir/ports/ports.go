@@ -15,4 +15,5 @@ type RajaongkirService interface {
 	GetListProvince(ctx context.Context) ([]province.GetListProvinceResponse, error)
 	GetListSubDistrict(ctx context.Context, districtID int) ([]subDistrict.GetListSubDistrictResponse, error)
 	GetShippingCost(ctx context.Context, weight, courier string, address *address.Address) ([]dto.CostResult, error)
+	GetWaybill(ctx context.Context, waybill, courier string) (*dto.GetWaybillResponse, error)
 }

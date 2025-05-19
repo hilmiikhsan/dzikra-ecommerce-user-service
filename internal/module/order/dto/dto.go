@@ -103,3 +103,32 @@ type Address struct {
 	ProvinceVendorID    string  `json:"province_vendor_id"`
 	SubDistrictVendorID string  `json:"subdistrict_vendor_id"`
 }
+
+type GetWaybillResponse struct {
+	Delivered      bool              `json:"delivered"`
+	Destination    string            `json:"destination"`
+	Resi           string            `json:"resi"`
+	ServiceCode    string            `json:"service_code"`
+	WaybillDate    string            `json:"waybill_date"`
+	ShipperName    string            `json:"shipper_name"`
+	ReceiverName   string            `json:"receiver_name"`
+	Origin         string            `json:"origin"`
+	Status         string            `json:"status"`
+	CourierName    string            `json:"courier_name"`
+	Manifest       []WaybillManifest `json:"manifest"`
+	DeliveryStatus DeliveryStatus    `json:"delivery_status"`
+}
+
+type WaybillManifest struct {
+	Description string `json:"manifest_description"`
+	Date        string `json:"manifest_date"`
+	Time        string `json:"manifest_time"`
+	City        string `json:"city_name"`
+}
+
+type DeliveryStatus struct {
+	Status      string `json:"status"`
+	PODReceiver string `json:"pod_receiver"`
+	PODDate     string `json:"pod_date"`
+	PODTime     string `json:"pod_time"`
+}

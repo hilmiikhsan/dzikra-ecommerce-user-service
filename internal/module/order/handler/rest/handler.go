@@ -2,6 +2,7 @@ package rest
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/middleware"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/order/dto"
@@ -67,6 +68,27 @@ func (h *orderHandler) getListOrder(c *fiber.Ctx) error {
 	res, err := h.service.GetListOrder(ctx, page, limit, search, status, locals.UserID)
 	if err != nil {
 		log.Error().Err(err).Msg("handler::getListOrder - Failed to get list order")
+		code, errs := err_msg.Errors[error](err)
+		return c.Status(code).JSON(response.Error(errs))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success(res, ""))
+}
+
+func (h *orderHandler) getWaybill(c *fiber.Ctx) error {
+	var (
+		ctx     = c.Context()
+		orderID = c.Params("order_id")
+	)
+
+	if strings.Contains(orderID, ":order_id") {
+		log.Warn().Msg("handler::getWaybill - invalid order ID")
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Invalid order ID"))
+	}
+
+	res, err := h.service.GetWaybillDetails(ctx, orderID)
+	if err != nil {
+		log.Error().Err(err).Msg("handler::getWaybill - Failed to get waybill")
 		code, errs := err_msg.Errors[error](err)
 		return c.Status(code).JSON(response.Error(errs))
 	}
