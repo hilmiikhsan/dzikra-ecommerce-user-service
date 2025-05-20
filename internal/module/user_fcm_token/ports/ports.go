@@ -12,4 +12,5 @@ type UserFCMTokenRepository interface {
 	InsertNewUserFCMToken(ctx context.Context, tx *sql.Tx, userFCMToken *entity.UserFCMToken) error
 	DeleteUserFCMToken(ctx context.Context, tx *sql.Tx, userID string) error
 	UpdateUserFCMToken(ctx context.Context, tx *sql.Tx, userFCMToken *entity.UserFCMToken) error
+	FindFcmUserTokenByRole(ctx context.Context, role string) ([]string, error)
 }

@@ -1,5 +1,6 @@
 package constants
 
 const (
-	UserRole = "USER"
+	UserRole          = "USER"
+	RoleSuperAdminPOS = "SUPER_ADMIN_POS"
 )

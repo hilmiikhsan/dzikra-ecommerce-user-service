@@ -65,7 +65,7 @@ func (r *userFcmTokenRepository) DeleteUserFCMToken(ctx context.Context, tx *sql
 	return nil
 }
 
-func (r userFcmTokenRepository) UpdateUserFCMToken(ctx context.Context, tx *sql.Tx, userFCMToken *entity.UserFCMToken) error {
+func (r *userFcmTokenRepository) UpdateUserFCMToken(ctx context.Context, tx *sql.Tx, userFCMToken *entity.UserFCMToken) error {
 	_, err := tx.ExecContext(ctx, r.db.Rebind(queryUpdateUserFCMToken),
 		userFCMToken.FcmToken,
 		userFCMToken.DeviceID,
@@ -78,4 +78,16 @@ func (r userFcmTokenRepository) UpdateUserFCMToken(ctx context.Context, tx *sql.
 	}
 
 	return nil
+}
+
+func (r *userFcmTokenRepository) FindFcmUserTokenByRole(ctx context.Context, role string) ([]string, error) {
+	var res []string
+
+	err := r.db.SelectContext(ctx, &res, r.db.Rebind(queryFindFcmUserTokenByRole), role)
+	if err != nil {
+		log.Error().Err(err).Str("role", role).Msg("repository::FindFcmUserTokenByRole - Failed to find fcm user token by role")
+		return nil, err
+	}
+
+	return res, nil
 }

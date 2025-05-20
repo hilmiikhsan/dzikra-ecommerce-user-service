@@ -67,6 +67,10 @@ type Config struct {
 		OriginCityID        string `env:"ORIGIN_CITY_ID" env-default:""`
 		OriginSubDistrictID string `env:"ORIGIN_SUBDISTRICT_ID" env-default:""`
 	}
+	FirebaseMessaging struct {
+		CredentialServiceAccount string `env:"FIREBASE_MESSAGING_CREDENTIAL_SERVICE_ACCOUNT" env-default:""`
+		ProjectID                string `env:"FIREBASE_MESSAGING_PROJECT_ID" env-default:""`
+	}
 	Notification struct {
 		NotificationGrpcHost string `env:"NOTIFICATION_GRPC_HOST" env-default:"localhost:7001"`
 	}
@@ -147,8 +151,11 @@ func (c *Configure) Initialize() {
 		Envs.RajaOngkir.BaseURL = utils.GetEnv("RAJAONGKIR_BASE_URL", Envs.RajaOngkir.BaseURL)
 		Envs.RajaOngkir.OriginCityID = utils.GetEnv("ORIGIN_CITY_ID", Envs.RajaOngkir.OriginCityID)
 		Envs.RajaOngkir.OriginSubDistrictID = utils.GetEnv("ORIGIN_SUBDISTRICT_ID", Envs.RajaOngkir.OriginSubDistrictID)
+		Envs.FirebaseMessaging.CredentialServiceAccount = utils.GetEnv("FIREBASE_MESSAGING_CREDENTIAL_SERVICE_ACCOUNT", Envs.FirebaseMessaging.CredentialServiceAccount)
 		Envs.Notification.NotificationGrpcHost = utils.GetEnv("NOTIFICATION_GRPC_HOST", Envs.Notification.NotificationGrpcHost)
 		Envs.Order.OrderGrpcHost = utils.GetEnv("ORDER_GRPC_HOST", Envs.Order.OrderGrpcHost)
+		Envs.FirebaseMessaging.CredentialServiceAccount = utils.GetEnv("FIREBASE_MESSAGING_CREDENTIAL_SERVICE_ACCOUNT", Envs.FirebaseMessaging.CredentialServiceAccount)
+		Envs.FirebaseMessaging.ProjectID = utils.GetEnv("FIREBASE_MESSAGING_PROJECT_ID", Envs.FirebaseMessaging.ProjectID)
 	})
 }
 

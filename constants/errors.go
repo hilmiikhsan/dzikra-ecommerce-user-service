@@ -50,4 +50,5 @@ var (
 	ErrNoShippingOptionReturned            = "No shipping option returned from external service"
 	ErrSelectedShippingOptionNotFound      = "Selected shipping option not found"
 	ErrOrderNotFound                       = "Order not found"
+	ErrNotificationTypeNotFound            = "notification type not found"
 )
