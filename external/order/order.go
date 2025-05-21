@@ -215,3 +215,27 @@ func (*External) GetOrderItemsByOrderID(ctx context.Context, req *order.GetOrder
 
 	return resp, nil
 }
+
+func (*External) CalculateTotalSummary(ctx context.Context, req *order.CalculateTotalSummaryRequest) (*order.CalculateTotalSummaryResponse, error) {
+	conn, err := grpc.Dial(utils.GetEnv("ORDER_GRPC_HOST", config.Envs.Order.OrderGrpcHost), grpc.WithInsecure())
+	if err != nil {
+		log.Err(err).Msg("external::CalculateTotalSummary - Failed to dial grpc")
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := order.NewOrderServiceClient(conn)
+
+	resp, err := client.CalculateTotalSummary(ctx, req)
+	if err != nil {
+		log.Err(err).Msg("external::CalculateTotalSummary - Failed to calculate total summary")
+		return nil, err
+	}
+
+	if resp.Message != constants.SuccessMessage {
+		log.Err(err).Msg("external::CalculateTotalSummary - Response error from order")
+		return nil, fmt.Errorf("get response error from order: %s", resp.Message)
+	}
+
+	return resp, nil
+}

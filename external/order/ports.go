@@ -14,4 +14,5 @@ type ExternalOrder interface {
 	UpdateOrderShippingNumber(ctx context.Context, req *order.UpdateOrderShippingNumberRequest) (*order.UpdateOrderShippingNumberResponse, error)
 	UpdateOrderStatusTransaction(ctx context.Context, req *order.UpdateOrderStatusTransactionRequest) (*order.UpdateOrderStatusTransactionResponse, error)
 	GetOrderItemsByOrderID(ctx context.Context, req *order.GetOrderItemsByOrderIDRequest) (*order.GetOrderItemsByOrderIDResponse, error)
+	CalculateTotalSummary(ctx context.Context, req *order.CalculateTotalSummaryRequest) (*order.CalculateTotalSummaryResponse, error)
 }

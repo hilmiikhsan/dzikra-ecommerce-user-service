@@ -54,4 +54,6 @@ var (
 	ErrNotificationTypeNotFound            = "notification type not found"
 	ErrShippingNumberAlreadyExists         = "Shipping number already exists"
 	ErrExpensesNotFound                    = "Expenses not found"
+	ErrInvalidStartDate                    = "Invalid start date format"
+	ErrInvalidEndDate                      = "Invalid end date format"
 )

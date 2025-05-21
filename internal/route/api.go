@@ -5,6 +5,7 @@ import (
 	banner "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/banner/handler/rest"
 	cart "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/handler/rest"
 	city "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/city/handler/rest"
+	dashboard "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/dashboard/handler/rest"
 	expenses "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/expenses/handler/rest"
 	application "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/list_application/handler/rest"
 	notification "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/notification/handler/rest"
@@ -47,6 +48,7 @@ func SetupRoutes(app *fiber.App) {
 	order.NewOrderHandler().OrderRoute(userAPI, superadminAPI)
 	notification.NewNotificationHandler().NotificationRoute(superadminAPI)
 	expenses.NewExpensesHandler().ExpensesRoute(superadminAPI)
+	dashboard.NewDashboardHandler().DashboardRoute(superadminAPI)
 
 	// fallback route
 	app.Use(func(c *fiber.Ctx) error {

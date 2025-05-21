@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/expenses/dto"
@@ -124,4 +125,16 @@ func (r *expensesRepository) SoftDeleteExpensesByID(ctx context.Context, tx *sql
 	}
 
 	return nil
+}
+
+func (r *expensesRepository) FindTotalSumExpenses(ctx context.Context, startDate, endDate time.Time) (float64, error) {
+	var total float64
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryFindTotalSumExpenses), startDate, endDate).Scan(&total)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::FindTotalSumExpenses - error executing query")
+		return 0, err
+	}
+
+	return total, nil
 }

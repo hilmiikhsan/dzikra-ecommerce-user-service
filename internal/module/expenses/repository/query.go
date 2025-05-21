@@ -51,4 +51,11 @@ const (
 			id = ? 
 			AND deleted_at IS NULL
 	`
+
+	queryFindTotalSumExpenses = `
+		SELECT 
+			COALESCE(SUM(cost),0) AS sum
+		FROM expenses
+		WHERE created_at BETWEEN ? AND ?
+	`
 )
