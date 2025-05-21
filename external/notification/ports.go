@@ -12,4 +12,5 @@ type ExternalNotification interface {
 	CreateNotification(ctx context.Context, req *notification.CreateNotificationRequest) (*notification.CreateNotificationResponse, error)
 	GetListNotification(ctx context.Context, req *notification.GetListNotificationRequest) (*notification.GetListNotificationResponse, error)
 	SendFcmBatchNotification(ctx context.Context, req *notification.SendFcmBatchNotificationRequest) (*notification.SendFcmBatchNotificationResponse, error)
+	SendFcmNotification(ctx context.Context, req *notification.SendFcmNotificationRequest) (*notification.SendFcmNotificationResponse, error)
 }

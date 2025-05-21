@@ -49,4 +49,12 @@ const (
 		AND u.deleted_at    IS NULL
 		AND r.deleted_at    IS NULL
 	`
+
+	queryFindUserFCMTokenByUserID = `
+		SELECT
+			fcm_token
+		FROM user_fcm_tokens
+		WHERE user_id = ?
+		AND deleted_at IS NULL
+	`
 )

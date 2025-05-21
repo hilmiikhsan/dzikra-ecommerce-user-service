@@ -28,6 +28,7 @@ type NotificationServiceClient interface {
 	CreateNotification(ctx context.Context, in *CreateNotificationRequest, opts ...grpc.CallOption) (*CreateNotificationResponse, error)
 	GetListNotification(ctx context.Context, in *GetListNotificationRequest, opts ...grpc.CallOption) (*GetListNotificationResponse, error)
 	SendFcmBatchNotification(ctx context.Context, in *SendFcmBatchNotificationRequest, opts ...grpc.CallOption) (*SendFcmBatchNotificationResponse, error)
+	SendFcmNotification(ctx context.Context, in *SendFcmNotificationRequest, opts ...grpc.CallOption) (*SendFcmNotificationResponse, error)
 }
 
 type notificationServiceClient struct {
@@ -83,6 +84,15 @@ func (c *notificationServiceClient) SendFcmBatchNotification(ctx context.Context
 	return out, nil
 }
 
+func (c *notificationServiceClient) SendFcmNotification(ctx context.Context, in *SendFcmNotificationRequest, opts ...grpc.CallOption) (*SendFcmNotificationResponse, error) {
+	out := new(SendFcmNotificationResponse)
+	err := c.cc.Invoke(ctx, "/notification.NotificationService/SendFcmNotification", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NotificationServiceServer is the server API for NotificationService service.
 // All implementations must embed UnimplementedNotificationServiceServer
 // for forward compatibility
@@ -93,6 +103,7 @@ type NotificationServiceServer interface {
 	CreateNotification(context.Context, *CreateNotificationRequest) (*CreateNotificationResponse, error)
 	GetListNotification(context.Context, *GetListNotificationRequest) (*GetListNotificationResponse, error)
 	SendFcmBatchNotification(context.Context, *SendFcmBatchNotificationRequest) (*SendFcmBatchNotificationResponse, error)
+	SendFcmNotification(context.Context, *SendFcmNotificationRequest) (*SendFcmNotificationResponse, error)
 	mustEmbedUnimplementedNotificationServiceServer()
 }
 
@@ -114,6 +125,9 @@ func (UnimplementedNotificationServiceServer) GetListNotification(context.Contex
 }
 func (UnimplementedNotificationServiceServer) SendFcmBatchNotification(context.Context, *SendFcmBatchNotificationRequest) (*SendFcmBatchNotificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendFcmBatchNotification not implemented")
+}
+func (UnimplementedNotificationServiceServer) SendFcmNotification(context.Context, *SendFcmNotificationRequest) (*SendFcmNotificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendFcmNotification not implemented")
 }
 func (UnimplementedNotificationServiceServer) mustEmbedUnimplementedNotificationServiceServer() {}
 
@@ -218,6 +232,24 @@ func _NotificationService_SendFcmBatchNotification_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NotificationService_SendFcmNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendFcmNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).SendFcmNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/notification.NotificationService/SendFcmNotification",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).SendFcmNotification(ctx, req.(*SendFcmNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NotificationService_ServiceDesc is the grpc.ServiceDesc for NotificationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -244,6 +276,10 @@ var NotificationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendFcmBatchNotification",
 			Handler:    _NotificationService_SendFcmBatchNotification_Handler,
+		},
+		{
+			MethodName: "SendFcmNotification",
+			Handler:    _NotificationService_SendFcmNotification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

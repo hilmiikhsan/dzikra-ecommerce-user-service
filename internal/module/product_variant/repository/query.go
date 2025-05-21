@@ -63,4 +63,11 @@ const (
 		AND product_id = ?
 		AND deleted_at IS NULL
 	`
+
+	queryFindProductVariantStockByID = `
+		SELECT variant_stock
+		FROM product_variants
+		WHERE id = ?
+		AND deleted_at IS NULL
+	`
 )

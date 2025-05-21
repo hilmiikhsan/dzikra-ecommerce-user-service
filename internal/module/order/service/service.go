@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/external/proto/notification"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/external/proto/order"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/middleware"
@@ -512,4 +513,250 @@ func (s *orderService) GetWaybillDetails(ctx context.Context, orderID string) (*
 	}
 
 	return result, nil
+}
+
+func (s *orderService) GetListOrderTransaction(ctx context.Context, page, limit int, search, status string) (*dto.GetListOrderResponse, error) {
+	res, err := s.externalOrder.GetListOrderTransaction(ctx, page, limit, search, status)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetListOrderTransaction - Failed to get list order")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	orders := make([]dto.GetListOrder, 0, len(res.Orders))
+	for _, order := range res.Orders {
+		var voucherIDStr *string
+		if order.VoucherId != 0 {
+			s := fmt.Sprintf("%d", order.VoucherId)
+			voucherIDStr = &s
+		}
+
+		var orderItems []dto.OrderItem
+		for _, item := range order.OrderItems {
+			var productImages []dto.ProductImage
+			for _, img := range item.ProductImages {
+				publicURL := config.Envs.MinioStorage.PublicURL
+				productImages = append(productImages, dto.ProductImage{
+					ID:        int(img.Id),
+					ImageURL:  utils.FormatMediaPathURL(img.ImageUrl, publicURL),
+					Position:  int(img.Position),
+					ProductID: int(img.ProductId),
+				})
+			}
+
+			var productDiscount *string
+			if item.ProductDisc != 0 {
+				s := fmt.Sprintf("%d", item.ProductDisc)
+				productDiscount = &s
+			} else {
+				productDiscount = nil
+			}
+
+			orderItems = append(orderItems, dto.OrderItem{
+				ProductID:             int(item.ProductId),
+				ProductName:           item.ProductName,
+				ProductVariantSubName: item.ProductVariantSubName,
+				ProductVariant:        item.ProductVariant,
+				TotalAmount:           fmt.Sprintf("%d", item.TotalAmount),
+				ProductDisc:           productDiscount,
+				Quantity:              int(item.Quantity),
+				FixPricePerItem:       fmt.Sprintf("%d", item.FixPricePerItem),
+				ProductImages:         productImages,
+			})
+		}
+
+		var district *string
+		if order.Address.District != "" {
+			s := order.Address.District
+			district = &s
+		} else {
+			district = nil
+		}
+
+		orders = append(orders, dto.GetListOrder{
+			ID:                  order.Id,
+			OrderDate:           order.OrderDate,
+			Status:              order.Status,
+			TotalQuantity:       int(order.TotalQuantity),
+			TotalAmount:         fmt.Sprintf("%d", order.TotalAmount),
+			ShippingNumber:      order.ShippingNumber,
+			TotalShippingAmount: fmt.Sprintf("%d", order.TotalShippingAmount),
+			CostName:            order.CostName,
+			CostService:         order.CostService,
+			VoucherID:           voucherIDStr,
+			VoucherDiscount:     int(order.VoucherDisc),
+			UserID:              order.Address.UserId,
+			Notes:               order.Notes,
+			SubTotal:            fmt.Sprintf("%d", order.SubTotal),
+			Address: dto.Address{
+				ID:                  int(order.Address.Id),
+				Province:            order.Address.Province,
+				City:                order.Address.City,
+				District:            district,
+				SubDistrict:         order.Address.Subdistrict,
+				PostalCode:          order.Address.PostalCode,
+				Address:             order.Address.Address,
+				ReceivedName:        order.Address.ReceivedName,
+				UserID:              order.Address.UserId,
+				CityVendorID:        order.Address.CityVendorId,
+				ProvinceVendorID:    order.Address.ProvinceVendorId,
+				SubDistrictVendorID: order.Address.SubdistrictVendorId,
+			},
+			OrderItems: orderItems,
+			Payment: dto.Payment{
+				RedirectURL: order.Payment.RedirectUrl,
+			},
+		})
+	}
+
+	return &dto.GetListOrderResponse{
+		Orders:      orders,
+		TotalPages:  int(res.TotalPages),
+		CurrentPage: int(res.CurrentPage),
+		PageSize:    int(res.PageSize),
+		TotalData:   int(res.TotalData),
+	}, nil
+}
+
+func (s *orderService) UpdateOrderShippingNumber(ctx context.Context, req *dto.UpdateOrderShippingNumberRequest, orderID string) (*dto.UpdateOrderShippingNumberResponse, error) {
+	res, err := s.externalOrder.UpdateOrderShippingNumber(ctx, &order.UpdateOrderShippingNumberRequest{
+		Id:             orderID,
+		ShippingNumber: req.ShippingNumber,
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrOrderNotFound) {
+			log.Error().Err(err).Msg("service::UpdateOrderShippingNumber - Order not found")
+			return nil, err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrOrderNotFound))
+		}
+
+		if strings.Contains(err.Error(), constants.ErrShippingNumberAlreadyExists) {
+			log.Error().Err(err).Msg("service::UpdateOrderShippingNumber - Shipping number already exists")
+			return nil, err_msg.NewCustomErrors(fiber.StatusConflict, err_msg.WithMessage(constants.ErrShippingNumberAlreadyExists))
+		}
+
+		log.Error().Err(err).Msg("service::UpdateOrderShippingNumber - Failed to update order shipping number")
+		return nil, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return &dto.UpdateOrderShippingNumberResponse{
+		ID:                  res.Id,
+		OrderDate:           res.OrderDate,
+		Status:              res.Status,
+		ShippingName:        res.ShippingName,
+		ShippingAddress:     res.ShippingAddress,
+		ShippingPhone:       res.ShippingPhone,
+		ShippingNumber:      res.ShippingNumber,
+		ShippingType:        res.ShippingType,
+		TotalWeight:         int(res.TotalWeight),
+		TotalQuantity:       int(res.TotalQuantity),
+		TotalShippingCost:   res.TotalShippingCost,
+		TotalProductAmount:  res.TotalProductAmount,
+		TotalShippingAmount: res.TotalShippingAmount,
+		TotalAmount:         res.TotalAmount,
+		VoucherDiscount:     int(res.VoucherDiscount),
+		VoucherID:           &res.VoucherId,
+		CostName:            res.CostName,
+		CostService:         res.CostService,
+		AddressID:           int(res.AddressId),
+		UserID:              res.UserId,
+		Notes:               res.Notes,
+	}, nil
+}
+
+func (s *orderService) UpdateOrderStatusTransaction(ctx context.Context, req *dto.UpdateOrderStatusTransactionRequest, orderID, fullName, email string) error {
+	orderResult, err := s.externalOrder.GetOrderById(ctx, &order.GetOrderByIdRequest{
+		Id: orderID,
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrOrderNotFound) {
+			log.Error().Err(err).Msg("service::UpdateOrderStatusTransaction - Order not found")
+			return err_msg.NewCustomErrors(fiber.StatusNotFound, err_msg.WithMessage(constants.ErrOrderNotFound))
+		}
+
+		log.Error().Err(err).Msg("service::UpdateOrderStatusTransaction - Failed to get order details")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	userFcmToken, err := s.userFcmTokenRepository.FindUserFCMTokenByUserID(ctx, orderResult.Order.UserId)
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateOrderStatusTransaction - Failed to get user FCM token")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// begin transaction
+	tx, err := s.db.Beginx()
+	if err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::UpdateOrderStatusTransaction - Failed to begin transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				log.Error().Err(rollbackErr).Any("payload", req).Msg("service::UpdateOrderStatusTransaction - Failed to rollback transaction")
+			}
+		}
+	}()
+
+	if req.Status == constants.OrderStatusWaitingForPickup {
+		orderItems, err := s.externalOrder.GetOrderItemsByOrderID(ctx, &order.GetOrderItemsByOrderIDRequest{
+			OrderId: orderID,
+		})
+		if err != nil {
+			log.Error().Err(err).Msg("service::UpdateOrderStatusTransaction - Failed to get order items")
+			return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+
+		for _, item := range orderItems.OrderItems {
+			var stock int
+			if item.ProductVariantId != 0 {
+				stock, err = s.productVariantRepository.FindProductVariantStockByID(ctx, int(item.ProductVariantId))
+			} else {
+				stock, err = s.productRepository.FindProductStockByID(ctx, int(item.ProductId))
+			}
+			if err != nil {
+				log.Error().Err(err).Msg("service::UpdateOrderStatusTransaction - Failed to fetch stock")
+				return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+			}
+			if stock < int(item.Quantity) {
+				log.Error().Msg("service::UpdateOrderStatusTransaction - Insufficient stock for some items in the order")
+				return err_msg.NewCustomErrors(fiber.StatusUnprocessableEntity, err_msg.WithMessage("Stok tidak cukup untuk beberapa item dalam pesanan"))
+			}
+		}
+
+		for _, item := range orderItems.OrderItems {
+			if err = s.productRepository.ReduceStock(ctx, tx, int(item.ProductId), int(item.ProductVariantId), int(item.Quantity)); err != nil {
+				log.Error().Err(err).Msg("service::UpdateOrderStatusTransaction - Failed to reduce stock")
+				return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+			}
+		}
+
+		notifFcmRequest := &notification.SendFcmNotificationRequest{
+			FcmToken:        userFcmToken,
+			Title:           "Pesanan menunggu jasa kirim",
+			Body:            fmt.Sprintf("Pesanan dengan id %s siap dikirim.", orderResult.Order.Id),
+			UserId:          orderResult.Order.UserId,
+			IsStatusChanged: true,
+		}
+
+		if _, err := s.externalNotification.SendFcmNotification(ctx, notifFcmRequest); err != nil {
+			log.Error().Err(err).Msg("service::UpdateOrderStatusTransaction - Failed to send FCM notification")
+			return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+		}
+	}
+
+	_, err = s.externalOrder.UpdateOrderStatusTransaction(ctx, &order.UpdateOrderStatusTransactionRequest{
+		Status:  req.Status,
+		OrderId: orderID,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("service::UpdateOrderStatusTransaction - Failed to update order status")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	// commit transaction
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Any("payload", req).Msg("service::UpdateOrderStatusTransaction - Failed to commit transaction")
+		return err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return nil
 }

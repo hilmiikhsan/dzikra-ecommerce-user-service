@@ -91,3 +91,19 @@ func (r *userFcmTokenRepository) FindFcmUserTokenByRole(ctx context.Context, rol
 
 	return res, nil
 }
+
+func (r *userFcmTokenRepository) FindUserFCMTokenByUserID(ctx context.Context, userID string) (string, error) {
+	var res string
+
+	err := r.db.GetContext(ctx, &res, r.db.Rebind(queryFindUserFCMTokenByUserID), userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Error().Err(err).Str("userID", userID).Msg("repository::FindUserFCMTokenByUserID - Failed to find user fcm token by user ID")
+			return "", nil
+		}
+
+		return "", err
+	}
+
+	return res, nil
+}

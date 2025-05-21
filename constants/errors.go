@@ -51,4 +51,5 @@ var (
 	ErrSelectedShippingOptionNotFound      = "Selected shipping option not found"
 	ErrOrderNotFound                       = "Order not found"
 	ErrNotificationTypeNotFound            = "notification type not found"
+	ErrShippingNumberAlreadyExists         = "Shipping number already exists"
 )

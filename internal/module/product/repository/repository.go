@@ -323,3 +323,86 @@ func (r *productRepository) CountProductByID(ctx context.Context, id int) (int, 
 
 	return count, nil
 }
+
+func (r *productRepository) FindProductStockByID(ctx context.Context, id int) (int, error) {
+	var stock int
+
+	err := r.db.GetContext(ctx, &stock, r.db.Rebind(queryFindProductStockByID), id)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::FindProductStockByID - error find product stock query")
+		return 0, err
+	}
+
+	return stock, nil
+}
+
+func (r *productRepository) ReduceStock(ctx context.Context, tx *sqlx.Tx, productID, variantID int, quantity int) error {
+	var err error
+
+	if variantID != 0 {
+		var current int
+		if err := tx.GetContext(ctx, &current,
+			`SELECT variant_stock 
+             FROM product_variants 
+             WHERE id = $1 
+             FOR UPDATE`, variantID,
+		); err != nil {
+			if err == sql.ErrNoRows {
+				log.Error().Err(err).Int("variant_id", variantID).Msg("repository::ReduceStock - variant not found")
+				return fmt.Errorf("variant %d not found", variantID)
+			}
+
+			log.Error().Err(err).Msg("repository::ReduceStock - error fetching variant stock")
+			return err
+		}
+
+		if current < quantity {
+			log.Error().Err(err).Int("current", current).Int("quantity", quantity).Msg("repository::ReduceStock - insufficient variant stock")
+			return fmt.Errorf("insufficient variant stock: have %d, need %d", current, quantity)
+		}
+
+		if _, err := tx.ExecContext(ctx,
+			`UPDATE product_variants 
+             SET variant_stock = variant_stock - $1 
+             WHERE id = $2`,
+			quantity, variantID,
+		); err != nil {
+			log.Error().Err(err).Msg("repository::ReduceStock - error updating variant stock")
+			return err
+		}
+
+	} else {
+		var current int
+		if err := tx.GetContext(ctx, &current,
+			`SELECT stock 
+             FROM products 
+             WHERE id = $1 
+             FOR UPDATE`, productID,
+		); err != nil {
+			if err == sql.ErrNoRows {
+				log.Error().Err(err).Int("product_id", productID).Msg("repository::ReduceStock - product not found")
+				return fmt.Errorf("product %d not found", productID)
+			}
+
+			log.Error().Err(err).Msg("repository::ReduceStock - error fetching product stock")
+			return err
+		}
+
+		if current < quantity {
+			log.Error().Err(err).Int("current", current).Int("quantity", quantity).Msg("repository::ReduceStock - insufficient product stock")
+			return fmt.Errorf("insufficient product stock: have %d, need %d", current, quantity)
+		}
+
+		if _, err := tx.ExecContext(ctx,
+			`UPDATE products 
+             SET stock = stock - $1 
+             WHERE id = $2`,
+			quantity, productID,
+		); err != nil {
+			log.Error().Err(err).Msg("repository::ReduceStock - error updating product stock")
+			return err
+		}
+	}
+
+	return nil
+}

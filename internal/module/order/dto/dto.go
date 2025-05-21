@@ -132,3 +132,35 @@ type DeliveryStatus struct {
 	PODDate     string `json:"pod_date"`
 	PODTime     string `json:"pod_time"`
 }
+
+type UpdateOrderShippingNumberRequest struct {
+	ShippingNumber string `json:"shipping_number" validate:"required,min=3,max=50,xss_safe"`
+}
+
+type UpdateOrderShippingNumberResponse struct {
+	ID                  string  `json:"id"`
+	OrderDate           string  `json:"order_date"`
+	Status              string  `json:"status"`
+	ShippingName        string  `json:"shipping_name"`
+	ShippingAddress     string  `json:"shipping_address"`
+	ShippingPhone       string  `json:"shipping_phone"`
+	ShippingNumber      string  `json:"shipping_number"`
+	ShippingType        string  `json:"shipping_type"`
+	TotalWeight         int     `json:"total_weight"`
+	TotalQuantity       int     `json:"total_quantity"`
+	TotalShippingCost   string  `json:"total_shipping_cost"`
+	TotalProductAmount  string  `json:"total_product_amount"`
+	TotalShippingAmount string  `json:"total_shipping_amount"`
+	TotalAmount         string  `json:"total_amount"`
+	VoucherDiscount     int     `json:"voucher_disc"`
+	VoucherID           *string `json:"voucher_id"`
+	CostName            string  `json:"cost_name"`
+	CostService         string  `json:"cost_service"`
+	AddressID           int     `json:"address_id"`
+	UserID              string  `json:"user_id"`
+	Notes               string  `json:"notes"`
+}
+
+type UpdateOrderStatusTransactionRequest struct {
+	Status string `json:"status" validate:"required,min=3,max=50,xss_safe"`
+}

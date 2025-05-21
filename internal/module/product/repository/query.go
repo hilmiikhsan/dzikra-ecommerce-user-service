@@ -189,4 +189,12 @@ const (
 		FROM products 
 		WHERE id = ? AND deleted_at IS NULL
 	`
+
+	queryFindProductStockByID = `
+		SELECT stock
+		FROM products
+		WHERE 
+			id = ? 
+			AND deleted_at IS NULL
+	`
 )

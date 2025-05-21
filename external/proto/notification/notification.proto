@@ -17,6 +17,8 @@ service NotificationService {
     returns (GetListNotificationResponse);
   rpc SendFcmBatchNotification (SendFcmBatchNotificationRequest)
     returns (SendFcmBatchNotificationResponse);
+  rpc SendFcmNotification (SendFcmNotificationRequest)
+    returns (SendFcmNotificationResponse);
 }
 
 // The request message containing notification details
@@ -86,5 +88,19 @@ message SendFcmBatchNotificationRequest {
 }
 
 message SendFcmBatchNotificationResponse {
+  string message = 1;
+}
+
+message SendFcmNotificationRequest {
+  string fcm_token = 1;
+  string title = 2;
+  string body = 3;
+  string user_id = 4;
+  string full_name = 5;
+  string email = 6;
+  bool is_status_changed = 7;
+}
+
+message SendFcmNotificationResponse {
   string message = 1;
 }

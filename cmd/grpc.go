@@ -9,14 +9,18 @@ import (
 
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/cmd/proto/address"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/cmd/proto/cart"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/cmd/proto/product"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/cmd/proto/product_image"
+	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/cmd/proto/product_variant"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/cmd/proto/tokenvalidation"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/adapter"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/infrastructure/config"
 	addressGrpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/address/handler/grpc"
 	cartGrpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/cart/handler/grpc"
+	productGrpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product/handler/grpc"
 	productImageGrpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_image/handler/grpc"
+	productVariantGrpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/product_variant/handler/grpc"
 	userGrpcHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/user/handler/grpc"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -65,6 +69,8 @@ func RunServeGRPC() {
 	cart.RegisterCartServiceServer(grpcServer, cartGrpcHandler.NewCartGrpcAPI())
 	product_image.RegisterProductImageServiceServer(grpcServer, productImageGrpcHandler.NewProductImageGrpcAPI())
 	address.RegisterAddressServiceServer(grpcServer, addressGrpcHandler.NewAddressGrpcAPI())
+	product_variant.RegisterProductVariantServiceServer(grpcServer, productVariantGrpcHandler.NewProductVariantGrpcAPI())
+	product.RegisterProductServiceServer(grpcServer, productGrpcHandler.NewProductGrpcAPI())
 
 	go func() {
 		log.Info().Msgf("gRPC server is running on port %s", envs.App.GrpcPort)

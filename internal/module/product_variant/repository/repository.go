@@ -121,3 +121,15 @@ func (r *productVariantRepository) CountProductVariantByIDAndProductID(ctx conte
 
 	return count, nil
 }
+
+func (r *productVariantRepository) FindProductVariantStockByID(ctx context.Context, id int) (int, error) {
+	var stock int
+
+	err := r.db.QueryRowContext(ctx, r.db.Rebind(queryFindProductVariantStockByID), id).Scan(&stock)
+	if err != nil {
+		log.Error().Err(err).Msg("repository::FindProductVariantStockByID - error finding product variant stock")
+		return 0, err
+	}
+
+	return stock, nil
+}

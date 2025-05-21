@@ -43,7 +43,7 @@ func SetupRoutes(app *fiber.App) {
 	address.NewAddressHandler().AddressRoute(userAPI)
 	cart.NewCartHandler().CartRoute(userAPI)
 	shipping.NewShippingHandler().ShippingRoute(userAPI)
-	order.NewOrderHandler().OrderRoute(userAPI)
+	order.NewOrderHandler().OrderRoute(userAPI, superadminAPI)
 	notification.NewNotificationHandler().NotificationRoute(superadminAPI)
 
 	// fallback route

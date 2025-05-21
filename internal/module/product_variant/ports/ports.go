@@ -13,4 +13,9 @@ type ProductVariantRepository interface {
 	DeleteProductVariant(ctx context.Context, tx *sqlx.Tx, id, productID int) error
 	SoftDeleteProductVariantsByProductID(ctx context.Context, tx *sqlx.Tx, productID int) error
 	CountProductVariantByIDAndProductID(ctx context.Context, id, productID int) (int, error)
+	FindProductVariantStockByID(ctx context.Context, id int) (int, error)
+}
+
+type ProductVariantService interface {
+	GetProductVariantStock(ctx context.Context, id int) (int, error)
 }

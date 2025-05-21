@@ -147,3 +147,26 @@ func (*External) SendFcmBatchNotification(ctx context.Context, req *notification
 
 	return resp, nil
 }
+
+func (*External) SendFcmNotification(ctx context.Context, req *notification.SendFcmNotificationRequest) (*notification.SendFcmNotificationResponse, error) {
+	conn, err := grpc.Dial(utils.GetEnv("NOTIFICATION_GRPC_HOST", config.Envs.Notification.NotificationGrpcHost), grpc.WithInsecure())
+	if err != nil {
+		log.Err(err).Msg("external::SendFcmNotification - Failed to dial grpc")
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := notification.NewNotificationServiceClient(conn)
+	resp, err := client.SendFcmNotification(ctx, req)
+	if err != nil {
+		log.Err(err).Msg("external::SendFcmNotification - Failed to send fcm notification")
+		return nil, err
+	}
+
+	if resp.Message != constants.SuccessMessage {
+		log.Err(err).Msg("external::SendFcmNotification - Response error from notification")
+		return nil, fmt.Errorf("get response error from notification: %s", resp.Message)
+	}
+
+	return resp, nil
+}

@@ -730,3 +730,13 @@ func (s *productService) RemoveProduct(ctx context.Context, id int) error {
 
 	return nil
 }
+
+func (s *productService) GetProductStock(ctx context.Context, id int) (int, error) {
+	stock, err := s.productRepository.FindProductStockByID(ctx, id)
+	if err != nil {
+		log.Error().Err(err).Msg("service::GetProductStock - Failed to get product variant stock")
+		return 0, err_msg.NewCustomErrors(fiber.StatusInternalServerError, err_msg.WithMessage(constants.ErrInternalServerError))
+	}
+
+	return stock, nil
+}
