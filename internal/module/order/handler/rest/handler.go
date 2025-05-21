@@ -25,7 +25,7 @@ func (h *orderHandler) createOrder(c *fiber.Ctx) error {
 	}
 
 	if err := h.validator.Validate(req); err != nil {
-		log.Warn().Err(err).Msg("handler::createAddress - Invalid request body")
+		log.Warn().Err(err).Msg("handler::createOrder - Invalid request body")
 		code, errs := err_msg.Errors(err, req)
 		return c.Status(code).JSON(response.Error(errs))
 	}

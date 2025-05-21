@@ -37,6 +37,7 @@ var (
 	ErrVoucherCodeAlreadyRegistered        = "Voucher code already registered"
 	ErrInvalidStartAt                      = "Invalid startAt format, expected YYYY-MM-DD HH:MM:SS"
 	ErrInvalidEndAt                        = "Invalid endAt format, expected YYYY-MM-DD HH:MM:SS"
+	ErrInvalidDate                         = "Invalid date format, expected YYYY-MM-DD HH:MM:SS"
 	ErrVoucherNotFound                     = "Voucher not found"
 	ErrVoucherUsageNotFound                = "Voucher usage not found"
 	ErrBannerNotFound                      = "Banner not found"
@@ -52,4 +53,5 @@ var (
 	ErrOrderNotFound                       = "Order not found"
 	ErrNotificationTypeNotFound            = "notification type not found"
 	ErrShippingNumberAlreadyExists         = "Shipping number already exists"
+	ErrExpensesNotFound                    = "Expenses not found"
 )

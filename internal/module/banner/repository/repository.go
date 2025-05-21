@@ -59,7 +59,7 @@ func (r *bannerRepository) FindListBanner(ctx context.Context, limit, offset int
 	var total int
 
 	if err := r.db.GetContext(ctx, &total, r.db.Rebind(queryCountListBanner), search); err != nil {
-		log.Error().Err(err).Msg("repository::FindListVoucher - error counting banner")
+		log.Error().Err(err).Msg("repository::FindListBanner - error counting banner")
 		return nil, 0, err
 	}
 

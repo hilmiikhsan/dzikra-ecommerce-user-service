@@ -12,5 +12,5 @@ func (h *orderHandler) OrderRoute(userRouter, superadminRouter fiber.Router) {
 	superadminRouter.Get("/order", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "order"), h.getListOrderTransaction)
 	superadminRouter.Get("/order/:order_id/waybill", h.middleware.UserBearer, h.middleware.RBACMiddleware("read", "order"), h.getOrderWaybillTransaction)
 	superadminRouter.Put("/order/:order_id/shipping-number", h.middleware.UserBearer, h.middleware.RBACMiddleware("update", "order"), h.updateOrderShippingNumber)
-	superadminRouter.Put("/order/:order_id/status", h.middleware.UserBearer, h.updateOrderStatusTransaction)
+	superadminRouter.Put("/order/:order_id/status", h.middleware.UserBearer, h.middleware.RBACMiddleware("update", "order"), h.updateOrderStatusTransaction)
 }
