@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/constants"
+	role "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/role/dto"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/err_msg"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/response"
 	"github.com/gofiber/fiber/v2"
@@ -30,6 +31,22 @@ func (m *UserMiddleware) UserBearer(c *fiber.Ctx) error {
 		return c.Status(code).JSON(response.Error(errs))
 	}
 
+	var ur []role.UserRoleDetail
+	for _, cr := range claims.UserRoles {
+		var apps []role.ApplicationPermissionDetail
+		for _, ap := range cr.ApplicationPermission {
+			apps = append(apps, role.ApplicationPermissionDetail{
+				ApplicationID: ap.ApplicationID,
+				Name:          ap.Name,
+				Permissions:   ap.Permissions,
+			})
+		}
+		ur = append(ur, role.UserRoleDetail{
+			Roles:                 cr.Roles,
+			ApplicationPermission: apps,
+		})
+	}
+
 	c.Locals("user_id", claims.UserID)
 	c.Locals("email", claims.Email)
 	c.Locals("full_name", claims.FullName)
@@ -38,6 +55,7 @@ func (m *UserMiddleware) UserBearer(c *fiber.Ctx) error {
 	c.Locals("device_type", claims.DeviceType)
 	c.Locals("fcm_token", claims.FcmToken)
 	c.Locals("phone_number", claims.PhoneNumber)
+	c.Locals("user_roles", ur)
 
 	// If the token is valid, pass the request to the next handler
 	return c.Next()

@@ -8,7 +8,7 @@ import (
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/middleware"
 	"github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/banner/ports"
 	bannerRepository "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/banner/repository"
-	productService "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/banner/service"
+	bannerService "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/internal/module/banner/service"
 	jwtHandler "github.com/Digitalkeun-Creative/be-dzikra-ecommerce-user-service/pkg/jwt_handler"
 )
 
@@ -40,7 +40,7 @@ func NewBannerHandler() *bannerHandler {
 	bannerRepository := bannerRepository.NewBannerRepository(adapter.Adapters.DzikraPostgres)
 
 	// product  service
-	bannerService := productService.NewBannerService(
+	bannerService := bannerService.NewBannerService(
 		bannerRepository,
 		minioService,
 	)
